@@ -79,7 +79,7 @@ jobs:
                       assert response.status==200, f'HTTP {response.status}'
                       assert 'VOYAGE｜新功能體驗區' in body, 'Wrong page content'
                       assert 'voyage-review-20261112' in body, 'Preview storage isolation missing'
-                      assert 'voyage-domain' in body, 'Integrated modules missing'
+                      assert 'VoyageDomain' in body and 'VoyageUI' in body, 'Integrated modules missing'
                       print('PUBLIC PREVIEW VERIFIED: HTTP 200, Chinese guide, isolated storage, integrated modules')
                       sys.exit(0)
               except Exception as ex:
