@@ -94,3 +94,20 @@ body[data-tab='trips'] .footnav a[data-tablink='trips'] strong,body[data-tab='it
 @media(prefers-reduced-motion:reduce){.hero-art span,.v2-link .v2-icon,.v2-big-icon,.v2-small-icon,.v2-banner-landmark{animation:none!important}}
 
 .v2-event-photo{display:block;float:right;max-width:115px;max-height:82px;width:auto;height:auto;object-fit:cover;border-radius:11px;margin:5px 0 8px 10px;box-shadow:0 3px 10px #25426325}#itinerary .event::after{content:'';display:block;clear:both}
+
+/* Visual QA fixes: avoid crowded day controls, duplicated dashboard and overlay controls */
+body[data-tab='trips'] #v1Summary{display:none!important}
+#v1ExpenseQuick{position:static!important;bottom:auto!important;right:auto!important;box-shadow:none!important;border-radius:12px!important;margin:11px 0 0!important;padding:10px 15px!important}
+#trips .tripbar select{min-width:0}
+#v2DayBar .v2-day-count{flex:0 0 auto;white-space:nowrap;margin-right:10px}
+@media(max-width:650px){
+ #trips .tripbar{display:grid;grid-template-columns:1fr auto auto;gap:7px}
+ #trips .tripbar select{grid-column:1/-1;min-width:0;width:100%;max-width:100%}
+ #trips .tripbar button{font-size:12px}
+ #v2DayBar{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible}
+ #v2DayBar .v2-day-count{grid-column:1/-1;white-space:normal;margin-right:0}
+ #v2DayBar button{font-size:12px;white-space:normal;min-width:0;padding:10px 7px}
+ #v2DayBar button:last-child{grid-column:1/-1}
+ #v2Home .v2-home-hero .v2-toolbar{gap:5px}
+ #v2Home .v2-home-hero .v2-toolbar button{font-size:11px;padding:7px 9px}
+}
