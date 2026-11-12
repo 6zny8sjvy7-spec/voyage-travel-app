@@ -126,6 +126,7 @@ test('daily schedule exposes a real unscheduled gap and can open prefilled route
  expect(actual.some(e=>e.type==='transport'&&e.name.includes('早餐店'))).toBe(false);
 });
 test('overlapping schedule events remain selectable in separate lanes and keep source data unchanged',async({page})=>{
+ page.on('dialog',dialog=>dialog.accept());
  await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
  for(const entry of [{name:'午餐',time:'15:00',duration:'90'},{name:'同時段購物',time:'15:30',duration:'45'}]){
   await page.locator('#v3ComposerDetails summary').click();
@@ -133,7 +134,6 @@ test('overlapping schedule events remain selectable in separate lanes and keep s
   await page.locator('#v3NewName').fill(entry.name);
   await page.locator('#v3NewTime').fill(entry.time);
   await page.locator('#v3NewDuration').fill(entry.duration);
-  page.once('dialog',dialog=>dialog.accept());
   await page.locator('#v3Composer').getByRole('button',{name:/加入當天時間軸/}).click();
  }
  const a=page.locator('#events .v3-schedule-event').filter({hasText:'午餐'}),b=page.locator('#events .v3-schedule-event').filter({hasText:'同時段購物'});
