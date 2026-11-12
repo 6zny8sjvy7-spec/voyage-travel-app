@@ -146,10 +146,13 @@ test('new days extend safely and survive reload, with date strip linking maps',a
  await expect(page.locator('#dates .date')).toHaveCount(5);
  await page.locator('[data-tablink="itinerary"]').click();
  await page.locator('#dates .date').first().click();
- await page.locator('#itinerary .event').first().getByRole('button',{name:/行程詳情/}).click();
+ await page.locator('#events .v3-schedule-event').first().click();
+ await expect(page.locator('#v3MapSummary')).toContainText('景福宮');
+ await page.locator('#v3MapSummary').getByRole('button',{name:/行程詳情/}).click();
  await expect(page.locator('#v2EventDialog')).toBeVisible();
  await page.locator('#v2EventDialog').getByRole('button',{name:/查看地圖/}).click();
- await expect(page.locator('#mapSection')).toBeVisible();
+ await expect(page.locator('#v3InlineMap')).toBeVisible();
+ expect(await page.locator('body').getAttribute('data-tab')).toBe('itinerary');
 });
 test('Myeongdong to Hongdae returns actual station sequence and transfer, without manual direction',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
