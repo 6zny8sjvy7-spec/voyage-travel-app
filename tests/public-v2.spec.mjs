@@ -1,0 +1,26 @@
+import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+const leaflet=readFileSync(new URL('./leaflet-stub.js',import.meta.url),'utf8');
+const url='https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/';
+test('published V2 actually loads quick actions, extends trip and routes Myeongdong to Hongdae',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#v2ReviewTop')).toContainText('VOYAGE 新版');
+ await expect(page.locator('#v2Home')).toBeVisible();
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await expect(page.locator('#itinerary')).toBeVisible();
+ await page.locator('#v2AddDay').click();
+ await expect(page.locator('#dates .date')).toHaveCount(4);
+ await page.reload();
+ await expect(page.locator('#v2Home')).toBeVisible();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v2-review-20261112'))[0].days.length)).toBe(4);
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+ await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
+ await page.locator('#transitFrom').fill('明洞');await page.locator('#transitTo').fill('弘大');
+ await page.getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('會賢');
+ await expect(page.locator('#v2RouteResults')).toContainText('孔德');
+ await expect(page.locator('#v2RouteResults')).toContainText('弘大入口');
+});
