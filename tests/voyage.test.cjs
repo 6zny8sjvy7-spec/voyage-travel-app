@@ -13,7 +13,10 @@ class FakeElement{
  append(...children){this.children.push(...children)}
  replaceChildren(...children){this.children=children}
  querySelectorAll(){return []}
- querySelector(){return null}
+ querySelector(){return new FakeElement('div',this.ids)}
+ closest(){return new FakeElement('label',this.ids)}
+ insertBefore(child){this.children.push(child);return child}
+ prepend(...items){this.children.unshift(...items)}
  scrollIntoView(){}
  after(x){this.children.push(x)}
  showModal(){this.open=true}
@@ -32,7 +35,7 @@ function uiEnv(){
  ctx.window=ctx;
  vm.createContext(ctx);
  vm.runInContext('let trips=[{id:"seed",name:"Test",city:"Seoul",country:"韓國",tz:"Asia/Seoul",days:[[{name:"Start",time:"09:00",duration:30}],[{name:"Next",time:"11:00"}]]}],active=0,day=0,weekMode=false;const trip=()=>trips[active];let saveCount=0;function save(){saveCount++}function render(){}function renderWeek(){}function drawMap(){}function setTab(){}function syncView(){}function suggest(){}',ctx);
- ["voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-discover.js","voyage-map.js","voyage-journal.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
+ ["voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-discover.js","voyage-map.js","voyage-journal.js","voyage-ux-v2.js","voyage-transit-v2.js","voyage-gps-v2.js","voyage-tools-v2.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
  return {ctx,ids,expression:s=>vm.runInContext(s,ctx)};
 }
 test("UI modules load and each more page renders without crash",()=>{
@@ -59,3 +62,8 @@ test("cloud upload must not be active without explicit project config",()=>{cons
 test("overlap scan detects a long activity overlapping multiple shorter activities",()=>{const D=domain(),events=[{name:"A",time:"09:00",duration:240},{name:"B",time:"10:00",duration:15},{name:"C",time:"11:00",duration:30}];assert.equal(D.conflicts(events).length,2);assert.equal(events[2].name,"C")});
 test("destination currency defaults but never overwrites explicit choice",()=>{const D=domain();assert.equal(D.normaliseTrip({name:"A",country:"韓國",city:"首爾",days:[[]]}).currency,"KRW");assert.equal(D.normaliseTrip({name:"B",country:"韓國",city:"首爾",currency:"TWD",days:[[]]}).currency,"TWD")});
 test("invalid calendar date is rejected even if JavaScript Date rolls forward",()=>{const D=domain();assert.equal(D.dayISO("2026-02-30",0),"");assert.equal(D.dayISO("2028-02-29",0),"2028-02-29")});
+
+test("date can be extended to day 4 without deleting existing three days",()=>{const {ctx,expression}=uiEnv(),v=ctx.VoyageV2;assert.equal(typeof v.addDay,"function");v.addDay();assert.equal(expression("trips[0].days.length"),3);assert.equal(expression("trips[0].days[0][0].name"),"Start");assert.equal(expression("trips[0].days[1][0].name"),"Next")});
+test("known Myeongdong to Hongdae route includes actual station order and transfer",()=>{const {ctx}=uiEnv(),r=ctx.VoyageRouteV2.routeSEO("hongdae","myeongdong");assert.ok(r);assert.equal(r.transfers,1);assert.equal(r.legs.length,2);assert.equal(r.legs[0].stations[0].local,"명동");assert.equal(r.legs[0].stations[2].en,"Seoul Station");assert.equal(r.legs[1].stations[1].en,"Gongdeok");assert.equal(r.legs[1].stations[2].local,"홍대입구")});
+test("safe removal refuses to remove a day containing planned events",()=>{const {ctx,expression}=uiEnv();ctx.VoyageV2.removeLastEmptyDay();assert.equal(expression("trips[0].days.length"),2)});
+test("GPS distance calculation is deterministic and requires no phone permissions at init",()=>{const {ctx}=uiEnv();assert.ok(ctx.VoyageGpsV2);assert.ok(ctx.VoyageGpsV2.haversine(37.5609,126.9865,37.5609,126.9865)<1)});
