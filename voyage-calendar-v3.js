@@ -17,7 +17,7 @@ preview.append(mapHead,mapDiv,mapSummary);
 $("events").after(preview);
 const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"});
 if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.after(composer);else form.before(composer)}
-function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has};}
+function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has,hasStart:start!==null};}
 function formatMinutes(min){const n=((min%1440)+1440)%1440;return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")+(min>=1440?"（隔日）":"")}
 function category(x){return types.some(a=>a[0]===x.type)?x.type:"place"}
 function routeText(x){if(x.type!=="transport")return"";const parts=x.routeInfo?.legs||[];if(parts.length)return parts.map(l=>{const mode=l.mode==="WALK"?"步行":l.line||"搭乘";return mode+(l.duration?(" "+Math.ceil(l.duration/60)+" 分"):"")}).join(" → ");return (x.from||"起點")+" → "+(x.to||"終點")+(x.line?" · "+x.line:"");}
@@ -26,11 +26,11 @@ function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)f
 function makeRuler(b){const r=E("div",{class:"v3-ruler"});for(let t=b.first;t<=b.last;t+=60){r.append(E("span",{class:"v3-hour",text:formatMinutes(t).replace("（隔日）","")}));}return r}
 function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(28,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(x.done?" is-done":"")+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
 card.style.top=y+"px";card.style.height=h+"px";
-const time=E("div",{class:"v3-event-time",text:formatMinutes(t.start)+"–"+(t.actual?formatMinutes(t.start+t.duration):"時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定")});
+const time=E("div",{class:"v3-event-time",text:(t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定")});
 card.append(time,E("strong",{class:"v3-event-name",text:x.name}));
 if(kind==="transport"){card.append(E("small",{class:"v3-event-detail",text:routeText(x)||"交通時間"}));}
 else if(x.notes&&h>80){card.append(E("small",{class:"v3-event-detail",text:x.notes.slice(0,90)}))}
-if(!t.actual)card.append(E("small",{class:"v3-duration-warning",text:"請設定停留分鐘"}));
+if(!t.actual)card.append(E("small",{class:"v3-duration-warning",text:"請設定停留分鐘（目前僅為排版占位）"}));
 const click=()=>{selected.event=x;selected.day=dayIndex;if(day!==dayIndex){day=dayIndex;render()}focusPlace(x,{scroll:true});};
 card.onclick=click;card.onkeydown=event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();click()}};
 if(single){card.append(button("編輯",e=>{}, "ghost"));const edit=card.lastElementChild;edit.className="v3-edit-mini";edit.onclick=ev=>{ev.stopPropagation();day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0)U.eventEditor(index,false)};}
