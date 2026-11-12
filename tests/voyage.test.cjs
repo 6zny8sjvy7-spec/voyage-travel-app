@@ -31,8 +31,8 @@ function uiEnv(){
  const ctx={document,console,Date,Intl,Math,JSON,URL,TextEncoder,Set,Map,Number,String,Array,Error,RegExp,setTimeout(fn){/* timers are not required for smoke tests */},navigator:{clipboard:{writeText:async()=>{}}},location,history:{replaceState(){}},localStorage:storage(),sessionStorage:storage(),confirm(){return true},prompt(_m,defaultVal){return defaultVal||""},fetch:async()=>{throw Error("network unavailable")},crypto:{randomUUID:()=>"mock-"+Math.random()}};
  ctx.window=ctx;
  vm.createContext(ctx);
- vm.runInContext('let trips=[{id:"seed",name:"Test",city:"Seoul",country:"韓國",tz:"Asia/Seoul",days:[[{name:"Start",time:"09:00",duration:30}],[{name:"Next",time:"11:00"}]]}],active=0,day=0,weekMode=false;const trip=()=>trips[active];let saveCount=0;function save(){saveCount++}function render(){}function renderWeek(){}function setTab(){}function syncView(){}',ctx);
- ["voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
+ vm.runInContext('let trips=[{id:"seed",name:"Test",city:"Seoul",country:"韓國",tz:"Asia/Seoul",days:[[{name:"Start",time:"09:00",duration:30}],[{name:"Next",time:"11:00"}]]}],active=0,day=0,weekMode=false;const trip=()=>trips[active];let saveCount=0;function save(){saveCount++}function render(){}function renderWeek(){}function setTab(){}function syncView(){}function suggest(){}',ctx);
+ ["voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-discover.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
  return {ctx,ids,expression:s=>vm.runInContext(s,ctx)};
 }
 test("UI modules load and each more page renders without crash",()=>{
