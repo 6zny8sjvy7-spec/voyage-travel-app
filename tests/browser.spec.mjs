@@ -27,7 +27,7 @@ test('five tabs, transport and seven-day calendar',async({page})=>{
  await expect(page.locator('#itinerary')).toBeVisible();
  await page.locator('#weeklyView').click();
  await expect(page.locator('#week')).toBeVisible();
- await expect(page.locator('#week')).toContainText('DAY 1');
+ await expect(page.locator('#week')).toContainText('第 1');
 });
 test('expense and rate are persisted across reload',async({page})=>{
  await page.locator('#v1ExpenseQuick').click();
@@ -48,23 +48,21 @@ test('travel companions have independent packing status',async({page})=>{
  await page.locator('#v1Summary').getByRole('button',{name:/旅行設定/}).click();
  await page.locator('#vTripPeople').fill('甲、乙');
  await page.locator('#v1DialogForm button[type="submit"]').click();
- await page.locator('[data-tablink="more"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'行李清單'}).click();
+ await page.locator('#v2Home').getByRole('button',{name:/行李清單/}).click();
  await page.locator('#v1Content').getByRole('button',{name:/新增物品/}).click();
  await page.locator('#vPackName').fill('充電線');
  await page.locator('#vPackOwner').selectOption('甲');
  await page.locator('#v1DialogForm button[type="submit"]').click();
- let check=page.locator('#v1Content .v1-item input[type="checkbox"]').first();
+ let check=page.locator('#v1Content > .v1-item input[type="checkbox"]').first();
  await check.check();expect(await check.isChecked()).toBe(true);
  await page.locator('#vPackPerson').selectOption('乙');
- check=page.locator('#v1Content .v1-item input[type="checkbox"]').first();
+ check=page.locator('#v1Content > .v1-item input[type="checkbox"]').first();
  expect(await check.isChecked()).toBe(false);
  await page.locator('#vPackPerson').selectOption('甲');
- expect(await page.locator('#v1Content .v1-item input[type="checkbox"]').first().isChecked()).toBe(true);
+ expect(await page.locator('#v1Content > .v1-item input[type="checkbox"]').first().isChecked()).toBe(true);
 });
 test('CSV import previews and only appends to existing trip',async({page})=>{
- await page.locator('[data-tablink="more"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'匯入資料'}).click();
+ await page.locator('#v2Home').getByRole('button',{name:/匯入行程/}).click();
  await page.locator('#vImportFile').setInputFiles({name:'trip.csv',mimeType:'text/csv',buffer:Buffer.from('name,time,day\n水族館,13:30,1\n')});
  await expect(page.locator('#vImportPreview input[data-role="name"]')).toHaveValue('水族館');
  page.once('dialog',d=>d.accept());
@@ -75,6 +73,7 @@ test('CSV import previews and only appends to existing trip',async({page})=>{
 });
 test('nearby Wikipedia result has a visible source and requires approval',async({page})=>{
  await page.route('**/w/api.php?**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({query:{pages:{'100':{pageid:100,index:1,title:'示範百科景點',coordinates:[{lat:37.58,lon:126.99}],fullurl:'https://zh.wikipedia.org/wiki/%E7%A4%BA%E7%AF%84'}}}})}));
+ await page.locator('#v2Home').getByRole('button',{name:/探索景點/}).click();
  await page.locator('#v1Discover').getByRole('button',{name:/查詢附近百科景點/}).click();
  await expect(page.locator('#v1Discover')).toContainText('示範百科景點');
  page.on('dialog',async d=>{if(d.type()==='prompt')await d.accept('15:00');else await d.accept()});
@@ -83,21 +82,20 @@ test('nearby Wikipedia result has a visible source and requires approval',async(
  expect(items.some(e=>e.name==='示範百科景點'&&e.source==='Wikipedia')).toBe(true);
 });
 test('cloud collaboration remains gated until backend is provided',async({page})=>{
- await page.locator('[data-tablink="more"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'多人協作'}).click();
+ await page.locator('#v2Home').getByRole('button',{name:/多人協作/}).click();
  await expect(page.locator('#v1Content')).toContainText('Supabase');
- await expect(page.locator('#vCloudURL')).toBeVisible();
+ await expect(page.locator('#vCloudURL')).toBeAttached();
  expect(await page.evaluate(()=>localStorage.getItem('voyage-cloud-settings-v1'))).toBeNull();
 });
 
 test('travel diary notes and shopping wishlist survive reload',async({page})=>{
  await page.locator('[data-tablink="more"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'旅行日記'}).click();
+ await page.locator('#v1Menu').getByRole('button',{name:'旅行回憶'}).click();
  await page.locator('#v1Content').getByRole('button',{name:/新增旅行回憶/}).click();
  await page.locator('#vDiaryTitle').fill('首爾第一天');
  await page.locator('#vDiaryBody').fill('景福宮散步與晚餐');
  await page.locator('#v1DialogForm button[type="submit"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'購物清單'}).click();
+ await page.locator('#v1Menu').getByRole('button',{name:'購物願望'}).click();
  await page.locator('#v1Content').getByRole('button',{name:/新增購物願望/}).click();
  await page.locator('#vWishTitle').fill('旅行紀念品');
  await page.locator('#vWishCost').fill('125');
@@ -107,14 +105,13 @@ test('travel diary notes and shopping wishlist survive reload',async({page})=>{
  expect((await get()).wishlist[0].cost).toBe(125);
  await page.reload();
  await page.locator('[data-tablink="more"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'旅行日記'}).click();
+ await page.locator('#v1Menu').getByRole('button',{name:'旅行回憶'}).click();
  await expect(page.locator('#v1Content')).toContainText('景福宮散步與晚餐');
- await page.locator('#v1Menu').getByRole('button',{name:'購物清單'}).click();
+ await page.locator('#v1Menu').getByRole('button',{name:'購物願望'}).click();
  await expect(page.locator('#v1Content')).toContainText('旅行紀念品');
 });
 test('international flight keeps both endpoint local dates and time zones',async({page})=>{
- await page.locator('[data-tablink="more"]').click();
- await page.locator('#v1Menu').getByRole('button',{name:'機票住宿'}).click();
+ await page.locator('#v2Home').getByRole('button',{name:/機票住宿/}).click();
  await page.locator('#v1Content').getByRole('button',{name:/新增/}).click();
  await page.locator('#vDocTitle').fill('國際航班');
  await page.locator('#vDocDate').fill('2026-11-21');
@@ -136,4 +133,53 @@ test('countdown reads destination-local calendar date',async({page})=>{
  await expect(page.locator('#v1Summary')).toContainText('倒數');
  await page.reload();
  await expect(page.locator('#v1Summary')).toContainText('倒數');
+});
+
+test('new days extend safely and survive reload, with date strip linking maps',async({page})=>{
+ await page.locator('[data-tablink="itinerary"]').click();
+ const before=await page.locator('#dates .date').count();
+ expect(before).toBe(3);
+ await page.locator('#v2AddDay').click();
+ await page.locator('#v2AddDay').click();
+ await expect(page.locator('#dates .date')).toHaveCount(5);
+ await page.reload();
+ await expect(page.locator('#dates .date')).toHaveCount(5);
+ await page.locator('[data-tablink="itinerary"]').click();
+ await page.locator('#dates .date').first().click();
+ await page.locator('#itinerary .event').first().getByRole('button',{name:/行程詳情/}).click();
+ await expect(page.locator('#v2EventDialog')).toBeVisible();
+ await page.locator('#v2EventDialog').getByRole('button',{name:/查看地圖/}).click();
+ await expect(page.locator('#mapSection')).toBeVisible();
+});
+test('Myeongdong to Hongdae returns actual station sequence and transfer, without manual direction',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
+ await page.locator('#transitFrom').fill('明洞');
+ await page.locator('#transitTo').fill('弘大');
+ await page.locator('#v2RouteResults').locator('..').getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('明洞');
+ await expect(page.locator('#v2RouteResults')).toContainText('會賢');
+ await expect(page.locator('#v2RouteResults')).toContainText('首爾站');
+ await expect(page.locator('#v2RouteResults')).toContainText('孔德');
+ await expect(page.locator('#v2RouteResults')).toContainText('弘大入口');
+ await expect(page.locator('#v2RouteResults')).toContainText('AREX');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#v2RouteResults').getByRole('button',{name:/加入我的行程/}).click();
+ const events=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
+ expect(events.some(x=>x.type==='transport'&&x.routeInfo?.transfers===1)).toBe(true);
+});
+test('theme changes visibly between warm daylight and indigo night',async({page})=>{
+ const pick=()=>page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
+ await page.evaluate(()=>{localStorage.setItem('voyage-theme','light')});
+ await page.reload();
+ const light=await pick();
+ await page.evaluate(()=>{localStorage.setItem('voyage-theme','dark')});
+ await page.reload();
+ const night=await pick();
+ expect(light).not.toBe(night);
+});
+test('translation textbox appears before example phrasebook',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/即時翻譯/}).click();
+ const positions=await page.evaluate(()=>{const box=document.getElementById('v1Content');return{form:[...box.children].findIndex(e=>e.classList.contains('v1-box')),phrases:[...box.children].findIndex(e=>e.tagName==='H3'&&e.textContent.includes('常用旅行句型'))}});
+ expect(positions.form).toBeGreaterThan(-1);
+ expect(positions.phrases).toBeGreaterThan(positions.form);
 });
