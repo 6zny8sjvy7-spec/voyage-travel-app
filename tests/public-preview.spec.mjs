@@ -1,0 +1,28 @@
+import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+const leaflet=readFileSync(new URL('./leaflet-stub.js',import.meta.url),'utf8');
+const url='https://6zny8sjvy7-spec.github.io/voyage-travel-app/v1-review-20261112/';
+test('public Chinese preview loads and a saved activity survives reload',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#v1TestNotice')).toContainText('新功能體驗區');
+ await expect(page.locator('#v1Summary')).toBeVisible();
+ await page.locator('[data-tablink="itinerary"]').click();
+ await page.locator('#itinerary').getByRole('button',{name:/完整行程資料/}).click();
+ await page.locator('#vEvName').fill('新版公開頁測試景點');
+ await page.locator('#vEvTime').fill('16:30');
+ await page.locator('#vEvDuration').fill('45');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ const saved=()=>page.evaluate(()=>{const raw=localStorage.getItem('voyage-review-20261112');return raw?JSON.parse(raw)[0].days[0].some(x=>x.name==='新版公開頁測試景點'):false});
+ expect(await saved()).toBe(true);
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+ await page.reload();
+ await expect(page.locator('#v1TestNotice')).toBeVisible();
+ expect(await saved()).toBe(true);
+ await page.locator('[data-tablink="more"]').click();
+ await expect(page.locator('#v1More')).toBeVisible();
+ await page.locator('#v1Menu').getByRole('button',{name:'行李清單'}).click();
+ await expect(page.locator('#v1Content')).toContainText('打包');
+});
