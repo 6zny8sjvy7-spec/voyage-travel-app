@@ -43,3 +43,32 @@ test('published review page now includes actual time blocks, in-page map and liv
  expect(key).toBe(true);
  expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
 });
+
+test('live Chinese review demonstrates date feedback, food shortcut, inline pin selection and independent saved data',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:19,weather_code:61,is_day:1,time:'2026-11-12T15:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url+'?qa=linked-calendar',{waitUntil:'domcontentloaded'});
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ const marker=page.locator('#v3MovingDateIcon');
+ await expect(marker).toBeAttached();
+ const before=await marker.evaluate(el=>el.style.left);
+ await page.locator('#dates .date').nth(1).click();
+ await expect.poll(()=>marker.evaluate(el=>el.style.left)).not.toBe(before);
+ await page.locator('#dates .date').first().click();
+ const where=page.locator('#events .v3-schedule-event').filter({hasText:'景福宮'});
+ await where.click();
+ await expect(page.locator('#v3MapSummary')).toContainText('景福宮');
+ expect(await page.evaluate(()=>document.body.dataset.tab)).toBe('itinerary');
+ await expect(page.locator('#v3InlineMap')).toBeVisible();
+ await page.locator('.v3-category-shortcuts').getByRole('button',{name:/餐飲/}).click();
+ await expect(page.locator('#v3NewType')).toHaveValue('food');
+ await page.locator('#v3NewName').fill('測試餐廳');
+ await page.locator('#v3NewTime').fill('18:10');
+ await page.locator('#v3NewDuration').fill('75');
+ await page.locator('#v3NewCost').fill('18000');
+ await page.locator('#v3Composer').getByRole('button',{name:/加入當天時間軸/}).click();
+ const meal=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v2-review-20261112'))[0].days[0].find(x=>x.name==='測試餐廳'));
+ expect(meal).toMatchObject({type:'food',time:'18:10',duration:75,cost:18000});
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+});
