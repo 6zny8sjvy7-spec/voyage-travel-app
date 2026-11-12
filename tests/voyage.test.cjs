@@ -67,3 +67,15 @@ test("date can be extended to day 4 without deleting existing three days",()=>{c
 test("known Myeongdong to Hongdae route includes actual station order and transfer",()=>{const {ctx}=uiEnv(),r=ctx.VoyageRouteV2.routeSEO("hongdae","myeongdong");assert.ok(r);assert.equal(r.transfers,1);assert.equal(r.legs.length,2);assert.equal(r.legs[0].stations[0].local,"명동");assert.equal(r.legs[0].stations[2].en,"Seoul Station");assert.equal(r.legs[1].stations[1].en,"Gongdeok");assert.equal(r.legs[1].stations[2].local,"홍대입구")});
 test("safe removal refuses to remove a day containing planned events",()=>{const {ctx,expression}=uiEnv();ctx.VoyageV2.removeLastEmptyDay();assert.equal(expression("trips[0].days.length"),2)});
 test("GPS distance calculation is deterministic and requires no phone permissions at init",()=>{const {ctx}=uiEnv();assert.ok(ctx.VoyageGpsV2);assert.ok(ctx.VoyageGpsV2.haversine(37.5609,126.9865,37.5609,126.9865)<1)});
+
+test("Seoul graph routing goes beyond one hardcoded pair",()=>{
+ const ctx={window:{}};vm.createContext(ctx);vm.runInContext(read("voyage-seoul-v3.js"),ctx);
+ const N=ctx.window.VoyageSeoulNetwork;
+ const a=N.route("明洞","聖水"),b=N.route("弘大","孔德"),c=N.route("Seongsu","Hongik Univ.");
+ assert.equal(a.transfers,1);
+ assert.equal(a.legs[0].line,"地鐵 4 號線");
+ assert.equal(a.legs[1].stations.at(-1).local,"성수");
+ assert.equal(b.transfers,0);
+ assert.ok(c.legs[0].stations.length>10);
+ assert.equal(N.route("不在網路的車站","聖水"),null);
+});
