@@ -83,7 +83,7 @@ body.dark #itinerary .timeline{border-left-color:#839ace}
 .v2-dialog-title{display:flex;align-items:center;gap:12px}.v2-dialog-title span{font-size:40px}.v2-dialog-title h2{margin:0;font-size:20px}
 .v2-map-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.v2-map-actions button{background:var(--soft);color:var(--ink);border-radius:12px;padding:10px}
 body[data-tab='trips'] #itinerary,body[data-tab='trips'] #recommend{display:none}
-body[data-tab='trips'] #v2Home{display:block}body[data-tab] #v2Home{display:none}
+body[data-tab] #v2Home{display:none}body[data-tab='trips'] #v2Home{display:block}
 body[data-tab='itinerary'] #itinerary{display:block}
 body[data-tab='more'] #v1More{display:block}
 #v1More .v1-pills{flex-wrap:wrap;white-space:normal}#v1More .v1-pills button{font-size:12px}
