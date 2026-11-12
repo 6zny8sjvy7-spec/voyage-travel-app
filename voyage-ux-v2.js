@@ -34,7 +34,8 @@ const nav=[
 ["🗣️","即時翻譯","翻譯與朗讀",()=>U.showPage("translation")],
 ["🏨","機票住宿","預約與地址",()=>U.showPage("documents")],
 ["✨","探索景點","來源可查的推薦",()=>setTab("discover")],
-["👥","多人協作","邀請好友同行",()=>U.showPage("collab")]
+["👥","多人協作","邀請好友同行",()=>U.showPage("collab")],
+["📥","匯入行程","備份與追加匯入",()=>U.showPage("import")],["📚","旅行紀錄","歷史旅行和封存",()=>U.showPage("history")],["📖","旅行回憶","旅程後寫下日記",()=>U.showPage("diary")]
 ];
 const grid=el("div",{class:"v2-quick-grid"});for(const [emoji,label,sub,fn] of nav){const b=el("button",{class:"v2-link"});b.append(el("span",{class:"v2-icon",text:emoji}),el("span",{text:label}),el("small",{text:sub}));b.onclick=fn;grid.append(b)}home.append(grid);
 home.append(el("div",{class:"v2-section-label"},[el("h2",{text:"旅程小提醒"}),el("span",{text:"旅行資料會自動儲存在裝置上"})]));
