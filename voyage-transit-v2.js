@@ -23,7 +23,13 @@ const panel=$("transportSection");
 panel.insertBefore(result,panel.querySelector(".transport-panel"));
 const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
 toolbar.append(searchBtn,button("🗺 Google Maps 動態規劃",openProvider),button("🌐 NAVER 路線",()=>{const t=trip();window.open("https://map.naver.com/p/search/"+encodeURIComponent($("transitTo").value+", "+t.city),"_blank","noopener")}));
-$("transportSection").querySelector(".transport-panel").prepend(toolbar);
+const form=$("transportSection").querySelector(".transport-panel");
+const toLabel=$("transitTo").closest("label");
+toLabel.after(toolbar);
+const advanced=E("details"),advancedTitle=E("summary",{text:"進階：自行輸入或修改線路方向（只有已查到的路線才會自動填入）"});
+const lineLabel=$("transitLine").closest("label");
+advanced.append(advancedTitle,lineLabel);
+form.append(advanced);
 const routeStyle=E("style",{text:".v2-route-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0}.v2-route-card h3{font-size:16px;margin:0 0 7px}.v2-route-leg{border-left:3px solid #f0ab72;margin:12px 0 0 9px;padding:2px 0 4px 18px}.v2-route-leg strong{font-size:14px}.v2-route-station{position:relative;padding:8px 2px;font-size:13px;border-bottom:1px solid var(--line)}.v2-route-station:before{content:'';position:absolute;left:-27px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid #de9c77}.v2-route-station:last-child:before{background:#d48563}.v2-route-source{font-size:11px;color:var(--muted);line-height:1.65}.v2-route-source a{color:var(--blue)}.v2-route-status{background:var(--soft);border-radius:12px;padding:10px;font-size:12px;margin:8px 0}"});
 document.head.append(routeStyle);
 let selectedRoute=null;
@@ -55,6 +61,6 @@ const source=E("div",{class:"v2-route-source",text:"資料來源："}),link=E("a
 function routeStops(route){return route.legs.flatMap((leg,i)=>{const arr=leg.stations||[];return i>0&&arr.length?arr.slice(1):arr})}
 function saveRoute(route){const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("把查詢到的 "+route.legs.length+" 段交通路線加入 DAY "+(day+1)+"？不會改動其他行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+"："+l.stations.map(x=>x.zh||x.en).join(" → ")+"\n方向："+l.headsign).join("\n");t.days[day].push({id:D.uid(),type:"transport",name:"🚆 "+from+" → "+to,from,to,time,duration:route.minutes||30,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});save();render();setTab("itinerary");U.toast("交通路線已加入這一天的時間軸")}
 function startRide(route){selectedRoute=route;setTransitMode("ride");$("transitStops").value=routeStops(route).map(x=>stationText(x)).join("\n");if(route.legs[0]?.line)$("transitLine").value=route.legs[0].line+" · "+route.legs[0].headsign;drawRide();result.scrollIntoView({behavior:"smooth",block:"start"});U.toast("已帶入查到的路線；搭乘進度仍需手動或 GPS 輔助確認")}
-window.VoyageRouteV2={search,routeSEO,routeStops,startRide,saveRoute};
+window.VoyageRouteV2={search,routeSEO,routeStops,startRide,saveRoute,getActiveRoute:()=>selectedRoute};
 status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
 })();
