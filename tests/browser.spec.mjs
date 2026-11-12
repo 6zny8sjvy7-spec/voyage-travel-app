@@ -174,8 +174,8 @@ test('theme changes visibly between warm daylight and indigo night',async({page}
  const light=await pick();
  await page.evaluate(()=>{localStorage.setItem('voyage-theme','dark')});
  await page.reload();
- const night=await pick();
- expect(light).not.toBe(night);
+ await expect.poll(()=>page.evaluate(()=>document.body.classList.contains('dark')),{timeout:7000}).toBe(true);
+ await expect.poll(pick,{timeout:7000,intervals:[100,250,500]}).not.toBe(light);
 });
 test('translation textbox appears before example phrasebook',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/即時翻譯/}).click();
