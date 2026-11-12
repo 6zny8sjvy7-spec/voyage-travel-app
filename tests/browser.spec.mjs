@@ -53,13 +53,13 @@ test('travel companions have independent packing status',async({page})=>{
  await page.locator('#vPackName').fill('充電線');
  await page.locator('#vPackOwner').selectOption('甲');
  await page.locator('#v1DialogForm button[type="submit"]').click();
- let check=page.locator('#v1Content > .v1-item input[type="checkbox"]').first();
+ let check=page.locator('#v1Content > .v1-item input.v1-check').first();
  await check.check();expect(await check.isChecked()).toBe(true);
  await page.locator('#vPackPerson').selectOption('乙');
- check=page.locator('#v1Content > .v1-item input[type="checkbox"]').first();
+ check=page.locator('#v1Content > .v1-item input.v1-check').first();
  expect(await check.isChecked()).toBe(false);
  await page.locator('#vPackPerson').selectOption('甲');
- expect(await page.locator('#v1Content > .v1-item input[type="checkbox"]').first().isChecked()).toBe(true);
+ expect(await page.locator('#v1Content > .v1-item input.v1-check').first().isChecked()).toBe(true);
 });
 test('CSV import previews and only appends to existing trip',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/匯入行程/}).click();
