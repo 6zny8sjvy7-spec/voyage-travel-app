@@ -141,3 +141,20 @@ body.dark .v3-time-track{background:repeating-linear-gradient(to bottom,transpar
 @media(prefers-reduced-motion:reduce){
  .v3-sun,.v3-small-cloud,.v3-moon,.v3-stars,.v3-cloud-main,.v3-cloud-sub,.v3-rain-drop,.v3-snow-flake,.v3-lightning,.v3-fog{animation:none!important}
 }
+
+/* Final visual audit: the WMO weather visual belongs in the card, not offscreen at hero right. */
+.hero .hero-art{display:none!important}
+.hero .glass{position:relative;max-width:min(415px,calc(100vw - 36px))!important;min-height:106px;display:flex;align-items:center;gap:9px;justify-content:space-between;padding:12px 13px}
+.hero .glass>#weatherEmoji{display:none!important}
+.hero .glass>div:not(#v3WeatherArt):not(#v3WeatherSource){min-width:0;flex:1}
+.hero .glass .sub{font-size:11px;line-height:1.4}
+.hero .glass #v3WeatherArt{position:relative;flex:0 0 98px;width:98px;height:86px;overflow:visible;margin:0;transform:none}
+.hero .glass #v3WeatherArt .v3-weather-scene{position:relative;width:180px;height:116px;transform:scale(.62);transform-origin:top left}
+.hero .glass #v3WeatherSource{display:none}
+@media(max-width:650px){
+ .hero .glass{max-width:min(360px,calc(100vw - 28px))!important;min-height:94px;padding:10px 11px}
+ .hero .glass #v3WeatherArt{flex-basis:78px;width:78px;height:78px}
+ .hero .glass #v3WeatherArt .v3-weather-scene{transform:scale(.52)}
+ .hero .glass .temp{font-size:19px}
+ .hero .glass .sub{font-size:10px}
+}
