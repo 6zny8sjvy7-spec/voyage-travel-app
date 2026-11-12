@@ -26,6 +26,7 @@ jobs:
           node --check voyage-cloud.js
           node --check voyage-discover.js
           node --check voyage-map.js
+          node --check voyage-journal.js
       - name: Domain and integrated UI tests
         run: node --test tests/voyage.test.cjs
       - name: Confirm all feature scripts wired
@@ -33,11 +34,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text()
-          scripts=['voyage-domain.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js']
+          scripts=['voyage-domain.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js','voyage-journal.js']
           for name in scripts:
               assert ('src="./'+name+'"') in html, name+' not loaded'
               assert Path(name).is_file(), name+' missing'
-          print('7 module scripts wired and present')
+          print('8 module scripts wired and present')
           PY
   browser:
     runs-on: ubuntu-latest
