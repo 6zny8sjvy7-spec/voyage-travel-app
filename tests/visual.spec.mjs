@@ -20,6 +20,10 @@ test('reference UI visual audit for main modes and day timeline',async({page},te
  await page.reload();
  await expect(page.locator('#v2Home')).toBeVisible();
  await page.screenshot({path:output+'/'+project+'-home-twilight.png',fullPage:true});
+ const nightSelect=await page.locator('#tripSelect').evaluate(el=>({background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color,appearance:getComputedStyle(el).appearance}));
+ expect(nightSelect.background).not.toBe('rgb(255, 255, 255)');
+ expect(nightSelect.color).not.toBe('rgb(255, 255, 255)');
+ expect(nightSelect.appearance).toBe('none');
  const over=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+5);
  expect(over).toBe(false);
 });
