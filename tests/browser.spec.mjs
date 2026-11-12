@@ -89,3 +89,51 @@ test('cloud collaboration remains gated until backend is provided',async({page})
  await expect(page.locator('#vCloudURL')).toBeVisible();
  expect(await page.evaluate(()=>localStorage.getItem('voyage-cloud-settings-v1'))).toBeNull();
 });
+
+test('travel diary notes and shopping wishlist survive reload',async({page})=>{
+ await page.locator('[data-tablink="more"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'旅行日記'}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增旅行回憶/}).click();
+ await page.locator('#vDiaryTitle').fill('首爾第一天');
+ await page.locator('#vDiaryBody').fill('景福宮散步與晚餐');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'購物清單'}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增購物願望/}).click();
+ await page.locator('#vWishTitle').fill('旅行紀念品');
+ await page.locator('#vWishCost').fill('125');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ const get=()=>page.evaluate(()=>{const t=JSON.parse(localStorage.getItem('voyage-v02'))[0];return {journal:t.journal,wishlist:t.wishlist}});
+ expect((await get()).journal[0].title).toBe('首爾第一天');
+ expect((await get()).wishlist[0].cost).toBe(125);
+ await page.reload();
+ await page.locator('[data-tablink="more"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'旅行日記'}).click();
+ await expect(page.locator('#v1Content')).toContainText('景福宮散步與晚餐');
+ await page.locator('#v1Menu').getByRole('button',{name:'購物清單'}).click();
+ await expect(page.locator('#v1Content')).toContainText('旅行紀念品');
+});
+test('international flight keeps both endpoint local dates and time zones',async({page})=>{
+ await page.locator('[data-tablink="more"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'機票住宿'}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增/}).click();
+ await page.locator('#vDocTitle').fill('國際航班');
+ await page.locator('#vDocDate').fill('2026-11-21');
+ await page.locator('#vDocTime').fill('22:00');
+ await page.locator('#vDocEndDate').fill('2026-11-21');
+ await page.locator('#vDocEndTime').fill('07:00');
+ await page.locator('#vDocTZ').fill('Asia/Taipei');
+ await page.locator('#vDocEndTZ').fill('America/Los_Angeles');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ const doc=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].documents[0]);
+ expect(doc.startTZ).toBe('Asia/Taipei');
+ expect(doc.endTZ).toBe('America/Los_Angeles');
+ expect(doc.endTime).toBe('07:00');
+});
+test('countdown reads destination-local calendar date',async({page})=>{
+ await page.locator('#v1Summary').getByRole('button',{name:/旅行設定/}).click();
+ await page.locator('#vTripDate').fill('2026-12-25');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ await expect(page.locator('#v1Summary')).toContainText('倒數');
+ await page.reload();
+ await expect(page.locator('#v1Summary')).toContainText('倒數');
+});
