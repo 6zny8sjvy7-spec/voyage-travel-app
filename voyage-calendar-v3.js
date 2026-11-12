@@ -37,7 +37,7 @@ if(single){card.append(button("編輯",e=>{}, "ghost"));const edit=card.lastElem
 return card}
 function drawGrid(indices,single){const b=bounds(indices),container=E("div",{class:"v3-grid-viewport"}),inner=E("div",{class:"v3-calendar-grid"}),ruler=makeRuler(b);
 container.append(ruler,inner);
-for(const i of indices){const col=E("section",{class:"v3-time-column"+(i===day?" active-day":""),"data-day":String(i)}),header=E("button",{class:"v3-column-heading",text:"第 "+(i+1)+" 天"+(trip().startDate?" · "+D.dayISO(trip().startDate,i).slice(5):"")});header.onclick=()=>{day=i;selected.day=i;render();syncView()};col.append(header);
+for(const i of indices){const col=E("section",{class:"v3-time-column"+(i===day?" active-day":""),"data-day":String(i)}),header=E("button",{class:"v3-column-heading",text:"第 "+(i+1)+" 天"+(trip().startDate?" · "+D.dayISO(trip().startDate,i).slice(5)+" "+new Intl.DateTimeFormat("zh-TW",{weekday:"short",timeZone:"UTC"}).format(new Date(D.dayISO(trip().startDate,i)+"T12:00:00Z")):"")});header.onclick=()=>{day=i;selected.day=i;render();syncView()};col.append(header);
 const track=E("div",{class:"v3-time-track"});track.style.height=b.height+"px";for(let tick=b.first;tick<=b.last;tick+=60){const line=E("div",{class:"v3-grid-line"});line.style.top=(tick-b.first)*pxPerMin+"px";track.append(line)}
 for(const x of trip().days[i]||[])track.append(createEvent(x,i,b,single));
 col.append(track);inner.append(col)}
@@ -52,7 +52,8 @@ marker.style.left=targetX+"px";
 if(oldIndex!==newIndex&&typeof marker.animate==="function"&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
 marker.animate([{transform:"translate("+(oldX-targetX)+"px,0)",opacity:.8},{transform:"translate("+(oldX-targetX)*.5+"px,-24px) rotate(13deg)",opacity:1},{transform:"translate(0,0) rotate(0deg)",opacity:1}],{duration:480,easing:"cubic-bezier(.22,.7,.22,1)"});
 }}
-function decorateDates(){const dates=[...dateRow.querySelectorAll(".date")];dates.forEach((b,i)=>{const old=b.onclick;b.onclick=event=>{const previous=day;old(event);focusMarker(previous,day)};});focusMarker(day,day)}
+function weekday(i){const start=trip().startDate,date=start?D.dayISO(start,i):"";return date?new Intl.DateTimeFormat("zh-TW",{weekday:"short",timeZone:"UTC"}).format(new Date(date+"T12:00:00Z")):""}
+function decorateDates(){const dates=[...dateRow.querySelectorAll(".date")];dates.forEach((b,i)=>{const wd=weekday(i);if(wd)b.prepend(E("small",{class:"v3-weekday",text:wd}));const old=b.onclick;b.onclick=event=>{const previous=day;old(event);focusMarker(previous,day)};});focusMarker(day,day)}
 function ensureMap(){if(inlineMap||!window.L)return;inlineMap=L.map("v3LeafletMap",{zoomControl:true,scrollWheelZoom:false}).setView([Number(trip().lat)||37.5665,Number(trip().lon)||126.978],12);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",maxZoom:19}).addTo(inlineMap);
 inlineLayers=L.layerGroup().addTo(inlineMap)}
