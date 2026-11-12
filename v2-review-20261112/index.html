@@ -295,6 +295,14 @@ body.dark .v3-time-track{background:repeating-linear-gradient(to bottom,transpar
  .hero .glass .sub{font-size:10px}
 }
 
+/* Keep the calendar visible immediately; expand the entry editor only when requested. */
+.v3-compose-shell{margin:10px 0 13px;border:1px dashed #b9c8e2;border-radius:13px;background:var(--card)}
+.v3-compose-shell>summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:11px 15px;color:var(--blue);font-size:13px;font-weight:800;border-radius:13px}
+.v3-compose-shell>summary::-webkit-details-marker{display:none}
+.v3-compose-shell>summary:focus-visible{outline:3px solid var(--blue)}
+.v3-compose-shell[open]>summary{border-bottom:1px solid var(--line)}
+.v3-compose-shell .v3-composer{margin:0;border:0;border-radius:0 0 13px 13px;background:transparent}
+
 </style></head><body><style>
 #v2ReviewTop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px max(14px,calc((100vw - 1060px)/2));background:linear-gradient(90deg,#fff6ed,#f0f4ff);color:#294260;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;border-bottom:1px solid #e3e7ed}
 #v2ReviewTop strong{font-size:14px}
@@ -951,8 +959,8 @@ const dateRow=$("dates");dateRow.parentNode.insertBefore(wrap,dateRow);wrap.appe
 const preview=E("section",{id:"v3InlineMap",class:"v3-inline-map"}),mapHead=E("div",{class:"v3-map-head"}),mapDiv=E("div",{id:"v3LeafletMap"}),mapSummary=E("div",{id:"v3MapSummary",class:"v1-notice"});
 preview.append(mapHead,mapDiv,mapSummary);
 $("events").after(preview);
-const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"});
-if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.after(composer);else form.before(composer)}
+const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"}),composerDetails=E("details",{id:"v3ComposerDetails",class:"v3-compose-shell"}),composerToggle=E("summary",{class:"v3-compose-toggle",text:"＋ 安排活動 · 景點／餐飲／交通／購物"});composerDetails.append(composerToggle,composer);
+if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.after(composerDetails);else form.before(composerDetails)}
 function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has,hasStart:start!==null};}
 function formatMinutes(min){const n=((min%1440)+1440)%1440;return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")+(min>=1440?"（隔日）":"")}
 function category(x){return types.some(a=>a[0]===x.type)?x.type:"place"}
@@ -1019,7 +1027,7 @@ function showComposer(){composer.replaceChildren(E("div",{class:"v3-composer-top
 const fields=E("div",{class:"v3-composer-fields"}),type=E("select",{id:"v3NewType"}),time=E("input",{id:"v3NewTime",type:"time",value:"10:00"}),duration=E("input",{id:"v3NewDuration",type:"number",min:"1",max:"1440",value:"45"}),name=E("input",{id:"v3NewName",placeholder:"例如：想吃的烤肉店、景點、地鐵轉乘"}),notes=E("input",{id:"v3NewNotes",placeholder:"食物推薦、地址或其他備註（可留空）"});
 for(const [v,label] of types)type.append(E("option",{value:v,text:label}));type.value="food";
 const make=(txt,input)=>E("label",{},[E("span",{text:txt}),input]);fields.append(make("類別",type),make("開始時間",time),make("停留／搭乘分鐘",duration),make("名稱",name),make("備註",notes));
-composer.append(fields,button("加入當天時間軸",()=>{const t=trip(),tm=time.value,du=Number(duration.value),title=name.value.trim();if(!title||!D.validTime(tm)||!Number.isInteger(du)||du<1||du>1440){U.toast("請填名稱、有效開始時間、1 至 1440 分鐘");return}const item={id:D.uid(),name:title,time:tm,duration:du,type:type.value,notes:notes.value.trim()};const collisions=D.conflicts([...t.days[day],item]);if(collisions.length&&!confirm("時間和既有活動重疊 "+collisions.length+" 組。確定照原時間保留嗎？"))return;t.days[day].push(item);save();render();name.value="";notes.value="";U.toast("已加入 "+title+" · "+du+" 分鐘")},"primary"))}
+composer.append(fields,button("加入當天時間軸",()=>{const t=trip(),tm=time.value,du=Number(duration.value),title=name.value.trim();if(!title||!D.validTime(tm)||!Number.isInteger(du)||du<1||du>1440){U.toast("請填名稱、有效開始時間、1 至 1440 分鐘");return}const item={id:D.uid(),name:title,time:tm,duration:du,type:type.value,notes:notes.value.trim()};const collisions=D.conflicts([...t.days[day],item]);if(collisions.length&&!confirm("時間和既有活動重疊 "+collisions.length+" 組。確定照原時間保留嗎？"))return;t.days[day].push(item);save();render();name.value="";notes.value="";composerDetails.open=false;U.toast("已加入 "+title+" · "+du+" 分鐘")},"primary"))}
 showComposer();
 function onRender(){drawDaily();decorateDates();refreshMap();$("itinerary").querySelectorAll(".v3-schedule-event").forEach(x=>x.setAttribute("data-rendered","true"));
 const oldQuick=$("itinerary").querySelector(".formrow");if(oldQuick)oldQuick.classList.add("v3-legacy-quick");}
