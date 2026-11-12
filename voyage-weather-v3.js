@@ -8,7 +8,7 @@ const weather=E("div",{id:"v3WeatherArt","aria-live":"polite",role:"img"}),sourc
 hero.replaceChildren(weather,source);
 const badge=$("weatherEmoji");
 function classify(code,isDay){const n=Number(code);if(!Number.isFinite(n))return "unknown";if(n>=95)return "storm";if(n>=71&&n<=86)return "snow";if(n>=51&&n<=67||n>=80&&n<=82)return "rain";if(n===45||n===48)return "fog";if(n===0||n===1)return isDay?"sun":"moon";if(n>=2&&n<=3)return "cloud";return isDay?"cloud":"moon"}
-function draw(payload){const w=payload&&payload.city===trip().city?payload:null,kind=w?classify(w.code,w.isDay):"unknown";
+function draw(payload){if(!hero.contains(weather))hero.replaceChildren(weather,source);const w=payload&&payload.city===trip().city?payload:null,kind=w?classify(w.code,w.isDay):"unknown";
 weather.className="v3-weather-"+kind;weather.replaceChildren();const main=E("div",{class:"v3-weather-scene"});
 if(kind==="sun"){main.append(E("span",{class:"v3-sun",text:"☀"}),E("span",{class:"v3-small-cloud",text:"☁"}))}
 else if(kind==="moon"){main.append(E("span",{class:"v3-moon",text:"☾"}),E("span",{class:"v3-stars",text:"✦ ✧"}))}
