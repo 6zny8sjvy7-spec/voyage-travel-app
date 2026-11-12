@@ -32,12 +32,12 @@ function uiEnv(){
  ctx.window=ctx;
  vm.createContext(ctx);
  vm.runInContext('let trips=[{id:"seed",name:"Test",city:"Seoul",country:"韓國",tz:"Asia/Seoul",days:[[{name:"Start",time:"09:00",duration:30}],[{name:"Next",time:"11:00"}]]}],active=0,day=0,weekMode=false;const trip=()=>trips[active];let saveCount=0;function save(){saveCount++}function render(){}function renderWeek(){}function drawMap(){}function setTab(){}function syncView(){}function suggest(){}',ctx);
- ["voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-discover.js","voyage-map.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
+ ["voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-discover.js","voyage-map.js","voyage-journal.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
  return {ctx,ids,expression:s=>vm.runInContext(s,ctx)};
 }
 test("UI modules load and each more page renders without crash",()=>{
  const {ctx}=uiEnv(),U=ctx.VoyageUI;
- for(const n of ["overview","expenses","packing","documents","translation","import","history","collab"]){assert.equal(typeof U.pages[n],"function",n);assert.doesNotThrow(()=>U.pages[n](ctx.document.createElement("section")),n)}
+ for(const n of ["overview","expenses","packing","documents","translation","import","history","collab","diary","wishlist"]){assert.equal(typeof U.pages[n],"function",n);assert.doesNotThrow(()=>U.pages[n](ctx.document.createElement("section")),n)}
  assert.equal(typeof U.addExpense,"function");
 });
 test("add an expense through the actual modal submit",()=>{
