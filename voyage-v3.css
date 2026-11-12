@@ -168,3 +168,11 @@ body.dark .v3-time-track{background:repeating-linear-gradient(to bottom,transpar
 .v3-compose-shell .v3-composer{margin:0;border:0;border-radius:0 0 13px 13px;background:transparent}
 
 #dates .v3-weekday{display:block;font-size:10px;line-height:1.3;color:var(--muted);margin-bottom:2px}#dates .date.active .v3-weekday{color:#fff}
+
+/* Transport gaps are scheduling opportunities, never claimed travel estimates. */
+.v3-free-gap{position:absolute;left:6px;right:6px;z-index:2;min-height:16px;display:flex;align-items:center;justify-content:center;font:600 10px/1.2 -apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;color:#526a7e;background:#e7f2fc;border:1px dashed #8baec8;border-radius:7px;padding:0 5px;cursor:pointer;white-space:nowrap;overflow:hidden}
+.v3-free-gap:hover,.v3-free-gap:focus-visible{background:#cfe8f8;outline:2px solid #6a9fce;outline-offset:1px}
+.v3-overlapping{border-color:#d58b61;box-shadow:0 2px 8px #cf8a6a33}
+.v3-tiny-gap{font-size:9px}
+body.dark .v3-free-gap{color:#3d5872;background:#dce7f3;border-color:#829ec2}
+@media(prefers-reduced-motion:reduce){.v3-free-gap,.v3-schedule-event{transition:none!important}}
