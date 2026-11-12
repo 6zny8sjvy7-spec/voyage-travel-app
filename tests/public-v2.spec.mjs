@@ -34,6 +34,8 @@ test('published review page now includes actual time blocks, in-page map and liv
  await expect(page.locator('.hero .glass #v3WeatherArt')).toBeVisible();
  await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
  await expect(page.locator('#v3InlineMap')).toBeVisible();
+ await expect(page.locator('#v3ComposerDetails')).toBeVisible();
+ await page.locator('#v3ComposerDetails summary').click();
  await expect(page.locator('#v3Composer')).toBeVisible();
  await page.locator('#weeklyView').click();
  await expect(page.locator('#week .v3-schedule-event').first()).toBeVisible();
