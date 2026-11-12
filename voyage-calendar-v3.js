@@ -119,8 +119,19 @@ window.open(url,"_blank","noopener");U.toast("已交給 Google 地圖規劃步�
 function showComposer(){composer.replaceChildren(E("div",{class:"v3-composer-top"},[E("h3",{text:"＋ 排入今天的行程"}),E("span",{class:"v1-sub",text:"餐飲、景點、購物、交通都可選類別與停留分鐘"})]));
 const fields=E("div",{class:"v3-composer-fields"}),type=E("select",{id:"v3NewType"}),time=E("input",{id:"v3NewTime",type:"time",value:"10:00"}),duration=E("input",{id:"v3NewDuration",type:"number",min:"1",max:"1440",value:"45"}),name=E("input",{id:"v3NewName",placeholder:"例如：想吃的烤肉店、景點、地鐵轉乘"}),notes=E("input",{id:"v3NewNotes",placeholder:"食物推薦、地址或其他備註（可留空）"});
 for(const [v,label] of types)type.append(E("option",{value:v,text:label}));type.value="food";
-const make=(txt,input)=>E("label",{},[E("span",{text:txt}),input]);fields.append(make("類別",type),make("開始時間",time),make("停留／搭乘分鐘",duration),make("名稱",name),make("備註",notes));
-composer.append(fields,button("加入當天時間軸",()=>{const t=trip(),tm=time.value,du=Number(duration.value),title=name.value.trim();if(!title||!D.validTime(tm)||!Number.isInteger(du)||du<1||du>1440){U.toast("請填名稱、有效開始時間、1 至 1440 分鐘");return}const item={id:D.uid(),name:title,time:tm,duration:du,type:type.value,notes:notes.value.trim()};const collisions=D.conflicts([...t.days[day],item]);if(collisions.length&&!confirm("時間和既有活動重疊 "+collisions.length+" 組。確定照原時間保留嗎？"))return;t.days[day].push(item);save();render();name.value="";notes.value="";composerDetails.open=false;U.toast("已加入 "+title+" · "+du+" 分鐘")},"primary"))}
+const make=(txt,input)=>E("label",{},[E("span",{text:txt}),input]);
+const cost=E("input",{id:"v3NewCost",type:"number",min:"0",step:"0.01",value:"0"}),mapLink=E("input",{id:"v3NewMapLink",type:"url",placeholder:"Google Maps／NAVER 分享連結（選填）"});
+fields.append(make("類別",type),make("開始時間",time),make("停留／搭乘分鐘",duration),make("名稱",name),make("備註",notes),make("預算／花費（目的地幣別）",cost),make("地點連結（選填）",mapLink));
+const shortcuts=E("div",{class:"v3-category-shortcuts"});
+for(const [value,label] of [["place","🏞️ 景點"],["food","🍜 餐飲"],["transport","🚆 交通"],["shop","🛍️ 購物"]]){
+ const pick=button("＋ "+label,()=>{composerDetails.open=true;type.value=value;name.placeholder=value==="food"?"餐廳、想吃的料理、咖啡店":value==="transport"?"例如：地鐵前往下一站":value==="shop"?"想去的商店或市集":"景點或活動名稱";name.focus()},"secondary");
+ shortcuts.append(pick);
+}
+composerDetails.before(shortcuts);
+composer.append(fields,button("加入當天時間軸",()=>{const t=trip(),tm=time.value,du=Number(duration.value),title=name.value.trim();if(!title||!D.validTime(tm)||!Number.isInteger(du)||du<1||du>1440){U.toast("請填名稱、有效開始時間、1 至 1440 分鐘");return}const spending=Number(cost.value||"0"),link=mapLink.value.trim();
+if(!Number.isFinite(spending)||spending<0){U.toast("請輸入有效的預算／費用");return}
+if(link&&!/^https:\/\//i.test(link)){U.toast("地點連結必須是 HTTPS 網址");return}
+const item={id:D.uid(),name:title,time:tm,duration:du,type:type.value,notes:notes.value.trim(),cost:spending,...(link?{mapUrl:link,url:link}:{})};const collisions=D.conflicts([...t.days[day],item]);if(collisions.length&&!confirm("時間和既有活動重疊 "+collisions.length+" 組。確定照原時間保留嗎？"))return;t.days[day].push(item);save();render();name.value="";notes.value="";cost.value="0";mapLink.value="";composerDetails.open=false;U.toast("已加入 "+title+" · "+du+" 分鐘")},"primary"))}
 showComposer();
 function onRender(){drawDaily();decorateDates();refreshMap();$("itinerary").querySelectorAll(".v3-schedule-event").forEach(x=>x.setAttribute("data-rendered","true"));
 const oldQuick=$("itinerary").querySelector(".formrow");if(oldQuick)oldQuick.classList.add("v3-legacy-quick");}
