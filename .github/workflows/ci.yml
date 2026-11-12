@@ -31,6 +31,10 @@ jobs:
           node --check voyage-transit-v2.js
           node --check voyage-gps-v2.js
           node --check voyage-tools-v2.js
+          node --check voyage-seoul-v3.js
+          node --check voyage-calendar-v3.js
+          node --check voyage-planning-v3.js
+          node --check voyage-weather-v3.js
       - name: Domain and integrated UI tests
         run: node --test tests/voyage.test.cjs
       - name: Confirm all feature scripts wired
@@ -38,12 +42,12 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text()
-          scripts=['voyage-domain.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-gps-v2.js','voyage-tools-v2.js']
+          scripts=['voyage-domain.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-gps-v2.js','voyage-tools-v2.js','voyage-seoul-v3.js','voyage-calendar-v3.js','voyage-planning-v3.js','voyage-weather-v3.js']
           for name in scripts:
               assert ('src="./'+name+'"') in html, name+' not loaded'
               assert Path(name).is_file(), name+' missing'
-          assert 'voyage-v2.css' in html and Path('voyage-v2.css').is_file()
-          print('12 scripts and V2 stylesheet are wired and present')
+          assert 'voyage-v2.css' in html and Path('voyage-v2.css').is_file() and 'voyage-v3.css' in html and Path('voyage-v3.css').is_file()
+          print('16 scripts and V2+V3 stylesheets are wired and present')
           PY
   browser:
     runs-on: ubuntu-latest
