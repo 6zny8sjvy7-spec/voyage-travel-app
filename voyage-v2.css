@@ -111,3 +111,20 @@ body[data-tab='trips'] #v1Summary{display:none!important}
  #v2Home .v2-home-hero .v2-toolbar{gap:5px}
  #v2Home .v2-home-hero .v2-toolbar button{font-size:11px;padding:7px 9px}
 }
+
+/* iPhone/WebKit night-mode accessibility: native selects otherwise render a white control with white text */
+body.dark select,body.dark input,body.dark textarea{
+  -webkit-appearance:none;appearance:none;
+  color:#f1f6ff!important;background-color:#293e5e!important;
+  border-color:#6783a7!important;-webkit-text-fill-color:#f1f6ff;
+  color-scheme:dark;
+}
+body.dark select{
+  background-image:linear-gradient(45deg,transparent 50%,#e2ecff 50%),linear-gradient(135deg,#e2ecff 50%,transparent 50%)!important;
+  background-position:calc(100% - 19px) 50%,calc(100% - 13px) 50%!important;
+  background-size:6px 6px,6px 6px!important;background-repeat:no-repeat!important;
+  padding-right:31px!important
+}
+body.dark select option{background:#293e5e;color:#f1f6ff}
+body.dark input[type=checkbox]{-webkit-appearance:checkbox;appearance:checkbox;accent-color:#95b8ff}
+body.dark input[type=date],body.dark input[type=time]{color-scheme:dark}
