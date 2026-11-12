@@ -39,9 +39,38 @@ function drawGrid(indices,single){const b=bounds(indices),container=E("div",{cla
 container.append(ruler,inner);
 for(const i of indices){const col=E("section",{class:"v3-time-column"+(i===day?" active-day":""),"data-day":String(i)}),header=E("button",{class:"v3-column-heading",text:"第 "+(i+1)+" 天"+(trip().startDate?" · "+D.dayISO(trip().startDate,i).slice(5)+" "+new Intl.DateTimeFormat("zh-TW",{weekday:"short",timeZone:"UTC"}).format(new Date(D.dayISO(trip().startDate,i)+"T12:00:00Z")):"")});header.onclick=()=>{day=i;selected.day=i;render();syncView()};col.append(header);
 const track=E("div",{class:"v3-time-track"});track.style.height=b.height+"px";for(let tick=b.first;tick<=b.last;tick+=60){const line=E("div",{class:"v3-grid-line"});line.style.top=(tick-b.first)*pxPerMin+"px";track.append(line)}
-for(const x of trip().days[i]||[])track.append(createEvent(x,i,b,single));
+const scheduled=(trip().days[i]||[]).filter(x=>timeInfo(x).hasStart).slice().sort((a,c)=>timeInfo(a).start-timeInfo(c).start);
+const lanes=[], cards=[];
+for(const x of trip().days[i]||[]){
+ const info=timeInfo(x);let lane=0;while(lane<3&&(lanes[lane]??-1)>info.start)lane++;
+ lane=Math.min(lane,2);lanes[lane]=info.start+info.duration;
+ const eventCard=createEvent(x,i,b,single);eventCard.dataset.lane=String(lane);
+ if(lane>0)eventCard.classList.add("v3-overlapping");
+ cards.push({x,info,lane,card:eventCard});track.append(eventCard);
+}
+for(const item of cards){
+ const competitors=cards.filter(y=>y!==item&&y.info.start<item.info.start+item.info.duration&&item.info.start<y.info.start+y.info.duration);
+ if(competitors.length){const count=Math.min(3,Math.max(item.lane+1,...competitors.map(y=>y.lane+1)));item.card.style.left=(item.lane*100/count+1)+"%";item.card.style.width=(98/count)+"%";item.card.title="時間有重疊，請核對行程"}
+}
+if(single){let prev=null;for(const e of scheduled){if(prev){const gap=gapRender(prev,e,b,true);if(gap)track.append(gap)}const end=timeInfo(e).start+timeInfo(e).duration;if(!prev||end>timeInfo(prev).start+timeInfo(prev).duration)prev=e}}
+
 col.append(track);inner.append(col)}
 return container}
+function gapMinutes(a,b){const x=timeInfo(a),y=timeInfo(b);if(!x.hasStart||!x.actual||!y.hasStart)return 0;return Math.max(0,y.start-x.start-x.duration)}
+function addGapTravel(a,b){const before=timeInfo(a),mins=gapMinutes(a,b);if(mins<10)return;composerDetails.open=true;
+ $("v3NewType").value="transport";$("v3NewTime").value=formatMinutes(before.start+before.duration).slice(0,5);
+ $("v3NewDuration").value="";$("v3NewDuration").placeholder="請核對實際交通分鐘";
+ $("v3NewName").value="前往 "+b.name;$("v3NewNotes").value="上一站："+a.name+"；下一站："+b.name+"。目前空檔 "+mins+" 分，尚非實際交通時間。";
+ composerDetails.scrollIntoView({behavior:"smooth",block:"center"});$("v3NewDuration").focus();
+}
+function gapRender(a,b,boundsInfo,single){
+ const n=gapMinutes(a,b);if(n<15)return null;
+ const from=timeInfo(a),y=(from.start+from.duration-boundsInfo.first)*pxPerMin;
+ const gap=E("button",{class:"v3-free-gap","aria-label":"未安排的空檔 "+n+" 分鐘，按此排入交通",text:"＋ 空檔 "+n+" 分 · 可加入交通"});
+ gap.style.top=(y+3)+"px";gap.style.height=Math.max(16,Math.min(n*pxPerMin-5,25))+"px";
+ if(!single&&n<25)gap.classList.add("v3-tiny-gap");
+ gap.onclick=()=>addGapTravel(a,b);return gap;
+}
 function drawWeek(){const w=$("week");if(!w)return;const existing=w.querySelector(".v3-grid-viewport"),scrollLeft=existing?existing.scrollLeft:0;const days=visibleDays();w.replaceChildren(E("div",{class:"v3-calendar-top"},[E("strong",{text:"第 "+(days[0]+1)+"–"+(days[days.length-1]+1)+" 天 · 時間行事曆"}),button("← 前七天",()=>{day=Math.max(0,Math.floor(day/7)*7-7);render()}),button("後七天 →",()=>{day=Math.min(trip().days.length-1,Math.floor(day/7)*7+7);render()})]));
 const grid=drawGrid(days,false);w.append(grid);grid.scrollLeft=scrollLeft}
 renderWeek=drawWeek;
@@ -63,7 +92,7 @@ if(points.length===1)inlineMap.setView([points[0].lat,points[0].lon],14);
 else inlineMap.fitBounds(L.latLngBounds(points.map(x=>[x.lat,x.lon])).pad(.22),{maxZoom:14})}
 function refreshMap(){mapHead.replaceChildren(E("div",{},[E("h3",{text:"🗺 行程下方地圖"}),E("p",{class:"v1-sub",text:"點上方景點，就在這張地圖定位。不需切換到其他分頁。"})]),E("div",{class:"v3-map-toolbar"},[button("今天全部景點",()=>{overview=true;selected.event=null;refreshMap();fitMap()}),button("Google 地圖：步行順序",openDayDirections),button("NAVER 查看地點",()=>{const x=selected.event||pinPoints()[0];if(x)nav(x,"naver");else U.toast("尚無已確認的景點可導航")})]));
 ensureMap();if(!inlineMap)return;inlineLayers.clearLayers();
-const points=pinPoints();/* Real street/transit routing is not available in this inline map: show numbered pins only. */for(const [i,x] of points.entries()){const icon=L.divIcon({html:'<div class="pin">'+(i+1)+"</div>",className:"",iconSize:[30,30],iconAnchor:[15,15]});const marker=L.marker([x.lat,x.lon],{icon}).bindPopup(E("span",{text:x.name})).addTo(inlineLayers);if(typeof marker.on==="function")marker.on("click",()=>focusPlace(x,{scroll:false}))}
+const points=pinPoints();/* Real street/transit routing is not available in this inline map: show numbered pins only. */for(const [i,x] of points.entries()){const icon=L.divIcon({html:'<div class="pin">'+(i+1)+"</div>",className:"",iconSize:[30,30],iconAnchor:[15,15]});const marker=L.marker([x.lat,x.lon],{icon}).bindPopup(E("span",{text:x.name})).addTo(inlineLayers);if(selected.event===x&&selected.day===day&&typeof marker.openPopup==="function")marker.openPopup();if(typeof marker.on==="function")marker.on("click",()=>focusPlace(x,{scroll:false}))}
 mapSummary.replaceChildren();
 if(!points.length){mapSummary.append(E("span",{text:"本日還沒有確認位置的景點。請點行事曆景點，再選擇定位；地圖不會猜測地址。"}))}
 else {const name=selected.event&&selected.day===day?selected.event.name:"全日 "+points.length+" 個已定位地點";mapSummary.append(E("strong",{text:name}),E("span",{text:" · 已定位的地點以編號顯示；尚未取得實際道路路線時不繪製連線，也不推算交通分鐘。"}));if(selected.event&&selected.day===day){const x=selected.event;const row=E("div",{class:"v1-actions"}),idx=trip().days[day].indexOf(x);if(idx>=0){row.append(button("行程詳情",()=>window.VoyageV2?.showDetails(x,idx,day)),button("編輯時間／停留分鐘",()=>U.eventEditor(idx,false)),button(x.done?"取消完成":"✓ 標記完成",()=>{x.done=!x.done;save();render()}));if(x.type!=="transport")row.append(button("Google 地圖",()=>nav(x,"google")),button("NAVER 地圖",()=>nav(x,"naver")))}mapSummary.append(row)}}
