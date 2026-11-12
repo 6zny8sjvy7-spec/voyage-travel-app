@@ -143,3 +143,23 @@ test('overlapping schedule events remain selectable in separate lanes and keep s
  await b.click();
  await expect(page.locator('#v3MapSummary')).toContainText('同時段購物');
 });
+
+test('one-touch dining shortcut persists category, actual duration, budget and provider link after reload',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await page.locator('.v3-category-shortcuts').getByRole('button',{name:/餐飲/}).click();
+ await expect(page.locator('#v3ComposerDetails')).toHaveAttribute('open','');
+ await expect(page.locator('#v3NewType')).toHaveValue('food');
+ await page.locator('#v3NewName').fill('聖水烤肉晚餐');
+ await page.locator('#v3NewTime').fill('18:10');
+ await page.locator('#v3NewDuration').fill('80');
+ await page.locator('#v3NewCost').fill('30000');
+ await page.locator('#v3NewMapLink').fill('https://maps.google.com/?q=Seongsu');
+ await page.locator('#v3Composer').getByRole('button',{name:/加入當天時間軸/}).click();
+ const get=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0].find(x=>x.name==='聖水烤肉晚餐'));
+ expect(await get()).toMatchObject({type:'food',time:'18:10',duration:80,cost:30000,mapUrl:'https://maps.google.com/?q=Seongsu'});
+ await page.reload();
+ expect(await get()).toMatchObject({type:'food',duration:80,cost:30000});
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await page.locator('#weeklyView').click();
+ await expect(page.locator('#week .v3-schedule-event').filter({hasText:'聖水烤肉晚餐'})).toContainText('80 分');
+});
