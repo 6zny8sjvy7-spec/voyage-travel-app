@@ -18,7 +18,7 @@ function addDay(){const t=trip();if(t.days.length>=366){alert("一趟旅行最�
 function removeLastEmptyDay(){const t=trip();if(t.days.length<=1){alert("至少要留一天");return}if(t.days[t.days.length-1].length){alert("最後一天有活動。先移動或備份，不能直接刪除避免遺失資料");return}if(!confirm("確定移除最後一個空白日期？"))return;t.days.pop();day=Math.min(day,t.days.length-1);save();render()}
 function editDate(){const t=trip(),raw=prompt("出發日期（YYYY-MM-DD）。此動作不會刪除或移動原有行程。",t.startDate||"2026-11-12");if(raw===null)return;if(!D.dayISO(raw,0)){alert("日期無效，例如 2026-11-20");return}t.startDate=raw;save();render()}
 function renderDayBar(){const t=trip();dayBar.replaceChildren(el("span",{class:"v2-day-count",id:"v2DayCountNotice",text:"現在共 "+t.days.length+" 天，可持續新增"}),btn("＋ 新增一天",addDay,"secondary"),btn("－ 移除末日",removeLastEmptyDay,"ghost"),btn(t.startDate?"📅 "+t.startDate:"📅 設定出發日",editDate,"secondary"));dayBar.children[1].id="v2AddDay";dayBar.children[2].id="v2RemoveDay"}
-function mapFor(item){if(item.type==="transport"){setTab("transport");$("transitFrom").value=item.from||"";$("transitTo").value=item.to||"";return}if(!Number.isFinite(Number(item.lat))||!Number.isFinite(Number(item.lon))){if(confirm("這個地點尚未確認座標。現在搜尋並確認位置？"))geocode(item);return}setTab("map");setTimeout(()=>{try{map.setView([Number(item.lat),Number(item.lon)],16);map.invalidateSize()}catch(e){console.warn(e)}},240)}
+function mapFor(item){if(window.VoyageCalendar){if(document.body.dataset.tab!=="itinerary")setTab("itinerary");window.VoyageCalendar.focusPlace(item,{scroll:true});return}if(item.type==="transport"){setTab("transport");$("transitFrom").value=item.from||"";$("transitTo").value=item.to||"";return}if(!Number.isFinite(Number(item.lat))||!Number.isFinite(Number(item.lon))){if(confirm("這個地點尚未確認座標。現在搜尋並確認位置？"))geocode(item);return}setTab("map");setTimeout(()=>{try{map.setView([Number(item.lat),Number(item.lon)],16);map.invalidateSize()}catch(e){console.warn(e)}},240)}
 function showDetails(item,i,d=day){const t=trip(),sym=icons[item.type]||"📍",when=t.startDate?D.dayISO(t.startDate,d):"第 "+(d+1)+" 天";dialog.replaceChildren();const head=el("div",{class:"v2-dialog-title"},[el("span",{text:sym}),el("div",{},[el("h2",{text:item.name}),el("div",{class:"v1-sub",text:when+" · "+(item.time||"未定時間")+" · "+(item.duration?item.duration+" 分鐘":"未設定停留時間")})])]);dialog.append(el("div",{class:"v2-section-label"},[head,btn("✕",()=>dialog.close(),"ghost")]));
 if(item.type==="transport")dialog.append(el("p",{class:"v1-notice",text:"🚆 "+(item.from||"出發")+" → "+(item.to||"抵達")+" · "+(item.line||"方向尚未確認")}));
 if(item.notes)dialog.append(el("p",{text:item.notes}));if(item.cost)dialog.append(el("p",{class:"v1-sub",text:"預估費用："+D.money(item.cost,t.currency||"TWD")}));
@@ -31,6 +31,7 @@ const nav=[
 ["🚇","交通導航","查路線與搭乘",()=>setTab("transport")],
 ["🗺️","旅行地圖","選景點直接定位",()=>setTab("map")],
 ["💳","費用與分帳","換匯與結算",()=>U.showPage("expenses")],
+["🍜","美食口袋名單","餐廳與想吃的料理",()=>U.showPage("foods")],["🛍️","購物願望","想買的東西與紀念品",()=>U.showPage("wishlist")],
 ["🧳","行李清單","旅伴各自打包",()=>U.showPage("packing")],
 ["🗣️","即時翻譯","翻譯與朗讀",()=>U.showPage("translation")],
 ["🏨","機票住宿","預約與地址",()=>U.showPage("documents")],
