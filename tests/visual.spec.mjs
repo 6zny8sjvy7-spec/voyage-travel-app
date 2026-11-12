@@ -1,0 +1,25 @@
+import {test,expect} from '@playwright/test';
+import {mkdirSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
+const leaflet=readFileSync(new URL('./leaflet-stub.js',import.meta.url),'utf8');
+test('reference UI visual audit for main modes and day timeline',async({page},testInfo)=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto('/');
+ await expect(page.locator('#v2Home')).toBeVisible();
+ const output='qa-screenshots';mkdirSync(output,{recursive:true});
+ const project=testInfo.project.name.replace(/[^a-z0-9]/gi,'-');
+ await page.screenshot({path:output+'/'+project+'-home-daylight.png',fullPage:true});
+ await page.locator('[data-tablink="itinerary"]').click();
+ await expect(page.locator('#itinerary')).toBeVisible();
+ await page.screenshot({path:output+'/'+project+'-itinerary-daylight.png',fullPage:true});
+ await page.locator('#v2AddDay').click();
+ await page.screenshot({path:output+'/'+project+'-extended-day.png',fullPage:true});
+ await page.evaluate(()=>localStorage.setItem('voyage-theme','dark'));
+ await page.reload();
+ await expect(page.locator('#v2Home')).toBeVisible();
+ await page.screenshot({path:output+'/'+project+'-home-twilight.png',fullPage:true});
+ const over=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+5);
+ expect(over).toBe(false);
+});
