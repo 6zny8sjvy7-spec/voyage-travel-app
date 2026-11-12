@@ -10,6 +10,7 @@ await expect(page.locator('#v2Home')).toBeVisible();
 });
 test('time grid allocates proportional durations and category colours',async({page})=>{
 await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+await page.locator('#v3ComposerDetails summary').click();
 await page.locator('#v3NewType').selectOption('food');
 await page.locator('#v3NewName').fill('烤肉晚餐');
 await page.locator('#v3NewTime').fill('18:00');
