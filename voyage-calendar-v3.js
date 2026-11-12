@@ -16,7 +16,7 @@ const preview=E("section",{id:"v3InlineMap",class:"v3-inline-map"}),mapHead=E("d
 preview.append(mapHead,mapDiv,mapSummary);
 $("events").after(preview);
 const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"});
-if(form)form.before(composer);
+if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.after(composer);else form.before(composer)}
 function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has};}
 function formatMinutes(min){const n=((min%1440)+1440)%1440;return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")+(min>=1440?"（隔日）":"")}
 function category(x){return types.some(a=>a[0]===x.type)?x.type:"place"}
@@ -60,12 +60,12 @@ function pinPoints(){return (trip().days[day]||[]).filter(x=>x.type!=="transport
 function fitMap(){if(!inlineMap)return;const points=pinPoints();if(!points.length){inlineMap.setView([Number(trip().lat)||37.5665,Number(trip().lon)||126.978],11);return}
 if(points.length===1)inlineMap.setView([points[0].lat,points[0].lon],14);
 else inlineMap.fitBounds(L.latLngBounds(points.map(x=>[x.lat,x.lon])).pad(.22),{maxZoom:14})}
-function refreshMap(){mapHead.replaceChildren(E("div",{},[E("h3",{text:"🗺 行程下方地圖"}),E("p",{class:"v1-sub",text:"點上方景點，就在這張地圖定位。不需切換到其他分頁。"})]),E("div",{class:"v3-map-toolbar"},[button("今天全部景點",()=>{overview=true;selected.event=null;refreshMap();fitMap()}),button("在 Google 地圖看全天路線",openDayDirections),button("NAVER 查看地點",()=>{const x=selected.event||pinPoints()[0];if(x)nav(x,"naver");else U.toast("尚無已確認的景點可導航")})]));
+function refreshMap(){mapHead.replaceChildren(E("div",{},[E("h3",{text:"🗺 行程下方地圖"}),E("p",{class:"v1-sub",text:"點上方景點，就在這張地圖定位。不需切換到其他分頁。"})]),E("div",{class:"v3-map-toolbar"},[button("今天全部景點",()=>{overview=true;selected.event=null;refreshMap();fitMap()}),button("Google 地圖：步行順序",openDayDirections),button("NAVER 查看地點",()=>{const x=selected.event||pinPoints()[0];if(x)nav(x,"naver");else U.toast("尚無已確認的景點可導航")})]));
 ensureMap();if(!inlineMap)return;inlineLayers.clearLayers();
-const points=pinPoints();for(const [i,x] of points.entries()){const icon=L.divIcon({html:'<div class="pin">'+(i+1)+"</div>",className:"",iconSize:[30,30],iconAnchor:[15,15]});const marker=L.marker([x.lat,x.lon],{icon}).bindPopup(x.name).addTo(inlineLayers);if(typeof marker.on==="function")marker.on("click",()=>focusPlace(x,{scroll:false}))}
+const points=pinPoints();if(points.length>1&&typeof L.polyline==="function"){L.polyline(points.map(x=>[x.lat,x.lon]),{color:"#658bc7",weight:3,dashArray:"6 8",opacity:.7}).addTo(inlineLayers)}for(const [i,x] of points.entries()){const icon=L.divIcon({html:'<div class="pin">'+(i+1)+"</div>",className:"",iconSize:[30,30],iconAnchor:[15,15]});const marker=L.marker([x.lat,x.lon],{icon}).bindPopup(x.name).addTo(inlineLayers);if(typeof marker.on==="function")marker.on("click",()=>focusPlace(x,{scroll:false}))}
 mapSummary.replaceChildren();
 if(!points.length){mapSummary.append(E("span",{text:"本日還沒有確認位置的景點。請點行事曆景點，再選擇定位；地圖不會猜測地址。"}))}
-else {const name=selected.event&&selected.day===day?selected.event.name:"全日 "+points.length+" 個已定位地點";mapSummary.append(E("strong",{text:name}),E("span",{text:" · 地點依當天行程順序顯示。沒有畫假道路，也不會捏造交通分鐘。"}))}
+else {const name=selected.event&&selected.day===day?selected.event.name:"全日 "+points.length+" 個已定位地點";mapSummary.append(E("strong",{text:name}),E("span",{text:" · 虛線只是景點順序的直線示意，不是道路路線，也不代表實際交通分鐘。"}));if(selected.event&&selected.day===day){const x=selected.event;const row=E("div",{class:"v1-actions"}),idx=trip().days[day].indexOf(x);if(idx>=0){row.append(button("行程詳情",()=>window.VoyageV2?.showDetails(x,idx,day)),button("編輯時間／停留分鐘",()=>U.eventEditor(idx,false)),button(x.done?"取消完成":"✓ 標記完成",()=>{x.done=!x.done;save();render()}));if(x.type!=="transport")row.append(button("Google 地圖",()=>nav(x,"google")),button("NAVER 地圖",()=>nav(x,"naver")))}mapSummary.append(row)}}
 if(selected.event&&selected.day===day&&Number.isFinite(selected.event.lat)&&Number.isFinite(selected.event.lon)&&!overview){
 inlineMap.setView([selected.event.lat,selected.event.lon],16)}else fitMap();
 setTimeout(()=>inlineMap.invalidateSize(),130);
@@ -77,8 +77,8 @@ refreshMap();
 if(opts.scroll)preview.scrollIntoView({behavior:"smooth",block:"center"})}
 function openDayDirections(){const t=trip(),points=pinPoints();if(points.length<2){U.toast("當日需要至少兩個已定位景點才能規劃路線");return}
 const coord=x=>x.lat+","+x.lon,p0=points[0],pn=points[points.length-1],via=points.slice(1,-1).slice(0,8).map(coord).join("|");
-const url="https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(coord(p0))+"&destination="+encodeURIComponent(coord(pn))+"&travelmode=transit"+(via?"&waypoints="+encodeURIComponent(via):"");
-window.open(url,"_blank","noopener");U.toast("已交給外部地圖規劃路線；請核對途經點、路線與搭乘時間。")}
+const url="https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(coord(p0))+"&destination="+encodeURIComponent(coord(pn))+"&travelmode=walking"+(via?"&waypoints="+encodeURIComponent(via):"");
+window.open(url,"_blank","noopener");U.toast("已交給 Google 地圖規劃步行多站路線；請核對是否需要改搭大眾交通工具。")}
 function showComposer(){composer.replaceChildren(E("div",{class:"v3-composer-top"},[E("h3",{text:"＋ 排入今天的行程"}),E("span",{class:"v1-sub",text:"餐飲、景點、購物、交通都可選類別與停留分鐘"})]));
 const fields=E("div",{class:"v3-composer-fields"}),type=E("select",{id:"v3NewType"}),time=E("input",{id:"v3NewTime",type:"time",value:"10:00"}),duration=E("input",{id:"v3NewDuration",type:"number",min:"1",max:"1440",value:"45"}),name=E("input",{id:"v3NewName",placeholder:"例如：想吃的烤肉店、景點、地鐵轉乘"}),notes=E("input",{id:"v3NewNotes",placeholder:"食物推薦、地址或其他備註（可留空）"});
 for(const [v,label] of types)type.append(E("option",{value:v,text:label}));type.value="food";
