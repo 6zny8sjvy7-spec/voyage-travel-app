@@ -8,6 +8,7 @@ function btn(label,handler,cls="secondary"){const b=el("button",{text:label,clas
 const icons={food:"🍜",place:"🏯",shop:"🛍️",transport:"🚆",hotel:"🛏️",flight:"✈️",other:"✨",activity:"🎡"};
 function landmark(t){const s=(t.country+" "+t.city).toLowerCase();if(/首爾|seoul|韓國|korea/.test(s))return["🏯","🎐","⛰️","首爾宮殿"];if(/曼谷|bangkok|泰國|thailand/.test(s))return["🛕","🛺","🌅","曼谷寺廟"];if(/東京|tokyo|日本|japan/.test(s))return["🗼","🗻","🌸","東京高塔與富士山"];if(/新加坡|singapore/.test(s))return["🦁","🌺","🌇","新加坡魚尾獅"];if(/巴黎|paris/.test(s))return["🗼","🥐","🌟","巴黎鐵塔"];if(/紐約|new york/.test(s))return["🗽","🌆","✨","紐約自由女神"];if(/倫敦|london/.test(s))return["🎡","🕰️","🌧️","倫敦"];if(/台北|臺北|taipei|台灣|taiwan/.test(s))return["🏙️","🧋","🌇","台灣"];return["🏰","✈️","🌤️","旅遊城市"]}
 const home=el("section",{id:"v2Home"}),dayBar=el("div",{id:"v2DayBar"}),banner=el("div",{id:"v2ItineraryBanner"}),art=el("div",{class:"hero-art",role:"img","aria-label":"城市地標"}),dialog=el("dialog",{id:"v2EventDialog"});
+const expenseQuickButton=$("v1ExpenseQuick");
 $("trips").after(home);
 $("dates").after(dayBar);
 $("itinerary").insertBefore(banner,$("dates"));
@@ -41,7 +42,7 @@ const grid=el("div",{class:"v2-quick-grid"});for(const [emoji,label,sub,fn] of n
 home.append(el("div",{class:"v2-section-label"},[el("h2",{text:"旅程小提醒"}),el("span",{text:"旅行資料會自動儲存在裝置上"})]));
 const total=t.days.flat().length,done=t.days.flat().filter(x=>x.done).length;home.append(el("div",{class:"v1-metrics"},[
 U.metric(t.days.length+" 天","旅程長度"),U.metric(done+"/"+total,"已完成活動"),U.metric((t.expenses||[]).length+" 筆","費用紀錄"),U.metric((t.packing||[]).length+" 件","行李清單")
-]));const quick=$("v1ExpenseQuick");quick.textContent="＋ 快速記一筆費用";home.append(el("div",{class:"v1-actions"},[quick]))}
+]));expenseQuickButton.textContent="＋ 快速記一筆費用";home.append(el("div",{class:"v1-actions"},[expenseQuickButton]))}
 function renderBanner(){const t=trip(),v=landmark(t);banner.replaceChildren(el("div",{},[el("div",{class:"eyebrow",text:"第 "+(day+1)+" 天 · 行程"}),el("h3",{text:t.country+" · "+t.city}),el("p",{text:(t.startDate?D.dayISO(t.startDate,day)+" · ":"")+"一天的旅行，由你安排"})]),el("span",{class:"v2-banner-landmark",text:v[0]}));art.replaceChildren(...v.slice(0,3).map(x=>el("span",{text:x})));art.setAttribute("aria-label",v[3])}
 function decorateEvents(){const a=trip().days[day]||[];$("events").querySelectorAll(".event").forEach((node,i)=>{const item=a[i];if(!item||node.querySelector(".v2-event-controls"))return;const top=node.querySelector(".event-top");if(top){const icon=el("span",{class:"v2-event-type",text:icons[item.type]||"📍","aria-hidden":"true"});top.insertBefore(icon,top.querySelector(".event-time"))}
 if(item.photoUrl&&/^https:\/\//i.test(item.photoUrl)){const photo=el("img",{src:item.photoUrl,alt:item.name+" 景點照片",loading:"lazy",class:"v2-event-photo"});node.append(photo)}node.append(el("div",{class:"v2-event-controls"},[btn("🔎 行程詳情",()=>showDetails(item,i)),btn("🗺 查看地圖",()=>mapFor(item)),...(item.type==="transport"?[btn("🚆 路線",()=>mapFor(item))]:[])]))})}
