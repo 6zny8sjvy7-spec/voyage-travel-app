@@ -61,6 +61,13 @@ function addGapTravel(a,b){const before=timeInfo(a),mins=gapMinutes(a,b);if(mins
  $("v3NewType").value="transport";$("v3NewTime").value=formatMinutes(before.start+before.duration).slice(0,5);
  $("v3NewDuration").value="";$("v3NewDuration").placeholder="請核對實際交通分鐘";
  $("v3NewName").value="前往 "+b.name;$("v3NewNotes").value="上一站："+a.name+"；下一站："+b.name+"。目前空檔 "+mins+" 分，尚非實際交通時間。";
+ const previousShortcut=composer.querySelector(".v3-gap-search");if(previousShortcut)previousShortcut.remove();
+ const routeBtn=button("🚇 搜尋「"+a.name+" → "+b.name+"」交通路線",()=>{
+  $("transitFrom").value=a.name;$("transitTo").value=b.name;
+  const arrive=timeInfo(a);$("transitTime").value=formatMinutes(arrive.start+arrive.duration).slice(0,5);
+  setTab("transport");setTransitMode("plan");
+ },"secondary");
+ routeBtn.classList.add("v3-gap-search");composer.append(routeBtn);
  composerDetails.scrollIntoView({behavior:"smooth",block:"center"});$("v3NewDuration").focus();
 }
 function gapRender(a,b,boundsInfo,single){
