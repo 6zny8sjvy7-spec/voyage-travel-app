@@ -66,7 +66,7 @@ test('CSV import previews and only appends to existing trip',async({page})=>{
  await page.locator('[data-tablink="more"]').click();
  await page.locator('#v1Menu').getByRole('button',{name:'匯入資料'}).click();
  await page.locator('#vImportFile').setInputFiles({name:'trip.csv',mimeType:'text/csv',buffer:Buffer.from('name,time,day\n水族館,13:30,1\n')});
- await expect(page.locator('#vImportPreview')).toContainText('水族館');
+ await expect(page.locator('#vImportPreview input[data-role="name"]')).toHaveValue('水族館');
  page.once('dialog',d=>d.accept());
  await page.locator('#vImportPreview').getByRole('button',{name:/確認附加勾選活動/}).click();
  const items=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
