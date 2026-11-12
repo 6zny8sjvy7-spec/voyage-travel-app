@@ -55,3 +55,7 @@ test("create an itinerary event without replacing previous events",()=>{
  assert.equal(expression("trips[0].days[0][0].name"),"Start");
 });
 test("cloud upload must not be active without explicit project config",()=>{const {ctx}=uiEnv();assert.equal(ctx.localStorage.getItem("voyage-cloud-settings-v1"),null);assert.ok(ctx.VoyageUI.pages.collab)});
+
+test("overlap scan detects a long activity overlapping multiple shorter activities",()=>{const D=domain(),events=[{name:"A",time:"09:00",duration:240},{name:"B",time:"10:00",duration:15},{name:"C",time:"11:00",duration:30}];assert.equal(D.conflicts(events).length,2);assert.equal(events[2].name,"C")});
+test("destination currency defaults but never overwrites explicit choice",()=>{const D=domain();assert.equal(D.normaliseTrip({name:"A",country:"韓國",city:"首爾",days:[[]]}).currency,"KRW");assert.equal(D.normaliseTrip({name:"B",country:"韓國",city:"首爾",currency:"TWD",days:[[]]}).currency,"TWD")});
+test("invalid calendar date is rejected even if JavaScript Date rolls forward",()=>{const D=domain();assert.equal(D.dayISO("2026-02-30",0),"");assert.equal(D.dayISO("2028-02-29",0),"2028-02-29")});
