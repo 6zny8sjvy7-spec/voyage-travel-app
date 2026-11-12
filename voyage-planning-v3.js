@@ -57,6 +57,5 @@ if(!t.foodWishlist.length)box.append(E("div",{class:"v1-notice",text:"還沒有�
 };
 const originalWishlist=pages.wishlist;
 pages.wishlist=box=>{originalWishlist(box);box.prepend(E("p",{class:"v1-notice",text:"購物願望也可以從首頁直接進入。這是待買清單，不會自動記帳；實際購買金額仍由你確認。"}))};
-const oldRenderMore=U.renderMore;U.renderMore=function(){oldRenderMore();if(pages.foods&&document.getElementById("v1Content")?.firstChild?.className==="v3-food-header"){}};
-if(typeof U.renderMore==="function")U.renderMore();
+U.renderMore();
 })();
