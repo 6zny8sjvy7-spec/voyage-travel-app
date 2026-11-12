@@ -158,3 +158,11 @@ body.dark .v3-time-track{background:repeating-linear-gradient(to bottom,transpar
  .hero .glass .temp{font-size:19px}
  .hero .glass .sub{font-size:10px}
 }
+
+/* Keep the calendar visible immediately; expand the entry editor only when requested. */
+.v3-compose-shell{margin:10px 0 13px;border:1px dashed #b9c8e2;border-radius:13px;background:var(--card)}
+.v3-compose-shell>summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:11px 15px;color:var(--blue);font-size:13px;font-weight:800;border-radius:13px}
+.v3-compose-shell>summary::-webkit-details-marker{display:none}
+.v3-compose-shell>summary:focus-visible{outline:3px solid var(--blue)}
+.v3-compose-shell[open]>summary{border-bottom:1px solid var(--line)}
+.v3-compose-shell .v3-composer{margin:0;border:0;border-radius:0 0 13px 13px;background:transparent}
