@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#eaf3fc"><title>VOYAGE｜重新設計版・功能體驗</title><meta name="robots" content="noindex">
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#eaf3fc"><title>VOYAGE｜完整時間行事曆與互動地圖體驗</title><meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bg:#edf4fc;--ink:#183453;--muted:#7087a2;--card:#ffffffed;--line:#dce7f3;--blue:#2878d4;--soft:#e7f1ff;--shadow:0 16px 45px #1b527319}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;transition:background .3s,color .3s}body.dark{--bg:#dbe7f5;--ink:#243953;--muted:#607e9d;--card:#f7fafff4;--line:#bfd1e7;--blue:#2a6bbb;--soft:#e3edf9;--shadow:0 16px 45px #294f8a24}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #68adff}button{border:0}input,select{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:11px 12px;border-radius:13px;min-width:0}input[type=checkbox]{accent-color:#2878d4;width:19px;height:19px}.shell{max-width:1120px;margin:auto;padding:0 18px 100px}.hero{position:relative;isolation:isolate;overflow:hidden;min-height:300px;border-radius:0 0 32px 32px;color:#fff;background:linear-gradient(110deg,#2c79b9a8,#0b386f55),url('https://images.unsplash.com/photo-1538485399081-7c8975b2b60b?auto=format&fit=crop&w=1800&q=80') center/cover}.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#0a264bbd,transparent 70%);z-index:-1}.hero-inner{max-width:1120px;margin:auto;padding:24px 24px 30px}.brand{font-weight:800;letter-spacing:5px;font-size:23px}.hero-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.hero h1{font-size:clamp(28px,6vw,46px);line-height:1.2;margin:42px 0 6px}.hero p{margin:0;opacity:.9}.hero .overline{letter-spacing:2px;font-size:12px;opacity:.85}.theme{background:#ffffff26;border:1px solid #ffffff60;color:white;border-radius:100px;padding:9px 13px}.glass{background:#ffffff26;backdrop-filter:blur(15px);border:1px solid #ffffff55;border-radius:20px;padding:13px 16px;margin-top:22px;display:flex;align-items:center;gap:15px;max-width:430px}.temp{font-size:28px;font-weight:750}.sub{font-size:12px;opacity:.8}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.8fr);gap:20px;margin-top:22px}.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:22px;margin-bottom:18px}.card h2{font-size:20px;margin:0 0 14px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.toolbar>*{flex-shrink:0}.primary{background:#2878d4;color:#fff;border-radius:13px;padding:11px 15px;font-weight:700}.secondary{background:var(--soft);color:var(--ink);border-radius:12px;padding:9px 12px}.ghost{background:transparent;color:var(--muted);padding:7px 9px}.tripbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.tripbar select{max-width:100%;flex:1}.dates{display:flex;gap:8px;overflow:auto;padding:3px 0 13px}.date{min-width:68px;padding:9px 12px;border-radius:13px;background:var(--soft);color:var(--ink);text-align:center}.date.active{background:#2878d4;color:#fff}.date b{display:block;font-size:19px}.date span{font-size:11px}.timeline{border-left:2px solid var(--line);margin-left:14px;padding-left:22px}.event{position:relative;padding:3px 0 20px}.event:before{content:"";position:absolute;left:-31px;top:15px;background:#2878d4;width:14px;height:14px;border:4px solid var(--card);border-radius:50%;box-shadow:0 0 0 1px var(--line)}.event.done{opacity:.55}.event.done .event-title{text-decoration:line-through}.event-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.event-time{font-size:12px;font-weight:800;color:var(--blue)}.event-title{font-size:17px;font-weight:750;flex:1}.event-detail{font-size:12px;color:var(--muted);margin:4px 0 10px}.event-actions{display:flex;flex-wrap:wrap;gap:5px}.event-actions button{font-size:12px;padding:7px 9px;border-radius:9px;background:var(--soft);color:var(--ink)}#map{height:370px;border-radius:17px;z-index:0}.mapnote{font-size:12px;color:var(--muted);margin-top:9px}.formrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.formrow input{flex:1;min-width:130px}.formrow input[type=time]{flex:0 0 115px}.footnav{position:fixed;z-index:1000;bottom:0;left:0;right:0;display:flex;justify-content:space-around;gap:5px;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));backdrop-filter:blur(20px)}.footnav a{color:var(--muted);font-size:12px;text-decoration:none;text-align:center;min-width:70px}.footnav strong{display:block;font-size:20px;color:var(--blue)}.pin{background:#2878d4;color:white;border:3px solid white;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;box-shadow:0 3px 10px #123a6980;font-weight:800}.hint{font-size:12px;color:var(--muted)}.status{border-radius:12px;background:var(--soft);padding:10px 12px;color:var(--ink);font-size:12px;margin-top:12px}.statrow{display:flex;justify-content:space-between;gap:10px}.statrow b{font-size:20px}.hidden{display:none!important}body[data-tab] #trips,body[data-tab] #itinerary,body[data-tab] #mapSection,body[data-tab] #recommend{display:none}body[data-tab='trips'] #trips,body[data-tab='itinerary'] #itinerary,body[data-tab='map'] #mapSection,body[data-tab='discover'] #recommend{display:block}body[data-tab] .layout{display:block}body[data-tab] .layout>div{display:contents}body[data-tab] #dataSection{display:none}body[data-tab='trips'] #dataSection[style*='block']{display:block}body[data-tab] .hero{display:none}body[data-tab='trips'] .hero{display:block}body[data-tab='trips'] #itinerary{display:block}body[data-tab='trips'] #recommend{display:block}body[data-tab] .shell{padding-top:20px}.hidden{display:none!important}.weatherfx{position:absolute;inset:0;pointer-events:none;overflow:hidden}.weatherfx i{position:absolute;top:-30px;animation:fall 3s linear infinite;color:white;font-style:normal;opacity:.75}@keyframes fall{to{transform:translateY(390px)}}@media(max-width:760px){.layout{grid-template-columns:1fr}.hero{min-height:290px}.hero h1{margin-top:36px}.card{padding:18px}.shell{padding:0 12px 95px}#map{height:320px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
@@ -133,6 +133,168 @@ body.dark select{
 body.dark select option{background:#293e5e;color:#f1f6ff}
 body.dark input[type=checkbox]{-webkit-appearance:checkbox;appearance:checkbox;accent-color:#95b8ff}
 body.dark input[type=date],body.dark input[type=time]{color-scheme:dark}
+</style><style>
+
+/* VOYAGE V3 — time-scaled schedule, embedded interactive map, actual weather visual */
+/* Warm daylight and gentle twilight, not nearly-black night. */
+body.dark{--bg:#e3e8f6;--ink:#243456;--muted:#566a8b;--card:#f9fbff;--line:#cad6e9;--blue:#4668c1;--soft:#e6ebf9;--shadow:0 12px 32px #41608d1f;--v2-accent:#b4a6de}
+body.dark .hero{background:linear-gradient(115deg,#687fa8,#7c8db9 55%,#b3a5ca)}
+body.dark .hero:after{background:linear-gradient(0deg,#4a668655,transparent)}
+body.dark .v2-home-hero{background:linear-gradient(110deg,#e2e6f9,#d6dcf3 65%,#efe2f0);border-color:#cbd3e8}
+body.dark .date.active{background:linear-gradient(125deg,#8e9ccd,#8c83b9)}
+body.dark #v2ItineraryBanner{background:linear-gradient(110deg,#e2e9fa,#f3e3ef)}
+body.dark .primary{background:#536fc0;color:white}
+body.dark .v3-schedule-event{color:#29364a}
+body.dark input:not([type="checkbox"]),body.dark select,body.dark textarea{background-color:#f9fbff!important;color:#26385c!important;border-color:#b4c2db!important;-webkit-text-fill-color:#26385c;color-scheme:light}
+body.dark select{background-image:linear-gradient(45deg,transparent 50%,#445985 50%),linear-gradient(135deg,#445985 50%,transparent 50%)!important}
+body.dark select option{background:#fff;color:#26385c}
+body.dark input[type=checkbox]{accent-color:#637dc6}
+.hero-art{right:max(14px,calc((100vw - 1050px)/2));bottom:10px;pointer-events:none;width:185px;text-align:center;filter:none}
+#v3WeatherArt{height:116px;width:180px;position:relative;overflow:hidden}
+#v3WeatherSource{color:#fff;font-size:10px;font-weight:600;text-shadow:0 1px 4px #38546b55}
+.v3-weather-scene{position:relative;height:100%;width:100%}
+#v3WeatherArt span{display:block;position:absolute}
+.v3-sun{font-size:86px;color:#ffe09a;left:44px;top:0;text-shadow:0 0 18px #ffd47c;animation:v3-sun-glow 3.7s ease-in-out infinite}
+.v3-small-cloud{left:18px;top:59px;color:#eef7ff;font-size:52px;animation:v3-cloud-drift 6s ease-in-out infinite}
+.v3-moon{font-size:108px;color:#f6f3d7;left:49px;top:-13px;text-shadow:0 0 12px #ffecc2;animation:v3-sun-glow 5s ease-in-out infinite}
+.v3-stars{font-size:30px;letter-spacing:4px;color:#fff6dc;left:8px;top:29px;animation:v3-twinkle 3s ease-in-out infinite}
+.v3-cloud-main{font-size:99px;color:#f0f4fa;left:31px;top:-5px;text-shadow:0 3px 7px #798aa95c;animation:v3-cloud-drift 5s ease-in-out infinite}
+.v3-cloud-sub{font-size:68px;color:#dce8f6;left:4px;top:30px;animation:v3-cloud-drift 7s ease-in-out infinite reverse}
+.v3-rain-drop{color:#a8dafd;font-size:44px;animation:v3-rain 1.15s linear infinite;left:calc(30px + var(--rain-x,0px));top:56px}
+.v3-rain-drop[data-i="0"]{--rain-x:0px;animation-delay:0s}
+.v3-rain-drop[data-i="1"]{--rain-x:24px;animation-delay:-.3s}
+.v3-rain-drop[data-i="2"]{--rain-x:48px;animation-delay:-.6s}
+.v3-rain-drop[data-i="3"]{--rain-x:72px;animation-delay:-.9s}
+.v3-rain-drop[data-i="4"]{--rain-x:96px;animation-delay:-.15s}
+.v3-snow-flake{font-size:25px;color:white;left:calc(24px + var(--snow-x,0px));top:54px;animation:v3-snow 2.4s linear infinite}
+.v3-snow-flake[data-i="1"]{--snow-x:23px;animation-delay:-.9s}
+.v3-snow-flake[data-i="2"]{--snow-x:44px;animation-delay:-1.8s}
+.v3-snow-flake[data-i="3"]{--snow-x:65px;animation-delay:-.3s}
+.v3-snow-flake[data-i="4"]{--snow-x:86px;animation-delay:-1.2s}
+.v3-snow-flake[data-i="5"]{--snow-x:107px;animation-delay:-2s}
+.v3-lightning{font-size:75px;color:#ffe58e;left:82px;top:45px;animation:v3-lightning 5s linear infinite}
+.v3-fog{font-size:55px;color:#eef5fc;left:10px;top:36px;white-space:nowrap;animation:v3-cloud-drift 8s ease-in-out infinite}
+.v3-weather-unknown{font-size:80px;color:#e6efff;left:56px;top:13px}
+@keyframes v3-sun-glow{0%,100%{opacity:.86;transform:scale(.96)}50%{opacity:1;transform:scale(1.07)}}
+@keyframes v3-cloud-drift{0%,100%{transform:translateX(-5px)}50%{transform:translateX(9px)}}
+@keyframes v3-rain{0%{opacity:0;transform:translateY(-5px)}20%{opacity:1}100%{opacity:0;transform:translateY(46px)}}
+@keyframes v3-snow{0%{opacity:0;transform:translate(0,-8px)}30%{opacity:1}100%{opacity:0;transform:translate(10px,50px)}}
+@keyframes v3-lightning{0%,92%,96%,100%{opacity:0}93%,95%,97%{opacity:1}}
+@keyframes v3-twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+/* Keep the cute clickable HOME feature tiles, not incessantly moving city cartoons. */
+.v2-home-hero .v2-big-icon,.v2-home-hero .v2-small-icon,.v2-banner-landmark{animation:none!important}
+#v2Home .v2-big-icon{font-size:70px;filter:drop-shadow(0 3px 6px #7089b433)}
+#v2Home .v2-small-icon{display:none}
+#itinerary .v2-banner-landmark{font-size:35px;opacity:.68}
+#itinerary .v2-event-type{display:none!important}
+#itinerary .v3-legacy-quick{display:none!important}
+/* Date transition travels only when user chooses another day */
+.v3-date-wrap{position:relative;padding-top:16px}
+#v3MovingDateIcon{position:absolute;top:-7px;font-size:16px;pointer-events:none;color:var(--blue);z-index:4;filter:drop-shadow(0 2px 1px #abc2e5);transform-origin:center}
+#dates .date{transition:transform .18s,background .25s,border-color .25s}
+#dates .date:active{transform:scale(.88)}
+#dates .date.active{box-shadow:0 4px 13px #d89e8542;outline:2px solid var(--v2-accent);outline-offset:2px}
+/* New entry form above grid */
+.v3-composer{padding:14px;border:1px solid var(--line);background:var(--card);border-radius:17px;margin:16px 0}
+.v3-composer-top{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.v3-composer-top h3{font-size:16px;margin:0}
+.v3-composer-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin:12px 0}
+.v3-composer-fields label{display:grid;gap:4px;color:var(--muted);font-size:12px;min-width:0}
+.v3-composer-fields input,.v3-composer-fields select{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px;width:100%;min-width:0;font-size:14px}
+.v3-composer-fields label:nth-child(4),.v3-composer-fields label:nth-child(5){grid-column:span 3}
+/* Time-grid calendar as in shared reference */
+#week,.timeline#events{position:relative;max-width:100%;border:0!important;margin:0!important;padding:0!important}
+.v3-calendar-top{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}
+.v3-calendar-top strong{margin-right:auto;font-size:14px}
+.v3-calendar-top button{font-size:12px}
+.v3-grid-viewport{display:flex;position:relative;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding:3px 0 15px;scroll-snap-type:x proximity}
+.v3-ruler{position:sticky;left:0;z-index:5;flex:0 0 53px;background:var(--card);border-right:1px solid var(--line);padding-top:48px;align-self:stretch;box-shadow:2px 0 6px #3d53620d}
+.v3-hour{display:block;height:55.8px;line-height:1;font-size:11px;color:var(--muted);text-align:right;padding-right:7px;box-sizing:border-box;position:relative;top:-5px}
+.v3-calendar-grid{display:flex;gap:3px;flex:1;min-width:0}
+.v3-time-column{min-width:190px;flex:1;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.v3-time-column.active-day{border-color:var(--v2-accent)}
+.v3-column-heading{width:100%;height:48px;padding:8px 9px;background:var(--soft);border:0;border-bottom:1px solid var(--line);text-align:left;color:var(--ink);font-size:12px;font-weight:750}
+.v3-time-column.active-day .v3-column-heading{background:#fbe8d5}
+body.dark .v3-time-column.active-day .v3-column-heading{background:#d7dcf3}
+.v3-time-track{position:relative;min-height:380px;background:repeating-linear-gradient(to bottom,transparent 0px,transparent 55px,#f5eee8 55px,#f5eee8 56px)}
+body.dark .v3-time-track{background:repeating-linear-gradient(to bottom,transparent 0px,transparent 55px,#e1e6f4 55px,#e1e6f4 56px)}
+.v3-grid-line{position:absolute;left:0;right:0;height:1px;background:var(--line);opacity:.6;pointer-events:none}
+.v3-schedule-event{position:absolute;left:4px;right:4px;min-height:27px;box-sizing:border-box;border:1px solid #d4dadf;border-left:5px solid #e1b958;border-radius:9px;background:#fffbdf;padding:5px 7px;overflow:hidden;cursor:pointer;z-index:1;text-align:left;box-shadow:0 2px 8px #57708916;transition:transform .13s,filter .13s,border-color .13s}
+.v3-schedule-event:active{transform:scale(.97)}
+.v3-schedule-event:hover,.v3-schedule-event:focus-visible,.v3-schedule-event.is-selected{outline:2px solid #667fcb;outline-offset:-2px;z-index:3;filter:saturate(1.1)}
+.v3-kind-food{border-left-color:#dc9094;background:#fdf1ef}
+.v3-kind-transport{border-left-color:#7ab986;background:#eef8e9}
+.v3-kind-hotel{border-left-color:#80b9dc;background:#edf8ff}
+.v3-kind-shop{border-left-color:#aa98d3;background:#f4f0fd}
+.v3-kind-flight{border-left-color:#7db5c9;background:#eafbff}
+.v3-kind-other{border-left-color:#bac2cf;background:#f4f5f9}
+.v3-event-time{font-size:10px;line-height:1.3;color:#5b6673;white-space:normal}
+.v3-event-name{font-size:12px;line-height:1.28;display:block;word-break:break-word;margin-top:2px;color:#26364e}
+.v3-event-detail,.v3-duration-warning{display:block;font-size:10px;line-height:1.35;margin-top:3px;color:#627184;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.v3-duration-warning{color:#a35d41}
+.v3-schedule-event.is-done{opacity:.57}
+.v3-schedule-event .v3-edit-mini{margin-top:4px;padding:3px 7px;background:#fff9;border:1px solid #cbd3de;border-radius:7px;font-size:10px;color:#4d6688}
+#events .v3-time-column{min-width:0;width:100%;max-width:100%}
+#events .v3-schedule-event{left:9px;right:9px}
+#events .v3-event-name{font-size:14px}
+/* Map remains directly below either day or week calendar */
+.v3-inline-map{margin:17px 0 10px;border:1px solid var(--line);padding:14px;border-radius:18px;background:var(--card)}
+.v3-map-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.v3-map-head h3{font-size:16px;margin:0 0 3px}
+.v3-map-head p{margin:0}
+.v3-map-toolbar{display:flex;gap:6px;flex-wrap:wrap}
+.v3-map-toolbar button{font-size:12px;padding:8px}
+#v3LeafletMap{height:350px;min-height:250px;width:100%;border-radius:13px;margin-top:10px;background:#e9f0f8;z-index:0}
+#v3MapSummary{margin:10px 0 0;line-height:1.6}
+.v3-pack-picker{display:block;border:1px solid var(--line);border-radius:14px;margin:10px 0;background:var(--card)}
+.v3-pack-picker>summary{padding:14px;cursor:pointer;font-weight:750;list-style:none;color:var(--ink)}
+.v3-pack-picker>summary::marker{display:none}
+.v3-pack-picker .v1-box{margin:0;border:0;border-top:1px solid var(--line);border-radius:0 0 13px 13px}
+.v3-pack-bulk{border:1px dashed var(--line);padding:12px;border-radius:14px;margin:12px 0}
+.v3-pack-bulk>strong{display:block;font-size:14px}
+.v3-pack-bulk .v1-actions{margin-bottom:0}
+.v3-pack-bulk button{font-size:12px}
+.v3-danger{color:#9b3f40!important;background:#ffedf0!important}
+.v3-remove-check{flex:none;width:17px;height:17px;accent-color:#be6464!important}
+.v3-food-header{display:flex;align-items:center;gap:10px}
+.v3-food-header h3{font-size:18px;margin:0}
+.v3-food-emoji{font-size:34px}
+.v3-food-row{display:flex;gap:10px;flex-wrap:wrap;padding:13px;margin:9px 0;border:1px solid var(--line);border-radius:13px;background:var(--card)}
+.v3-food-row .v1-actions{align-self:center}
+@media(max-width:670px){
+ .hero-art{right:10px;bottom:10px;width:108px}
+ #v3WeatherArt{width:110px;height:95px;transform:scale(.7);transform-origin:right center;margin-left:-24px}
+ #v3WeatherSource{font-size:9px;max-width:120px}
+ .v3-composer-fields{grid-template-columns:1fr 1fr}
+ .v3-composer-fields label:nth-child(4),.v3-composer-fields label:nth-child(5){grid-column:span 2}
+ .v3-time-column{min-width:190px}
+ #v3LeafletMap{height:290px}
+ .v3-map-toolbar{width:100%}
+ .v3-map-toolbar button{flex:1;padding:8px 5px}
+ .v3-calendar-top button{font-size:11px;padding:8px}
+ .v3-ruler{flex-basis:47px}
+}
+@media(prefers-reduced-motion:reduce){
+ .v3-sun,.v3-small-cloud,.v3-moon,.v3-stars,.v3-cloud-main,.v3-cloud-sub,.v3-rain-drop,.v3-snow-flake,.v3-lightning,.v3-fog{animation:none!important}
+}
+
+/* Final visual audit: the WMO weather visual belongs in the card, not offscreen at hero right. */
+.hero .hero-art{display:none!important}
+.hero .glass{position:relative;max-width:min(415px,calc(100vw - 36px))!important;min-height:106px;display:flex;align-items:center;gap:9px;justify-content:space-between;padding:12px 13px}
+.hero .glass>#weatherEmoji{display:none!important}
+.hero .glass>div:not(#v3WeatherArt):not(#v3WeatherSource){min-width:0;flex:1}
+.hero .glass .sub{font-size:11px;line-height:1.4}
+.hero .glass #v3WeatherArt{position:relative;flex:0 0 98px;width:98px;height:86px;overflow:visible;margin:0;transform:none}
+.hero .glass #v3WeatherArt .v3-weather-scene{position:relative;width:180px;height:116px;transform:scale(.62);transform-origin:top left}
+.hero .glass #v3WeatherSource{display:none}
+@media(max-width:650px){
+ .hero .glass{max-width:min(360px,calc(100vw - 28px))!important;min-height:94px;padding:10px 11px}
+ .hero .glass #v3WeatherArt{flex-basis:78px;width:78px;height:78px}
+ .hero .glass #v3WeatherArt .v3-weather-scene{transform:scale(.52)}
+ .hero .glass .temp{font-size:19px}
+ .hero .glass .sub{font-size:10px}
+}
+
 </style></head><body><style>
 #v2ReviewTop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px max(14px,calc((100vw - 1060px)/2));background:linear-gradient(90deg,#fff6ed,#f0f4ff);color:#294260;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;border-bottom:1px solid #e3e7ed}
 #v2ReviewTop strong{font-size:14px}
@@ -708,6 +870,263 @@ const details=E("details"),summary=E("summary",{text:"進階：雲端服務擁�
 box.replaceChildren(intro,details);
 };
 U.renderMore();
+})();
+
+</script>
+<script>
+/* VOYAGE V3 independently constructed Seoul sample subway graph.
+   Verified station sequence from Seoul Metro line maps (see source references).
+   This is a PARTIAL reference network, not official realtime routing. */
+(function(){
+"use strict";
+const nodes={
+seoul:["首爾站","서울역","Seoul Station",37.5546,126.9724,["首爾","seoul"]],
+hoehyeon:["會賢","회현","Hoehyeon",37.5585,126.9781],
+myeongdong:["明洞","명동","Myeongdong",37.5609,126.9865],
+chungmuro:["忠武路","충무로","Chungmuro",37.5613,126.9941],
+ddp:["東大門歷史文化公園","동대문역사문화공원","Dongdaemun History Culture Park",37.5658,127.0093,["東大門歷史文化公園站","ddp"]],
+dongdaemun:["東大門","동대문","Dongdaemun",37.5713,127.0095],
+euljiro4:["乙支路4街","을지로4가","Euljiro 4-ga",37.5669,126.9982],
+euljiro3:["乙支路3街","을지로3가","Euljiro 3-ga",37.5663,126.9917],
+euljiro1:["乙支路入口","을지로입구","Euljiro 1-ga",37.5660,126.9820],
+cityhall:["市廳","시청","City Hall",37.5657,126.9771],
+chungjeongno:["忠正路","충정로","Chungjeongno",37.5596,126.9636],
+ahyeon:["阿峴","아현","Ahyeon",37.5573,126.9560],
+ewha:["梨大","이대","Ewha Womans Univ.",37.5568,126.9459,["梨花女子大學"]],
+sinchon:["新村","신촌","Sinchon",37.5552,126.9369],
+hongdae:["弘大入口","홍대입구","Hongik Univ.",37.5572,126.9254,["弘大","hongdae","hongik"]],
+gongdeok:["孔德","공덕","Gongdeok",37.5440,126.9513],
+sindang:["新堂","신당","Sindang",37.5659,127.0195],
+sangwangsimni:["上往十里","상왕십리","Sangwangsimni",37.5644,127.0291],
+wangsimni:["往十里","왕십리","Wangsimni",37.5613,127.0374],
+hanyang:["漢陽大","한양대","Hanyang Univ.",37.5558,127.0435],
+ttukseom:["纛島","뚝섬","Ttukseom",37.5472,127.0474,["聖水前一站"]],
+seongsu:["聖水","성수","Seongsu",37.5446,127.0559,["聖水站","seongsu"]]
+};
+const lines={
+"地鐵 4 號線":["seoul","hoehyeon","myeongdong","chungmuro","ddp","dongdaemun"],
+"地鐵 2 號線":["hongdae","sinchon","ewha","ahyeon","chungjeongno","cityhall","euljiro1","euljiro3","euljiro4","ddp","sindang","sangwangsimni","wangsimni","hanyang","ttukseom","seongsu"],
+"AREX 機場鐵道普通列車":["seoul","gongdeok","hongdae"]
+};
+const alias=x=>String(x||"").trim().toLowerCase().replace(/\s/g,"").replace(/(?:역|站|station)$/i,"").replace(/[\u00b7.]/g,"");
+function key(text){const raw=alias(text);if(!raw)return null;for(const [id,n] of Object.entries(nodes)){if([n[0],n[1],n[2],...(n[5]||[])].some(a=>alias(a)===raw))return id}return null}
+function station(id){const n=nodes[id];return{zh:n[0],local:n[1],en:n[2],lat:n[3],lon:n[4]}}
+const edges=new Map(),all=[];
+const addEdge=(a,b,cost,transfer=false)=>{if(!edges.has(a))edges.set(a,[]);edges.get(a).push({to:b,cost,transfer})};
+for(const [line,stops] of Object.entries(lines)){for(const id of stops)all.push(line+"|"+id);for(let i=1;i<stops.length;i++){const from=line+"|"+stops[i-1],to=line+"|"+stops[i],cost=line.includes("AREX")?4:2;addEdge(from,to,cost);addEdge(to,from,cost)}}
+const byStation={};for(const code of all){const id=code.split("|")[1];(byStation[id]??=[]).push(code)}
+for(const list of Object.values(byStation))for(let i=0;i<list.length;i++)for(let j=0;j<list.length;j++)if(i!==j)addEdge(list[i],list[j],5,true);
+function route(from,to){const a=key(from),b=key(to);if(!a||!b||a===b)return null;
+const distances=new Map(),previous=new Map(),queue=[];
+for(const start of byStation[a]||[]){distances.set(start,0);queue.push(start)}
+let goal=null;
+while(queue.length){queue.sort((x,y)=>(distances.get(x)??Infinity)-(distances.get(y)??Infinity));const u=queue.shift(),uid=u.split("|")[1];if(uid===b){goal=u;break}
+for(const e of edges.get(u)||[]){const alt=(distances.get(u)??Infinity)+e.cost;if(alt<(distances.get(e.to)??Infinity)){distances.set(e.to,alt);previous.set(e.to,u);if(!queue.includes(e.to))queue.push(e.to)}}}
+if(!goal)return null;
+const path=[];for(let u=goal;u;u=previous.get(u))path.unshift(u);
+const legs=[];let track=null;
+for(const code of path){const [line,id]=code.split("|");if(!track||track.line!==line){track={line,mode:line.includes("AREX")?"SUBURBAN":"SUBWAY",headsign:"",stations:[station(id)]};legs.push(track)}else if(track.stations.at(-1).zh!==station(id).zh)track.stations.push(station(id));}
+for(let i=0;i<legs.length;i++){const l=legs[i],next=l.stations[1];if(next)l.headsign="搭往「"+next.zh+"」方向的月台；請以當日列車終點顯示核對";else l.headsign="此站轉乘 "+(legs[i+1]?.line||"")}
+const estimated=Math.ceil(distances.get(goal)||0), transfers=Math.max(0,legs.length-1);
+return{kind:"seoul-partial",minutes:estimated,transfers,legs,source:"https://metro.nuua.travel/en/seoul/station/156/line/2",label:"首爾部分站網參考 · 約 "+estimated+" 分含轉乘步行估算、不含等車（非即時班次），範圍僅涵蓋已整理的 2／4 號線部分區間和 AREX 普通列車。完整路線以當日 NAVER／Google 地圖及月台公告為準。"}}
+window.VoyageSeoulNetwork={key,route,stations:nodes,lines};
+})();
+
+</script>
+<script>
+/* VOYAGE V3: real time-proportional calendar and synchronized embedded map.
+   Time ranges are based only on saved times/durations; default rendering estimates are labeled.
+   A dashed day order is NOT a calculated road or transit route. */
+(function(){
+"use strict";
+const U=window.VoyageUI,D=window.VoyageDomain;if(!U||!D)throw Error("VOYAGE modules not ready");
+const $=id=>document.getElementById(id);
+const E=(tag,attrs={},children=[])=>{const n=document.createElement(tag);for(const [k,v] of Object.entries(attrs)){if(k==="text")n.textContent=String(v);else if(k==="class")n.className=v;else n.setAttribute(k,String(v))}for(const c of children)n.append(c);return n};
+const button=(label,fn,cls="secondary")=>{const b=E("button",{text:label,class:cls});b.type="button";b.onclick=fn;return b};
+const typeNames={place:"景點",food:"餐飲",transport:"交通／航班",shop:"購物",hotel:"住宿",flight:"航班",other:"其他"};
+const types=[["place","景點"],["food","餐飲"],["transport","交通"],["shop","購物"],["hotel","住宿"],["flight","航班"],["other","其他"]];
+const pxPerMin=.93,selected={event:null,day:0},cache=new WeakMap();let movingDate=false,inlineMap=null,inlineLayers=null,lastMapTrip="",overview=false;
+const wrap=E("div",{class:"v3-date-wrap"}),marker=E("span",{id:"v3MovingDateIcon",role:"img","aria-label":"日期選取標記",text:"✈"});
+const dateRow=$("dates");dateRow.parentNode.insertBefore(wrap,dateRow);wrap.append(dateRow,marker);
+const preview=E("section",{id:"v3InlineMap",class:"v3-inline-map"}),mapHead=E("div",{class:"v3-map-head"}),mapDiv=E("div",{id:"v3LeafletMap"}),mapSummary=E("div",{id:"v3MapSummary",class:"v1-notice"});
+preview.append(mapHead,mapDiv,mapSummary);
+$("events").after(preview);
+const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"});
+if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.after(composer);else form.before(composer)}
+function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has,hasStart:start!==null};}
+function formatMinutes(min){const n=((min%1440)+1440)%1440;return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")+(min>=1440?"（隔日）":"")}
+function category(x){return types.some(a=>a[0]===x.type)?x.type:"place"}
+function routeText(x){if(x.type!=="transport")return"";const parts=x.routeInfo?.legs||[];if(parts.length)return parts.map(l=>{const mode=l.mode==="WALK"?"步行":l.line||"搭乘";return mode+(l.duration?(" "+Math.ceil(l.duration/60)+" 分"):"")}).join(" → ");return (x.from||"起點")+" → "+(x.to||"終點")+(x.line?" · "+x.line:"");}
+function visibleDays(){const total=trip().days.length,start=Math.floor(day/7)*7;return Array.from({length:Math.min(7,total-start)},(_,i)=>start+i)}
+function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)for(const x of trip().days[i]||[]){const time=timeInfo(x);earliest=Math.min(earliest,time.start);latest=Math.max(latest,time.start+time.duration)}earliest=Math.max(0,Math.floor((earliest-30)/60)*60);latest=Math.min(2880,Math.ceil((latest+40)/60)*60);return{first:earliest,last:Math.max(latest,earliest+360),height:(Math.max(latest,earliest+360)-earliest)*pxPerMin}}
+function makeRuler(b){const r=E("div",{class:"v3-ruler"});for(let t=b.first;t<=b.last;t+=60){r.append(E("span",{class:"v3-hour",text:formatMinutes(t).replace("（隔日）","")}));}return r}
+function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(28,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(x.done?" is-done":"")+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
+card.style.top=y+"px";card.style.height=h+"px";
+const time=E("div",{class:"v3-event-time",text:(t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定")});
+card.append(time,E("strong",{class:"v3-event-name",text:x.name}));
+if(kind==="transport"){card.append(E("small",{class:"v3-event-detail",text:routeText(x)||"交通時間"}));}
+else if(x.notes&&h>80){card.append(E("small",{class:"v3-event-detail",text:x.notes.slice(0,90)}))}
+if(!t.actual)card.append(E("small",{class:"v3-duration-warning",text:"請設定停留分鐘（目前僅為排版占位）"}));
+const click=()=>{selected.event=x;selected.day=dayIndex;if(day!==dayIndex){day=dayIndex;render()}focusPlace(x,{scroll:true});};
+card.onclick=click;card.onkeydown=event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();click()}};
+if(single){card.append(button("編輯",e=>{}, "ghost"));const edit=card.lastElementChild;edit.className="v3-edit-mini";edit.onclick=ev=>{ev.stopPropagation();day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0)U.eventEditor(index,false)};}
+return card}
+function drawGrid(indices,single){const b=bounds(indices),container=E("div",{class:"v3-grid-viewport"}),inner=E("div",{class:"v3-calendar-grid"}),ruler=makeRuler(b);
+container.append(ruler,inner);
+for(const i of indices){const col=E("section",{class:"v3-time-column"+(i===day?" active-day":""),"data-day":String(i)}),header=E("button",{class:"v3-column-heading",text:"第 "+(i+1)+" 天"+(trip().startDate?" · "+D.dayISO(trip().startDate,i).slice(5):"")});header.onclick=()=>{day=i;selected.day=i;render();syncView()};col.append(header);
+const track=E("div",{class:"v3-time-track"});track.style.height=b.height+"px";for(let tick=b.first;tick<=b.last;tick+=60){const line=E("div",{class:"v3-grid-line"});line.style.top=(tick-b.first)*pxPerMin+"px";track.append(line)}
+for(const x of trip().days[i]||[])track.append(createEvent(x,i,b,single));
+col.append(track);inner.append(col)}
+return container}
+function drawWeek(){const w=$("week");if(!w)return;const existing=w.querySelector(".v3-grid-viewport"),scrollLeft=existing?existing.scrollLeft:0;const days=visibleDays();w.replaceChildren(E("div",{class:"v3-calendar-top"},[E("strong",{text:"第 "+(days[0]+1)+"–"+(days[days.length-1]+1)+" 天 · 時間行事曆"}),button("← 前七天",()=>{day=Math.max(0,Math.floor(day/7)*7-7);render()}),button("後七天 →",()=>{day=Math.min(trip().days.length-1,Math.floor(day/7)*7+7);render()})]));
+const grid=drawGrid(days,false);w.append(grid);grid.scrollLeft=scrollLeft}
+renderWeek=drawWeek;
+function drawDaily(){const box=$("events");box.replaceChildren(drawGrid([day],true));}
+function focusMarker(oldIndex,newIndex){const dates=[...dateRow.querySelectorAll(".date")],target=dates[newIndex];if(!target||!marker)return;const wrapRect=wrap.getBoundingClientRect(),targetRect=target.getBoundingClientRect(),targetX=targetRect.left-wrapRect.left+targetRect.width/2-11;
+const old=dates[oldIndex],oldRect=old?.getBoundingClientRect(),oldX=oldRect?(oldRect.left-wrapRect.left+oldRect.width/2-11):targetX;
+marker.style.left=targetX+"px";
+if(oldIndex!==newIndex&&typeof marker.animate==="function"&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+marker.animate([{transform:"translate("+(oldX-targetX)+"px,0)",opacity:.8},{transform:"translate("+(oldX-targetX)*.5+"px,-24px) rotate(13deg)",opacity:1},{transform:"translate(0,0) rotate(0deg)",opacity:1}],{duration:480,easing:"cubic-bezier(.22,.7,.22,1)"});
+}}
+function decorateDates(){const dates=[...dateRow.querySelectorAll(".date")];dates.forEach((b,i)=>{const old=b.onclick;b.onclick=event=>{const previous=day;old(event);focusMarker(previous,day)};});focusMarker(day,day)}
+function ensureMap(){if(inlineMap||!window.L)return;inlineMap=L.map("v3LeafletMap",{zoomControl:true,scrollWheelZoom:false}).setView([Number(trip().lat)||37.5665,Number(trip().lon)||126.978],12);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",maxZoom:19}).addTo(inlineMap);
+inlineLayers=L.layerGroup().addTo(inlineMap)}
+function pinPoints(){return (trip().days[day]||[]).filter(x=>x.type!=="transport"&&Number.isFinite(x.lat)&&Number.isFinite(x.lon))}
+function fitMap(){if(!inlineMap)return;const points=pinPoints();if(!points.length){inlineMap.setView([Number(trip().lat)||37.5665,Number(trip().lon)||126.978],11);return}
+if(points.length===1)inlineMap.setView([points[0].lat,points[0].lon],14);
+else inlineMap.fitBounds(L.latLngBounds(points.map(x=>[x.lat,x.lon])).pad(.22),{maxZoom:14})}
+function refreshMap(){mapHead.replaceChildren(E("div",{},[E("h3",{text:"🗺 行程下方地圖"}),E("p",{class:"v1-sub",text:"點上方景點，就在這張地圖定位。不需切換到其他分頁。"})]),E("div",{class:"v3-map-toolbar"},[button("今天全部景點",()=>{overview=true;selected.event=null;refreshMap();fitMap()}),button("Google 地圖：步行順序",openDayDirections),button("NAVER 查看地點",()=>{const x=selected.event||pinPoints()[0];if(x)nav(x,"naver");else U.toast("尚無已確認的景點可導航")})]));
+ensureMap();if(!inlineMap)return;inlineLayers.clearLayers();
+const points=pinPoints();if(points.length>1&&typeof L.polyline==="function"){L.polyline(points.map(x=>[x.lat,x.lon]),{color:"#658bc7",weight:3,dashArray:"6 8",opacity:.7}).addTo(inlineLayers)}for(const [i,x] of points.entries()){const icon=L.divIcon({html:'<div class="pin">'+(i+1)+"</div>",className:"",iconSize:[30,30],iconAnchor:[15,15]});const marker=L.marker([x.lat,x.lon],{icon}).bindPopup(x.name).addTo(inlineLayers);if(typeof marker.on==="function")marker.on("click",()=>focusPlace(x,{scroll:false}))}
+mapSummary.replaceChildren();
+if(!points.length){mapSummary.append(E("span",{text:"本日還沒有確認位置的景點。請點行事曆景點，再選擇定位；地圖不會猜測地址。"}))}
+else {const name=selected.event&&selected.day===day?selected.event.name:"全日 "+points.length+" 個已定位地點";mapSummary.append(E("strong",{text:name}),E("span",{text:" · 虛線只是景點順序的直線示意，不是道路路線，也不代表實際交通分鐘。"}));if(selected.event&&selected.day===day){const x=selected.event;const row=E("div",{class:"v1-actions"}),idx=trip().days[day].indexOf(x);if(idx>=0){row.append(button("行程詳情",()=>window.VoyageV2?.showDetails(x,idx,day)),button("編輯時間／停留分鐘",()=>U.eventEditor(idx,false)),button(x.done?"取消完成":"✓ 標記完成",()=>{x.done=!x.done;save();render()}));if(x.type!=="transport")row.append(button("Google 地圖",()=>nav(x,"google")),button("NAVER 地圖",()=>nav(x,"naver")))}mapSummary.append(row)}}
+if(selected.event&&selected.day===day&&Number.isFinite(selected.event.lat)&&Number.isFinite(selected.event.lon)&&!overview){
+inlineMap.setView([selected.event.lat,selected.event.lon],16)}else fitMap();
+setTimeout(()=>inlineMap.invalidateSize(),130);
+}
+function focusPlace(x,opts={}){if(x.type==="transport"){selected.event=x;selected.day=day;mapSummary.replaceChildren(E("span",{text:"🚆 "+routeText(x)+"。交通路線尚不能在內嵌地圖以官方軌跡顯示；請使用外部路線服務。"}));if(opts.scroll)preview.scrollIntoView({behavior:"smooth",block:"center"});return}
+selected.event=x;selected.day=day;overview=false;
+if(!Number.isFinite(x.lat)||!Number.isFinite(x.lon)){mapSummary.replaceChildren(E("span",{text:"「"+x.name+"」尚未確認座標；請先核對地點，才會移動地圖。"}),button("搜尋並確認此地點",()=>geocode(x)));if(opts.scroll)preview.scrollIntoView({behavior:"smooth",block:"center"});return}
+refreshMap();
+if(opts.scroll)preview.scrollIntoView({behavior:"smooth",block:"center"})}
+function openDayDirections(){const t=trip(),points=pinPoints();if(points.length<2){U.toast("當日需要至少兩個已定位景點才能規劃路線");return}
+const coord=x=>x.lat+","+x.lon,p0=points[0],pn=points[points.length-1],via=points.slice(1,-1).slice(0,8).map(coord).join("|");
+const url="https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(coord(p0))+"&destination="+encodeURIComponent(coord(pn))+"&travelmode=walking"+(via?"&waypoints="+encodeURIComponent(via):"");
+window.open(url,"_blank","noopener");U.toast("已交給 Google 地圖規劃步行多站路線；請核對是否需要改搭大眾交通工具。")}
+function showComposer(){composer.replaceChildren(E("div",{class:"v3-composer-top"},[E("h3",{text:"＋ 排入今天的行程"}),E("span",{class:"v1-sub",text:"餐飲、景點、購物、交通都可選類別與停留分鐘"})]));
+const fields=E("div",{class:"v3-composer-fields"}),type=E("select",{id:"v3NewType"}),time=E("input",{id:"v3NewTime",type:"time",value:"10:00"}),duration=E("input",{id:"v3NewDuration",type:"number",min:"1",max:"1440",value:"45"}),name=E("input",{id:"v3NewName",placeholder:"例如：想吃的烤肉店、景點、地鐵轉乘"}),notes=E("input",{id:"v3NewNotes",placeholder:"食物推薦、地址或其他備註（可留空）"});
+for(const [v,label] of types)type.append(E("option",{value:v,text:label}));type.value="food";
+const make=(txt,input)=>E("label",{},[E("span",{text:txt}),input]);fields.append(make("類別",type),make("開始時間",time),make("停留／搭乘分鐘",duration),make("名稱",name),make("備註",notes));
+composer.append(fields,button("加入當天時間軸",()=>{const t=trip(),tm=time.value,du=Number(duration.value),title=name.value.trim();if(!title||!D.validTime(tm)||!Number.isInteger(du)||du<1||du>1440){U.toast("請填名稱、有效開始時間、1 至 1440 分鐘");return}const item={id:D.uid(),name:title,time:tm,duration:du,type:type.value,notes:notes.value.trim()};const collisions=D.conflicts([...t.days[day],item]);if(collisions.length&&!confirm("時間和既有活動重疊 "+collisions.length+" 組。確定照原時間保留嗎？"))return;t.days[day].push(item);save();render();name.value="";notes.value="";U.toast("已加入 "+title+" · "+du+" 分鐘")},"primary"))}
+showComposer();
+function onRender(){drawDaily();decorateDates();refreshMap();$("itinerary").querySelectorAll(".v3-schedule-event").forEach(x=>x.setAttribute("data-rendered","true"));
+const oldQuick=$("itinerary").querySelector(".formrow");if(oldQuick)oldQuick.classList.add("v3-legacy-quick");}
+const before=render;render=function(){before();try{onRender()}catch(e){console.error("VOYAGE calendar+map view:",e)}};
+const beforeTab=setTab;setTab=function(tab){beforeTab(tab);if(tab==="itinerary"){setTimeout(()=>{ensureMap();inlineMap?.invalidateSize()},130)}};
+window.VoyageCalendar={timeInfo,formatMinutes,bounds,focusPlace,openDayDirections,drawWeek};
+render();syncView();
+})();
+
+</script>
+<script>
+/* VOYAGE V3: expandable category-based packing, bulk removal, eat-list and wishlist shortcuts. */
+(function(){
+"use strict";
+const U=window.VoyageUI,D=window.VoyageDomain;if(!U||!D)return;
+const {E,button,field,get,openDialog,toast,current,pages}=U;
+const selected=new Map();
+function owned(){const t=current();return selected.get(t.id)||new Set()}
+function cleanSelected(t){const valid=new Set(t.packing.map(x=>x.id)),now=owned();for(const x of now)if(!valid.has(x))now.delete(x);selected.set(t.id,now);return now}
+const basePacking=pages.packing;
+pages.packing=box=>{
+const t=current();basePacking(box);
+const lib=box.querySelector("#v2PackingLibrary");
+if(!lib)return;
+const collapsed=!!t.packingCollapsed,detail=E("details",{id:"v3PackLibrary",class:"v3-pack-picker"});
+detail.open=!collapsed;
+const summary=E("summary",{text:(collapsed?"▶ 展開":"▼ 收合")+"分類清單庫 · 挑選證件／3C／衣物／盥洗／健康等"});
+detail.append(summary,lib);box.prepend(detail);
+const choose=lib.querySelector("#v2PackChoices"),buttons=[...lib.querySelectorAll("button")],add=buttons.find(x=>x.textContent.includes("加入勾選的物品"));
+if(add)lib.querySelector(".v1-actions").prepend(button("加入目前分類所有項目",()=>{const available=choose.querySelectorAll('input[type=checkbox]:not(:disabled)');available.forEach(c=>c.checked=true);if(!available.length){toast("此分類沒有尚未加入的物品");return}add.click()}));
+function toggle(){t.packingCollapsed=!detail.open;summary.textContent=(detail.open?"▼ 收合":"▶ 展開")+"分類清單庫 · 挑選證件／3C／衣物／盥洗／健康等";save()}
+detail.addEventListener("toggle",toggle);
+lib.insertBefore(E("div",{class:"v1-actions"},[button("縮小清單",()=>{detail.open=false;summary.focus()}),button("展開選擇",()=>{detail.open=true;lib.scrollIntoView({behavior:"smooth",block:"start"})})]),lib.firstChild);
+const oldButton=[...box.querySelectorAll("button")].find(b=>b.textContent.includes("加入出國通用清單"));
+if(oldButton){oldButton.textContent="從分類清單加入物品";oldButton.onclick=()=>{detail.open=true;lib.scrollIntoView({behavior:"smooth",block:"start"})}}
+const rows=[...box.children].filter(c=>c.classList?.contains("v1-item"));
+const toolbar=E("div",{class:"v3-pack-bulk",id:"v3PackBulk"}),count=E("span",{class:"v1-sub",id:"v3PackSelectedCount",text:"尚未選取刪除項目"}),now=cleanSelected(t);
+function countUp(){count.textContent="已選取 "+now.size+" / "+t.packing.length+" 件（不影響已打包勾選）";toolbar.querySelector("[data-action=delete]").disabled=now.size===0}
+function clearAll(){if(!t.packing.length){toast("清單目前是空的");return}if(!confirm("確定清空目前旅行所有 "+t.packing.length+" 件行李嗎？這個操作無法撤銷，其他行程不會受影響。"))return;t.packing=[];now.clear();save();render()}
+function erase(){const count=now.size;if(!count)return;if(!confirm("確定刪除勾選的 "+count+" 件物品？這些項目的所有旅伴打包勾選也會一併刪除。"))return;t.packing=t.packing.filter(x=>!now.has(x.id));now.clear();save();render();toast("已刪除 "+count+" 件物品")}
+const selectAll=button("全選要刪的物品",()=>{now.clear();t.packing.forEach(x=>now.add(x.id));rows.forEach(r=>{const x=r.querySelector(".v3-remove-check");if(x)x.checked=true});countUp()}),clear=button("取消選取",()=>{now.clear();rows.forEach(r=>{const x=r.querySelector(".v3-remove-check");if(x)x.checked=false});countUp()}),remove=button("刪除勾選",erase),eraseAll=button("清空全部行李",clearAll);
+remove.dataset.action="delete";eraseAll.className="v3-danger";
+toolbar.append(E("strong",{text:"整理我的清單"}),count,E("div",{class:"v1-actions"},[selectAll,clear,remove,eraseAll]));
+const place=rows[0]||[...box.children].find(x=>x.classList?.contains("v1-notice"));if(place)box.insertBefore(toolbar,place);else box.append(toolbar);
+rows.forEach((row,i)=>{const pack=t.packing[i];if(!pack)return;const input=E("input",{type:"checkbox",class:"v3-remove-check","aria-label":"選取刪除 "+pack.name});input.checked=now.has(pack.id);input.onchange=()=>{if(input.checked)now.add(pack.id);else now.delete(pack.id);countUp()};row.prepend(input);row.dataset.packId=String(pack.id)});
+countUp();
+};
+pages.foods=box=>{
+const t=current();if(!Array.isArray(t.foodWishlist))t.foodWishlist=[];
+box.append(E("div",{class:"v3-food-header"},[E("span",{class:"v3-food-emoji",text:"🍜"}),E("div",{},[E("h3",{text:"我想吃的美食口袋名單"}),E("p",{class:"v1-sub",text:"先收藏想吃的食物、餐廳或甜點，再依日期安排進真正的行程時間軸。餐廳地址需核對後才能定位。"})])]));
+box.append(E("div",{class:"v1-actions"},[button("＋ 收藏想吃的",()=>{
+openDialog("新增美食／餐廳收藏",[
+field("vFoodName","餐廳名稱或想吃的食物","text",""),
+field("vFoodKind","類型","select","restaurant",{options:[["restaurant","餐廳"],["street","小吃／街頭美食"],["dessert","甜點"],["coffee","咖啡"],["market","夜市／市場"],["dish","特定想吃的料理"]]}),
+field("vFoodAddress","地址或區域","text","",{full:true}),
+field("vFoodCost","預估金額（目的地幣別）","number","0",{min:0,step:"0.01"}),
+field("vFoodNotes","想吃的品項、排隊及營業提醒","textarea","",{full:true}),
+field("vFoodURL","地圖／官方網址（HTTPS，選填）","url","",{full:true})
+],()=>{const name=get("vFoodName"),url=get("vFoodURL"),cost=D.amount(get("vFoodCost"));if(!name||cost===null)throw Error("請輸入名稱與有效預算");if(url&&!/^https:\/\//i.test(url))throw Error("網址必須是 HTTPS");t.foodWishlist.push({id:D.uid(),name,kind:get("vFoodKind"),address:get("vFoodAddress"),cost,notes:get("vFoodNotes"),url,visited:false});return true})},"primary")]));
+for(const x of t.foodWishlist){const card=E("div",{class:"v3-food-row"}),main=E("div",{class:"v1-item-main"});main.append(E("strong",{text:(x.visited?"✓ ":"")+x.name}),E("div",{class:"v1-sub",text:[({restaurant:"餐廳",street:"小吃",dessert:"甜點",coffee:"咖啡",market:"市場",dish:"料理"}[x.kind]||"美食"),x.address,x.cost?D.money(x.cost,t.currency):"",x.notes].filter(Boolean).join(" · ")}));card.append(main);
+card.append(E("div",{class:"v1-actions"},[button("📅 安排到行程",()=>{const choices=t.days.map((_,i)=>[String(i),"第 "+(i+1)+" 天"+(t.startDate?" · "+D.dayISO(t.startDate,i):"")]);openDialog("把「"+x.name+"」排入行程",[
+field("vFoodDay","哪一天","select",String(day),{options:choices}),
+field("vFoodTime","用餐開始時間","time","12:00"),
+field("vFoodMinutes","用餐分鐘","number","60",{min:1}),
+field("vFoodRemark","安排備註","textarea",x.notes||"",{full:true})
+],()=>{const d=+get("vFoodDay"),time=get("vFoodTime"),duration=+get("vFoodMinutes");if(!Number.isInteger(d)||!t.days[d]||!D.validTime(time)||!Number.isInteger(duration)||duration<1||duration>1440)throw Error("請填入合法日期、時間與分鐘");const entry={id:D.uid(),type:"food",name:x.name,time,duration,notes:[x.address,get("vFoodRemark")].filter(Boolean).join(" · "),cost:x.cost||0,url:x.url};const conflicts=D.conflicts([...t.days[d],entry]);if(conflicts.length&&!confirm("與現有活動時間重疊，仍要加入嗎？"))return false;t.days[d].push(entry);day=d;return true})}),button(x.visited?"標記未吃":"✓ 已吃過",()=>{x.visited=!x.visited;save();render()}),button("移除收藏",()=>{if(!confirm("移除「"+x.name+"」收藏？已排入行程的紀錄會保留。"))return;t.foodWishlist=t.foodWishlist.filter(v=>v.id!==x.id);save();render()})]));box.append(card)}
+if(!t.foodWishlist.length)box.append(E("div",{class:"v1-notice",text:"還沒有想吃的食物。先收藏一間烤肉店、咖啡店或街頭小吃，再安排用餐時間。"}));
+};
+const originalWishlist=pages.wishlist;
+pages.wishlist=box=>{originalWishlist(box);box.prepend(E("p",{class:"v1-notice",text:"購物願望也可以從首頁直接進入。這是待買清單，不會自動記帳；實際購買金額仍由你確認。"}))};
+U.renderMore();
+})();
+
+</script>
+<script>
+/* VOYAGE V3 weather artwork follows actual current Open-Meteo WMO weather_code.
+   No animated city landmark decorations are treated as weather observations. */
+(function(){
+"use strict";
+const $=id=>document.getElementById(id),E=(tag,attrs={},children=[])=>{const x=document.createElement(tag);for(const [k,v] of Object.entries(attrs)){if(k==="class")x.className=v;else if(k==="text")x.textContent=String(v);else x.setAttribute(k,v)}for(const c of children)x.append(c);return x};
+const hero=document.querySelector(".hero-art"),glass=document.querySelector(".hero .glass");if(!glass)return;if(hero)hero.style.display="none";
+const weather=E("div",{id:"v3WeatherArt","aria-live":"polite",role:"img"}),source=E("div",{id:"v3WeatherSource"});
+glass.append(weather,source);
+const badge=$("weatherEmoji");
+function classify(code,isDay){const n=Number(code);if(!Number.isFinite(n))return "unknown";if(n>=95)return "storm";if(n>=71&&n<=86)return "snow";if(n>=51&&n<=67||n>=80&&n<=82)return "rain";if(n===45||n===48)return "fog";if(n===0||n===1)return isDay?"sun":"moon";if(n>=2&&n<=3)return "cloud";return isDay?"cloud":"moon"}
+function draw(payload){if(!glass.contains(weather))glass.append(weather,source);if(hero)hero.style.display="none";const w=payload&&payload.city===trip().city?payload:null,kind=w?classify(w.code,w.isDay):"unknown";
+weather.className="v3-weather-"+kind;weather.replaceChildren();const main=E("div",{class:"v3-weather-scene"});
+if(kind==="sun"){main.append(E("span",{class:"v3-sun",text:"☀"}),E("span",{class:"v3-small-cloud",text:"☁"}))}
+else if(kind==="moon"){main.append(E("span",{class:"v3-moon",text:"☾"}),E("span",{class:"v3-stars",text:"✦ ✧"}))}
+else if(kind==="cloud"){main.append(E("span",{class:"v3-cloud-main",text:"☁"}),E("span",{class:"v3-cloud-sub",text:"☁"}))}
+else if(kind==="rain"||kind==="storm"){main.append(E("span",{class:"v3-cloud-main",text:"☁"}));for(let i=0;i<5;i++)main.append(E("span",{class:"v3-rain-drop",text:"·","data-i":i}));if(kind==="storm")main.append(E("span",{class:"v3-lightning",text:"ϟ"}))}
+else if(kind==="snow"){main.append(E("span",{class:"v3-cloud-main",text:"☁"}));for(let i=0;i<6;i++)main.append(E("span",{class:"v3-snow-flake",text:"❄","data-i":i}))}
+else if(kind==="fog"){main.append(E("span",{class:"v3-fog",text:"☁ ≋ ≋"}))}
+else main.append(E("span",{class:"v3-weather-unknown",text:"◌"}));
+weather.append(main);
+const label={sun:"晴朗",moon:"晴朗夜晚",cloud:"多雲",rain:"有雨",storm:"雷雨",snow:"降雪",fog:"有霧",unknown:"天氣資料暫時無法取得"}[kind];
+weather.setAttribute("aria-label","目的地目前天氣："+label);
+source.textContent=w?"依 "+w.city+" 當地現在天氣（"+label+"）變化":"尚無目的地即時天氣資料";
+if(badge)badge.textContent={sun:"☀️",moon:"🌙",cloud:"☁️",rain:"🌧️",storm:"⛈️",snow:"❄️",fog:"🌫️",unknown:"◌"}[kind];
+const homeIcon=$("v2Home")?.querySelector(".v2-big-icon"),homeSmall=$("v2Home")?.querySelector(".v2-small-icon");
+if(homeIcon){homeIcon.textContent=badge?.textContent||"◌";homeIcon.setAttribute("aria-label","目前天氣 "+label)}
+if(homeSmall)homeSmall.textContent="";
+}
+document.addEventListener("voyage-weather",event=>draw(event.detail));
+const old=render;render=function(){old();try{draw(window.VoyageCurrentWeather)}catch(e){console.error("VOYAGE live-weather visual",e)}};
+draw(window.VoyageCurrentWeather);
+window.VoyageWeatherV3={classify,draw};
 })();
 
 </script>
