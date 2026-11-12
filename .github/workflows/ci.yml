@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Confirm published Chinese V1 preview is accessible without login
+      - name: Confirm published Chinese itinerary/calendar preview with real travel data and map is accessible
         run: |
           python3 - <<'PY'
           import time,urllib.request,urllib.error,sys
@@ -96,8 +96,8 @@ jobs:
                       assert response.status==200, f'HTTP {response.status}'
                       assert 'VOYAGE 新版' in body, 'Wrong preview page'
                       assert 'voyage-v2-review-20261112' in body and 'voyage-v02' not in body, 'Preview storage isolation missing'
-                      assert 'VoyageDomain' in body and 'VoyageRouteV2' in body and 'VoyageV2' in body, 'V2 modules missing'
-                      print('V2 PUBLIC PREVIEW VERIFIED: HTTP 200, compact Chinese guide, isolated data and actual route search')
+                      assert 'VoyageDomain' in body and 'VoyageCalendar' in body and 'VoyageWeatherV3' in body and 'VoyageSeoulNetwork' in body, 'V3 modules missing'
+                      print('USER PREVIEW VERIFIED: HTTP 200, proportional calendar, inline map, dynamic weather, Seoul routing and isolated storage')
                       sys.exit(0)
               except Exception as ex:
                   print('Attempt',i+1,'unavailable:',str(ex)[:200],flush=True)
