@@ -49,7 +49,7 @@ document.head.append(E("style",{text:css}));
 const root=E("section",{id:"v1More",class:"card"}),summary=E("section",{id:"v1Summary",class:"card"}),notice=E("div",{id:"v1Notice",role:"status"}),quick=E("button",{id:"v1ExpenseQuick",class:"primary",text:"＋ 記帳"}),dialog=E("dialog",{id:"v1Dialog"});
 root.innerHTML='<div class="eyebrow">VOYAGE TOOLKIT</div><h2>旅行工具</h2><div id="v1Menu" class="v1-pills"></div><div id="v1Content"></div>';
 dialog.innerHTML='<div class="v1-modal-head"><h2 id="v1DialogTitle">編輯</h2><button class="secondary" id="v1DialogClose" type="button">✕</button></div><form id="v1DialogForm"><div id="v1DialogFields"></div><div id="v1DialogWarning" class="v1-warning hidden"></div><div class="v1-form-actions"><button class="secondary" type="button" id="v1Cancel">取消</button><button class="primary" type="submit">儲存</button></div></form>';
-document.querySelector("main.shell").append(root,summary);
+document.querySelector("main.shell").append(root);document.getElementById("trips").after(summary);
 document.body.append(notice,quick,dialog);
 $v("v1DialogClose").onclick=() => dialog.close();$v("v1Cancel").onclick=()=>dialog.close();
 function toast(message){const n=$v("v1Notice"),key=++noticeVersion;n.textContent=message;n.classList.add("show");setTimeout(()=>{if(key===noticeVersion)n.classList.remove("show")},4200)}
