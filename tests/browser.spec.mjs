@@ -6,7 +6,7 @@ test.beforeEach(async({page})=>{
  await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
  await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
  await page.goto('/');
- await expect(page.locator('#v1Summary')).toBeVisible();
+ await expect(page.locator('#v2Home')).toBeVisible();
 });
 test('five tabs, transport and seven-day calendar',async({page})=>{
  await page.locator('[data-tablink="transport"]').click();
@@ -41,11 +41,11 @@ test('expense and rate are persisted across reload',async({page})=>{
  const get=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].expenses.find(e=>e.title==='晚餐'));
  expect((await get()).twd).toBe(30);
  await page.reload();
- await expect(page.locator('#v1Summary')).toBeVisible();
+ await expect(page.locator('#v2Home')).toBeVisible();
  expect((await get()).amount).toBe(1200);
 });
 test('travel companions have independent packing status',async({page})=>{
- await page.locator('#v1Summary').getByRole('button',{name:/旅行設定/}).click();
+ await page.locator('#v2Home').getByRole('button',{name:'旅行設定'}).click();
  await page.locator('#vTripPeople').fill('甲、乙');
  await page.locator('#v1DialogForm button[type="submit"]').click();
  await page.locator('#v2Home').getByRole('button',{name:/行李清單/}).click();
@@ -127,12 +127,12 @@ test('international flight keeps both endpoint local dates and time zones',async
  expect(doc.endTime).toBe('07:00');
 });
 test('countdown reads destination-local calendar date',async({page})=>{
- await page.locator('#v1Summary').getByRole('button',{name:/旅行設定/}).click();
+ await page.locator('#v2Home').getByRole('button',{name:'旅行設定'}).click();
  await page.locator('#vTripDate').fill('2026-12-25');
  await page.locator('#v1DialogForm button[type="submit"]').click();
- await expect(page.locator('#v1Summary')).toContainText('倒數');
+ await expect(page.locator('#v2Home')).toContainText('倒數');
  await page.reload();
- await expect(page.locator('#v1Summary')).toContainText('倒數');
+ await expect(page.locator('#v2Home')).toContainText('倒數');
 });
 
 test('new days extend safely and survive reload, with date strip linking maps',async({page})=>{
