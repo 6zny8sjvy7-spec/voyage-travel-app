@@ -23,7 +23,7 @@ const refresh=button("查詢此站下一班",lookup,"secondary");
 query.append(E("label",{},[E("span",{text:"本站到站／發車資訊（有即時資料才標即時）"}),input]),refresh);
 const arrivals=E("div",{id:"v5DepartureResult",class:"v5-departure-result",text:"輸入車站名稱，再按查詢；沒有可靠即時資料時，只顯示班表或無資料。"});
 bar.append(query,arrivals,E("p",{class:"v1-sub",text:"免費開放資料：Transitous（依來源授權、資料覆蓋及可用量限制）；任何到站分鐘都是從來源回應計算，不使用固定班距假裝即時倒數。"}));
-const attribution=E("p",{class:"v1-sub",text:"資料來源：Transitous（依各城市已開放的免費路線資料）；查不到時留在 VOYAGE 說明，不跳轉外站。"});bar.append(attribution);
+const attribution=E("p",{class:"v1-sub"},[E("span",{text:"免費交通資料：Transitous（依各城市開放範圍）。站序、班次及即時資訊不足時留在 VOYAGE 顯示限制。資料授權歸屬："}),E("a",{href:A.ATTRIBUTION,rel:"noopener noreferrer",target:"_blank",text:"公開資料來源與授權"})]);bar.append(attribution);
 section.insertBefore(bar,toolbar);
 function refreshCountry(){
  const t=trip(),code=R?.countryCode(t)||"",key=code+"|"+t.city+"|"+t.id;
