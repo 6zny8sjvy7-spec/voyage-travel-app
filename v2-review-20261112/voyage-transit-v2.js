@@ -159,7 +159,12 @@ function draw(routes){
    details.append(row);
   }
   details.append(E("p",{class:"v2-route-source",text:"資料依據："+(route.source||"來源未註明")+" · 查詢時間："+new Date(route.requestedAt||Date.now()).toLocaleString("zh-TW")+"；即時班次僅在來源可核對時才另行顯示。"}));
-  details.append(button("將這條路線加入行程",()=>saveRoute(route),"primary"));
+  const saveButton=button("將這條路線加入行程",()=>saveRoute(route),"primary");
+  const validLegs=route.legs.filter(x=>!["WALK","BIKE","CAR"].includes(x.mode));
+  const verified=validLegs.length>0&&validLegs.every(x=>knownCount(x,route)!==null&&!!x.headsign&&x.directionVerified!==false);
+  saveButton.disabled=!verified;
+  if(!verified)saveButton.title="需要完整停靠站與可靠行車方向，才能把這條方案加入行程";
+  details.append(saveButton);
   window.VoyageTransitUIV5?.lookupForRoute?.($("transitFrom").value.trim(),trip(),route);
  }
  unique.forEach((route,i)=>{
@@ -170,8 +175,27 @@ function draw(routes){
  result.append(chooser,details);
  select(0);
 }
-function routeStops(route){return route.legs.flatMap((leg,i)=>{const arr=leg.stations||[];return i>0&&arr.length?arr.slice(1):arr})}
-function saveRoute(route){const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("把查詢到的 "+route.legs.length+" 段交通路線加入 DAY "+(day+1)+"？不會改動其他行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[day].push({id:D.uid(),type:"transport",name:"🚆 "+from+" → "+to,from,to,time,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});save();render();setTab("itinerary");U.toast("交通路線已加入這一天的時間軸")}
+function routeStops(route){
+ const result=[];
+ const sameStop=(a,b)=>{if(!a||!b)return false;if(a.id&&b.id)return a.id===b.id;
+  const name=x=>String(x.name||x.local||x.en||x.zh||"").trim().toLowerCase();
+  return !!name(a)&&name(a)===name(b)};
+ for(const leg of route.legs||[]){
+  for(const station of leg.stations||[]){
+   if(result.length&&sameStop(result[result.length-1],station))continue;
+   result.push(station);
+  }
+ }
+ return result;
+}
+function saveRoute(route){
+ const transit=(route.legs||[]).filter(x=>!["WALK","BIKE","CAR"].includes(x.mode));
+ if(!transit.length||transit.some(leg=>knownCount(leg,route)===null||!leg.headsign||leg.directionVerified===false)){
+  U.toast("本路線尚缺完整停靠站或行車方向，無法核實站數；請勿把不完整資訊當成已確認搭乘方案");
+  return;
+ }
+ const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";
+ if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("把查詢到的 "+route.legs.length+" 段交通路線加入 DAY "+(day+1)+"？不會改動其他行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[day].push({id:D.uid(),type:"transport",name:"🚆 "+from+" → "+to,from,to,time,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});save();render();setTab("itinerary");U.toast("交通路線已加入這一天的時間軸")}
 window.VoyageRouteV2={search,routeSEO,routeStops,saveRoute};
 status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
 const oldRender=render;
