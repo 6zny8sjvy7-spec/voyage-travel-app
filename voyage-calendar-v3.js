@@ -24,9 +24,18 @@ function routeText(x){if(x.type!=="transport")return"";const parts=x.routeInfo?.
 function visibleDays(){const total=trip().days.length,start=Math.floor(day/7)*7;return Array.from({length:Math.min(7,total-start)},(_,i)=>start+i)}
 function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)for(const x of trip().days[i]||[]){const time=timeInfo(x);earliest=Math.min(earliest,time.start);latest=Math.max(latest,time.start+time.duration)}earliest=Math.max(0,Math.floor((earliest-30)/60)*60);latest=Math.min(2880,Math.ceil((latest+40)/60)*60);return{first:earliest,last:Math.max(latest,earliest+360),height:(Math.max(latest,earliest+360)-earliest)*pxPerMin}}
 function makeRuler(b){const r=E("div",{class:"v3-ruler"});for(let t=b.first;t<=b.last;t+=60){r.append(E("span",{class:"v3-hour",text:formatMinutes(t).replace("（隔日）","")}));}return r}
+function eventClockLabel(x,t){
+ if(x.type==="flight"&&x.documentPhase==="departure"&&x.ticketArriveTime){
+  const from=(x.ticketDepartDate||"")+" "+(x.ticketDepartTime||x.time)+" "+(x.ticketStartTZ||"");
+  const to=(x.ticketArriveDate||"")+" "+x.ticketArriveTime+" "+(x.ticketEndTZ||"");
+  return from+" → "+to+" · 飛行約 "+t.duration+" 分";
+ }
+ if(x.type==="flight"&&x.documentPhase==="arrival")return "機票顯示抵達 "+(x.ticketArriveDate||"")+" "+(x.ticketArriveTime||x.time)+"（"+(x.ticketEndTZ||"目的地當地")+"）";
+ return (t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定");
+}
 function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(58,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(x.done?" is-done":"")+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
 card.style.top=y+"px";card.style.height=h+"px";
-const time=E("div",{class:"v3-event-time",text:(t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定")});
+const time=E("div",{class:"v3-event-time",text:eventClockLabel(x,t)});
 const symbols={place:"🏛️",food:"🍽️",transport:"🚆",shop:"🛍️",hotel:"🛏️",flight:"✈️",other:"✨"};card.append(time,E("strong",{class:"v3-event-name",text:(symbols[kind]||"📍")+" "+x.name}));
 if(kind==="transport"){card.append(E("small",{class:"v3-event-detail",text:routeText(x)||"交通時間"}));}
 else if(x.notes&&h>80){card.append(E("small",{class:"v3-event-detail",text:x.notes.slice(0,90)}))}
