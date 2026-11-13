@@ -56,3 +56,47 @@
 .v5-route-summary{font-size:12px;color:var(--muted);margin-top:6px}
 .v5-day-timeline .v3-schedule-event:focus-visible{outline:3px solid #5b91da}
 @media(max-width:600px){.v5-day-row,.v5-day-gap-row{grid-template-columns:51px minmax(0,1fr);gap:7px}.v5-day-time{font-size:11px}.v5-day-timeline .v3-schedule-event{min-height:76px;padding:12px 42px 12px 10px}}
+
+
+/* V6 theme QA: night must be unmistakably dark, not just pale lavender. */
+body.dark{
+  color-scheme:dark;
+  --bg:#101a2d;--ink:#eef4ff;--muted:#adc0dc;--card:#1d2d49f7;
+  --line:#395170;--blue:#a7ceff;--soft:#283b5d;
+  --shadow:0 16px 40px #060e22b8;--v2-accent:#93b7f4;
+}
+body.dark .hero{background:linear-gradient(115deg,#08162f,#192f52 62%,#34456a)!important}
+body.dark #v2Home .v2-home-hero{
+  background:linear-gradient(110deg,#1a2b49,#243c60 70%,#263452)!important;
+  border-color:#536d96!important;box-shadow:0 18px 35px #0813298c;
+}
+body.dark #v2Home .v2-home-hero .v2-hero-copy h2{color:#f1f6ff!important}
+body.dark #v2Home .v2-home-hero .v2-hero-copy p{color:#bbcce6!important}
+body.dark #v2Home .v2-home-hero .tripbar{border-top-color:#455c7e!important}
+body.dark #v2Home #v4WeatherGlass{
+  background:#142640e8!important;border-color:#6684aa!important;
+  color:#f2f7ff!important;box-shadow:0 8px 24px #081527bd;
+}
+body.dark #v2Home #v4WeatherGlass #temp,
+body.dark #v2Home #v4WeatherGlass #cityLabel,
+body.dark #v2Home #v4WeatherGlass #weatherDesc,
+body.dark #v2Home #v4WeatherGlass #v3WeatherSource,
+body.dark #v2Home #v4WeatherStatus{color:#d5e4fa!important;text-shadow:none!important}
+body.dark #v2Home #v4WeatherRetry{background:#2b4164!important;color:#e5f1ff!important;border-color:#5876a1!important}
+body.dark input:not([type="checkbox"]),body.dark select,body.dark textarea{
+  background-color:#1b2f50!important;color:#f1f6ff!important;
+  -webkit-text-fill-color:#f1f6ff!important;border-color:#587092!important;color-scheme:dark;
+}
+body.dark .date.active{background:linear-gradient(135deg,#446fbd,#716ab5)!important;color:#fff!important}
+body.dark #v2ItineraryBanner{background:linear-gradient(110deg,#23395a,#332c57)!important;color:#edf4ff}
+body.dark #v2ItineraryBanner *{color:inherit}
+body.dark .v2-link{background:#1d304f!important;border-color:#395374!important;color:#f0f6ff!important}
+body.dark .v2-link small{color:#b6c8e2!important}
+body.dark .v3-schedule-event{background:#233a5e!important;color:#eaf3ff!important;border-color:#607ba7!important}
+body.dark .v3-event-name,body.dark .v3-event-time{color:#eff6ff!important}
+body.dark .v3-event-detail,body.dark .v3-duration-warning{color:#c2d2e8!important}
+body.dark .v3-time-column,body.dark .v3-grid-viewport{background:#162741;color:#d3e1f5}
+body.dark .footnav{background:#152640f5!important;border-color:#385274!important;color:#e6f1ff!important}
+body.dark .footnav a{color:#d6e4fc!important}
+body.dark .footnav a[style*="rgb(112, 135, 162)"]{color:#bbcae2!important}
+body.dark .v5-eta-realtime{color:#8deac4}
