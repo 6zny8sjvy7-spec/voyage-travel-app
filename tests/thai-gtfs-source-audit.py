@@ -40,11 +40,17 @@ def canonical(value):
 SIAM = {"siam", "สยาม"}
 ASOK = {"asok", "asoke", "อโศก"}
 def station_kind(name):
-    s = canonical(name)
-    if s in SIAM:
-        return "Siam"
-    if s in ASOK:
-        return "Asok"
+    # OTP records multiple official Thai/English names in one field,
+    # e.g. "BTS สยาม;BTS Siam" and "BTS อโศก;BTS Asok".
+    # Check each complete language variant, not fuzzy Asok-substrings that
+    # would incorrectly accept the unrelated ASOKHAR station.
+    for part in re.split(r"[;；]", str(name or "")):
+        part = re.sub(r"^(?:BTS|MRT)\s+", "", part.strip(), flags=re.I)
+        normalized = canonical(part)
+        if normalized in SIAM:
+            return "Siam"
+        if normalized in ASOK:
+            return "Asok"
     return None
 
 try:
