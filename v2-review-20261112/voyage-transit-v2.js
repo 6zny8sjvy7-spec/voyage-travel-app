@@ -222,7 +222,15 @@ function saveRoute(route){
   return;
  }
  const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";
- if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("把查詢到的 "+route.legs.length+" 段交通路線加入 DAY "+(day+1)+"？不會改動其他行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[day].push({id:D.uid(),type:"transport",name:"🚆 "+from+" → "+to,from,to,time,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});save();render();setTab("itinerary");U.toast("交通路線已加入這一天的時間軸")}
+ const chosenDate=$("transitPlanDate")?.value||"",firstDate=t.startDate||"";
+ if(!firstDate||!chosenDate||D.dayISO(chosenDate,0)!==chosenDate){
+  U.toast("請先設定旅行開始日期與正確的實際搭車日期，才能將路線加入當天行程");return;
+ }
+ const chosenDateIndex=Math.round((Date.parse(chosenDate+"T12:00:00Z")-Date.parse(firstDate+"T12:00:00Z"))/86400000);
+ if(!Number.isInteger(chosenDateIndex)||chosenDateIndex<0||chosenDateIndex>=t.days.length){
+  U.toast("搭車日期「"+chosenDate+"」不在旅行天數內；請先調整日期或新增天數");return;
+ }
+ if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("將 "+route.legs.length+" 段交通路線加入 "+chosenDate+"（第 "+(chosenDateIndex+1)+" 天）？不會更改你填寫的時間與既有行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[chosenDateIndex].push({id:D.uid(),type:"transport",name:(first?.mode==="BUS"?"🚌 ":"🚆 ")+from+" → "+to,from,to,time,date:chosenDate,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});day=chosenDateIndex;save();render();setTab("itinerary");U.toast("交通路線已加入 "+chosenDate+" 的時間軸")}
 window.VoyageRouteV2={search,routeSEO,routeStops,saveRoute};
 status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
 const oldRender=render;
