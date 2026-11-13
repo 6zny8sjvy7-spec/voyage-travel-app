@@ -34,3 +34,10 @@
 #week .v3-event-name{font-size:14px!important;line-height:1.4!important;overflow-wrap:anywhere;white-space:normal!important}
 #week .v3-event-time{font-size:12px!important;line-height:1.45!important;white-space:normal!important;overflow-wrap:anywhere}
 #week .v3-event-detail{display:block!important;-webkit-line-clamp:unset!important;max-height:none!important;overflow:visible!important;font-size:12px!important;line-height:1.4!important;overflow-wrap:anywhere}
+
+/* Keep exactly one trip-creation button (on the hero). Switch existing trips with one compact selector. */
+body[data-tab] #trips{display:none!important}
+#v2Home .v7-trip-switch{margin:12px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 15px;border:1px solid var(--line);border-radius:15px;background:var(--card)}
+#v2Home .v7-trip-switch label{font:700 13px/1.4 ui-rounded,"Noto Sans TC",system-ui,sans-serif;color:var(--ink)}
+#v2Home .v7-trip-switch select{flex:1;min-width:min(100%,220px);max-width:100%;font-size:15px;padding:10px 11px;border-radius:12px}
+@media(max-width:520px){#v2Home .v7-trip-switch{display:grid;gap:6px}#v2Home .v7-trip-switch select{width:100%;min-width:0}}
