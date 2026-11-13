@@ -31,7 +31,7 @@ test('published review page now includes actual time blocks, in-page map and liv
  await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:20,weather_code:61,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
  await page.goto(url,{waitUntil:'domcontentloaded'});
  await expect(page.locator('#v3WeatherArt')).toHaveClass(/v3-weather-rain/);
- await expect(page.locator('.hero .glass #v3WeatherArt')).toBeVisible();
+ await expect(page.locator('.hero .glass #v3WeatherArt, #v4WeatherGlass #v3WeatherArt')).toBeVisible();
  await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
  await expect(page.locator('#v3InlineMap')).toBeVisible();
  await expect(page.locator('#v3ComposerDetails')).toBeVisible();
