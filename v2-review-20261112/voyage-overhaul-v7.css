@@ -41,3 +41,84 @@ body[data-tab] #trips{display:none!important}
 #v2Home .v7-trip-switch label{font:700 13px/1.4 ui-rounded,"Noto Sans TC",system-ui,sans-serif;color:var(--ink)}
 #v2Home .v7-trip-switch select{flex:1;min-width:min(100%,220px);max-width:100%;font-size:15px;padding:10px 11px;border-radius:12px}
 @media(max-width:520px){#v2Home .v7-trip-switch{display:grid;gap:6px}#v2Home .v7-trip-switch select{width:100%;min-width:0}}
+
+/* V7 true dark mode: distinctive navy surfaces, not a pastel day theme with a moon icon.
+   Keep the approved animated city landmark and weather card. */
+body.dark{
+ color-scheme:dark!important;
+ --bg:#101a2e!important;--ink:#edf4ff!important;--muted:#b5c7e4!important;
+ --card:#202f4bed!important;--line:#425674!important;--blue:#b2ceff!important;
+ --soft:#2a3c5c!important;--shadow:0 12px 34px #040a1c85!important;
+ --v2-accent:#9db8ff!important;
+ background:#101a2e!important;color:#edf4ff!important;
+}
+body.dark .hero{
+ background:linear-gradient(120deg,#111c36 0%,#253759 53%,#433e68 100%)!important;
+}
+body.dark .hero:after{background:linear-gradient(0deg,#0b162ac9,transparent 79%)!important}
+body.dark .hero .glass{
+ background:#34476599!important;border-color:#9db5dd66!important;
+ color:#f5f8ff!important;
+}
+body.dark #v2Home .v2-home-hero{
+ background:linear-gradient(115deg,#233654,#33466b 62%,#423f64)!important;
+ border-color:#687ba0!important;
+ box-shadow:0 12px 28px #050d20a8!important;
+}
+body.dark #v2Home .v2-home-hero .v2-hero-copy h2,
+body.dark #v2Home .v2-home-hero .v2-hero-copy strong{
+ color:#f5f8ff!important;
+}
+body.dark #v2Home .v2-home-hero .v2-hero-copy p,
+body.dark #v2Home .v2-home-hero .v2-hero-copy .eyebrow{
+ color:#c5d3ee!important;
+}
+body.dark #v2Home .v7-trip-switch,
+body.dark .v2-link,
+body.dark .card,
+body.dark .v1-box,
+body.dark .v3-inline-map,
+body.dark .v3-composer,
+body.dark .v5-transit-panel,
+body.dark .v1-item{
+ background:#202f4bee!important;color:#edf4ff!important;
+ border-color:#425674!important;
+}
+body.dark .v2-link small{color:#bdd0ed!important}
+body.dark #v2Home .v2-section-label,
+body.dark #v2Home .v2-section-label h2{color:#f0f5ff!important}
+body.dark .footnav{
+ background:#182741f5!important;border-color:#425674!important;
+ box-shadow:0 -10px 34px #040a1e75!important;
+}
+body.dark .footnav a{color:#c1d2ed!important}
+body.dark .footnav a.active{color:#b3d2ff!important}
+body.dark #v2ReviewTop{
+ background:#172742!important;color:#e8f1ff!important;border-color:#425674!important;
+}
+body.dark #v2ReviewTop a,
+body.dark #v2ReviewTop button{color:#d7e7ff!important}
+body.dark input:not([type="checkbox"]):not([type="radio"]),
+body.dark select,body.dark textarea{
+ background:#283b59!important;color:#f4f8ff!important;
+ -webkit-text-fill-color:#f4f8ff!important;border-color:#657b9d!important;
+ color-scheme:dark!important;
+}
+body.dark input::placeholder,body.dark textarea::placeholder{
+ color:#b1c3e1!important;-webkit-text-fill-color:#b1c3e1!important;
+}
+body.dark select option{background:#263858!important;color:#f4f8ff!important}
+body.dark .v3-time-column,
+body.dark .v3-time-track,
+body.dark .v3-calendar-grid{background:#1c2b45!important}
+body.dark .v3-column-heading{background:#304569!important;color:#f1f6ff!important}
+body.dark #week .v3-schedule-event,
+body.dark #events .v3-schedule-event{
+ background:#304465!important;color:#edf4ff!important;border-color:#6a82aa!important;
+}
+body.dark #week .v3-event-time,body.dark #events .v3-event-time,
+body.dark #week .v3-event-name,body.dark #events .v3-event-name{
+ color:#f5f8ff!important;
+}
+body.dark #week .v3-event-detail,body.dark #events .v3-event-detail{color:#d5e2f5!important}
+body.dark .v1-sub,body.dark .v3-event-detail{color:#b9cbe6}
