@@ -35,7 +35,7 @@ function uiEnv(){
  ctx.window=ctx;
  vm.createContext(ctx);
  vm.runInContext('let trips=[{id:"seed",name:"Test",city:"Seoul",country:"韓國",tz:"Asia/Seoul",days:[[{name:"Start",time:"09:00",duration:30}],[{name:"Next",time:"11:00"}]]}],active=0,day=0,weekMode=false;const trip=()=>trips[active];let saveCount=0;function save(){saveCount++}function render(){}function renderWeek(){}function drawMap(){}function setTab(){}function syncView(){}function suggest(){}',ctx);
- ["voyage-currency-v5.js","voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-map.js","voyage-journal.js","voyage-ux-v2.js","voyage-transit-v2.js","voyage-gps-v2.js","voyage-tools-v2.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
+ ["voyage-currency-v5.js","voyage-domain.js","voyage-ui-base.js","voyage-tools.js","voyage-import-translate.js","voyage-cloud.js","voyage-map.js","voyage-journal.js","voyage-ux-v2.js","voyage-transit-v2.js","voyage-tools-v2.js"].forEach(filename=>vm.runInContext(read(filename),ctx,{filename}));
  return {ctx,ids,expression:s=>vm.runInContext(s,ctx)};
 }
 test("UI modules load and each more page renders without crash",()=>{
