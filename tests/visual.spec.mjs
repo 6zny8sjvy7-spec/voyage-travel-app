@@ -11,8 +11,9 @@ test('reference UI visual audit for main modes and day timeline',async({page},te
  const output='qa-screenshots';mkdirSync(output,{recursive:true});
  const project=testInfo.project.name.replace(/[^a-z0-9]/gi,'-');
  await page.screenshot({path:output+'/'+project+'-home-daylight.png',fullPage:true});
- const weatherBounds=await page.evaluate(()=>{const a=document.getElementById("v3WeatherArt")?.getBoundingClientRect(),c=document.querySelector(".hero .glass")?.getBoundingClientRect();return{a:a&&{left:a.left,right:a.right,top:a.top,bottom:a.bottom},c:c&&{left:c.left,right:c.right,top:c.top,bottom:c.bottom}}});
+ const weatherBounds=await page.evaluate(()=>{const a=document.getElementById("v3WeatherArt")?.getBoundingClientRect(),c=document.getElementById("v4WeatherGlass")?.getBoundingClientRect();return{a:a&&{left:a.left,right:a.right,top:a.top,bottom:a.bottom},c:c&&{left:c.left,right:c.right,top:c.top,bottom:c.bottom}}});
  expect(weatherBounds.a).toBeTruthy();
+ expect(weatherBounds.c).toBeTruthy();
  expect(weatherBounds.a.left).toBeGreaterThanOrEqual(weatherBounds.c.left-2);
  expect(weatherBounds.a.right).toBeLessThanOrEqual(weatherBounds.c.right+2);
  await page.locator('[data-tablink="itinerary"]').click();
