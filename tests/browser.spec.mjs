@@ -110,21 +110,25 @@ test('travel diary notes and shopping wishlist survive reload',async({page})=>{
  await page.locator('#v1Menu').getByRole('button',{name:'購物願望'}).click();
  await expect(page.locator('#v1Content')).toContainText('旅行紀念品');
 });
-test('international flight keeps both endpoint local dates and time zones',async({page})=>{
+test('airline date entry respects two endpoint local times with automatic approved country timezone',async({page})=>{
+ await page.evaluate(()=>{trip().startDate='2026-11-21';save();render()});
  await page.locator('#v2Home').getByRole('button',{name:/機票住宿/}).click();
- await page.locator('#v1Content').getByRole('button',{name:/新增/}).click();
- await page.locator('#vDocTitle').fill('國際航班');
- await page.locator('#vDocDate').fill('2026-11-21');
- await page.locator('#vDocTime').fill('22:00');
- await page.locator('#vDocEndDate').fill('2026-11-21');
- await page.locator('#vDocEndTime').fill('07:00');
- await page.locator('#vDocTZ').fill('Asia/Taipei');
- await page.locator('#vDocEndTZ').fill('America/Los_Angeles');
+ await page.locator('#v1Content').getByRole('button',{name:/新增航班/}).click();
+ await page.locator('#vBFlight').fill('IT-TEST');
+ await page.locator('#vBFromCountry').selectOption('TW');
+ await page.locator('#vBToCountry').selectOption('KR');
+ await page.locator('#vBFrom').fill('台灣機場');
+ await page.locator('#vBTo').fill('韓國機場');
+ await page.locator('#vBDepartDate').fill('2026-11-21');
+ await page.locator('#vBDepartTime').fill('17:00');
+ await page.locator('#vBArriveDate').fill('2026-11-21');
+ await page.locator('#vBArriveTime').fill('20:20');
  await page.locator('#v1DialogForm button[type="submit"]').click();
  const doc=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].documents[0]);
  expect(doc.startTZ).toBe('Asia/Taipei');
- expect(doc.endTZ).toBe('America/Los_Angeles');
- expect(doc.endTime).toBe('07:00');
+ expect(doc.endTZ).toBe('Asia/Seoul');
+ expect(doc.endTime).toBe('20:20');
+ expect(doc.elapsedMinutes).toBe(140);
 });
 test('countdown reads destination-local calendar date',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:'旅行設定'}).click();
