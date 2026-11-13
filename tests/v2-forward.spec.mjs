@@ -614,3 +614,46 @@ test("V7 Bangkok future trip route search uses Thai timezone and preserves trave
  await expect.poll(()=>requests.length).toBeGreaterThan(0);
  expect(requests[0]).toBe("2026-11-19T09:20:00+07:00");
 });
+
+test("Four-country station matching rejects lookalike wrong stops but accepts actual aliases",async({page})=>{
+ const verdict=await page.evaluate(()=>{
+  const m=window.VoyageTransitV5.stationMatches;
+  return {
+   wrongSeoul:m("Myeongbong","Myeongdong","KR"),
+   wrongSeoulNative:m("명봉역","明洞","KR"),
+   rightSeoul:m("명동역","明洞","KR"),
+   rightSeoulEng:m("Myeongdong Station","明洞","KR"),
+   wrongBangkok:m("ASOKHAR","Asok","TH"),
+   rightBangkok:m("Asok BTS","Asok","TH"),
+   rightThai:m("สยาม","暹羅","TH"),
+   rightJapan:m("Shinjuku Station","新宿","JP"),
+   rightVietnam:m("Bến Thành","濱城市場","VN"),
+  };
+ });
+ expect(verdict.wrongSeoul).toBe(false);
+ expect(verdict.wrongSeoulNative).toBe(false);
+ expect(verdict.wrongBangkok).toBe(false);
+ expect(verdict.rightSeoul).toBe(true);
+ expect(verdict.rightSeoulEng).toBe(true);
+ expect(verdict.rightBangkok).toBe(true);
+ expect(verdict.rightThai).toBe(true);
+ expect(verdict.rightJapan).toBe(true);
+ expect(verdict.rightVietnam).toBe(true);
+});
+test("Transit geocoding must REFUSE Myeongbong/ASOKHAR, not return fabricated boarding station",async({page})=>{
+ await page.route("**/api/v1/geocode**",r=>{
+  const term=new URL(r.request().url()).searchParams.get("text")||"";
+  const bangkok=/asok|อโศก|曼谷/i.test(term);
+  const candidate=bangkok?{name:"ASOKHAR",lat:13.755,lon:100.502,id:"WRONG_ASOKHAR"}:{name:"Myeongbong",lat:37.565,lon:126.976,id:"WRONG_MYEONGBONG"};
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([candidate])});
+ });
+ const errors=await page.evaluate(async()=>{
+  const API=window.VoyageTransitV5;
+  return Promise.all([
+   API.geocode("明洞",{id:"a",country:"韓國",city:"首爾",countryCode:"KR",lat:37.5665,lon:126.978,tz:"Asia/Seoul"}).then(()=>null,e=>e.message),
+   API.geocode("Asok",{id:"b",country:"泰國",city:"曼谷",countryCode:"TH",lat:13.7563,lon:100.5018,tz:"Asia/Bangkok"}).then(()=>null,e=>e.message),
+  ]);
+ });
+ expect(errors[0]).toMatch(/無法確認/);
+ expect(errors[1]).toMatch(/無法確認/);
+});
