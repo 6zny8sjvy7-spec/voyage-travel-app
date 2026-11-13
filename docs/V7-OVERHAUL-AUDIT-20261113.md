@@ -46,3 +46,20 @@
 
 ## 已知第三方免費資料使用風險
 Transitous 是志願者提供的 best-effort 輕量非商業服務，有明確歸屬和使用規則（https://transitous.org/api/）。它不保證韓泰日越所有地鐵與公車的完整覆蓋和即時資料，故不能作為全功能完成保證。專案正式對外持續使用前，需確認是否符合其開源授權要求（當前 repo 可能尚未有 LICENSE；不得未經專案擁有人授權擅自選 license），以及公開來源連結歸屬規定。
+
+## 已核對的四國免費資料來源覆蓋缺口（2026-11-13）
+
+以下是**來源目錄事實，不是即時 A→B 實測或可用保證**。Transitous 公開來源：https://transitous.org/sources/ （2026-11-13 查閱）。
+
+| 國家 | Transitous 公開目錄觀察 | 真實路線驗收風險 |
+|---|---|---|
+| 韓國 | 在「Korea, Republic of」目前列出 KTDB（來源更新 2025-05-21）與 Korail（來源更新 2026-11-01）。未在該國目錄列到「Seoul Metro」完整地鐵資料 | **不能**因此宣稱首爾地鐵／公車 A→B 已有完整站序或即時資料。應另接首爾市/首爾交通公社官方免費資料，審查免付費註冊、API key 與來源更新 |
+| 泰國 | 「Thailand」列出 Namtang/OTP GTFS，包含 BTS、Bangkok Expressway and Metro、Bangkok Metropolitan Administration、BMTA 等 | 可做資料來源候選；但需檢查實際返回完整 stop sequence、快慢車、方向、時刻與即時資料是否具備 |
+| 日本 | 「Japan」有 Japan Rail 與 Tokyo Rail 及數量眾多營運商資料，包含 Tokyo Metro、都營地下鐵與大阪 Metro 等 | 靜態路線候選較完整，**但**不能將部分營運商或班次覆蓋推論為所有公車和即時資料可用 |
+| 越南 | Transitous 國家來源目錄中未列「Vietnam」或「Viet Nam」專區 | **不能把 Transitous 當作越南城市地鐵、公車可靠來源**；必須另外評估胡志明市 Go!Bus 等當地資料的授權與可用免費 API |
+
+官方 Seoul 即時到站公開資料：https://data.seoul.go.kr/dataList/OA-15799/A/1/datasetView.do （資料集於 2026-11-02 有更新）；取得官方 API 權限需要確認其免費帳號金鑰流程。沒有安全免付費存取方式，就不能在公網站宣稱提供即時倒數。
+
+Transitous API 服務條款：https://transitous.org/api/ 明定以開源、非商用及輕量使用為原則，並要求資料來源歸屬。GitHub Repo 的公開可讀不代表已選用開源授權；若尚未有 LICENSE 不得擅自添加授權聲明。正式大規模使用及跨國完整覆蓋都還需要另行取得可用且合法的免費來源。
+
+**結論：** 四國交通共用程式介面與站序檢核已完成部分實作，但跨國地鐵／BTS／公車真實驗收，尤其韓國完整地鐵、越南城市公車與各國即時進站仍是未完成阻擋項。禁止將模擬資料測試結果或數字宣稱為四國交通全面完成。
