@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync } from "node:fs";
 const leaflet=readFileSync(new URL("./leaflet-stub.js",import.meta.url),"utf8");
 test.beforeEach(async({page})=>{
  await page.route("**/leaflet.js",r=>r.fulfill({status:200,contentType:"application/javascript",body:leaflet}));
@@ -186,4 +186,24 @@ test("A-to-B lookup only states exact stop count with complete source, shows dir
  await expect(page.locator("#v5DepartureResult")).not.toContainText("Wrong Direction");
  await expect(page.locator("#rideMode")).toBeHidden();
  await expect(page.locator("#v2GpsAssist")).toHaveCount(0);
+});
+
+
+test("V2 forward desktop/iPhone visual screenshots: home, night, itinerary, collapsed editor",async({page},testInfo)=>{
+ mkdirSync("visual-evidence",{recursive:true});
+ const id=testInfo.project.name.replace(/[^a-z0-9]/gi,"-").toLowerCase();
+ await page.screenshot({path:"visual-evidence/"+id+"-home-day.png",fullPage:true});
+ const width=await page.evaluate(()=>({content:document.documentElement.scrollWidth,window:innerWidth}));
+ expect(width.content).toBeLessThanOrEqual(width.window+5);
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator("#v3ComposerDetails")).not.toHaveAttribute("open","");
+ await page.screenshot({path:"visual-evidence/"+id+"-itinerary-collapsed.png",fullPage:true});
+ await page.locator("#v3ComposerDetails summary").click();
+ await page.locator("#v3NewType").selectOption("transport");
+ await page.locator("#v3TransportMode").selectOption("rail");
+ await page.screenshot({path:"visual-evidence/"+id+"-transport-form.png",fullPage:true});
+ await page.evaluate(()=>localStorage.setItem("voyage-theme-v2-review-20261112","dark"));
+ await page.reload();
+ await expect(page.locator("body.dark")).toBeVisible();
+ await page.screenshot({path:"visual-evidence/"+id+"-home-night.png",fullPage:true});
 });
