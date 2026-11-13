@@ -714,8 +714,12 @@ test("dark mode has a genuinely dark body and card palette, not an unchanged pas
  await page.evaluate(()=>localStorage.setItem("voyage-theme-v2-review-20261112","dark"));
  await page.reload();
  await expect(page.locator("body.dark")).toHaveCount(1);
- const night=await color();
  const lum=x=>{const m=x.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);return m?Number(m[1])*.2126+Number(m[2])*.7152+Number(m[3])*.0722:NaN};
+ // Allow the app's declared CSS background transition to finish before
+ // judging contrast; don't confuse an in-flight light->dark animation
+ // with a permanently pastel dark theme.
+ await expect.poll(async()=>lum((await color()).body),{timeout:3500,intervals:[100,200,300,350]}).toBeLessThan(65);
+ const night=await color();
  expect(lum(night.body)).toBeLessThan(65);
  expect(lum(day.body)-lum(night.body)).toBeGreaterThan(95);
  expect(lum(night.tile)).toBeLessThan(lum(day.tile)-65);
