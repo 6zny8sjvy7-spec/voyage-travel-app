@@ -1,0 +1,31 @@
+/* VOYAGE V5: restrained country landmark, truthful weather, source-aware transit modes */
+.v5-country-art{position:absolute;right:3%;top:9%;width:clamp(98px,21%,188px);height:142px;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
+.v5-landmark-svg{width:100%;height:120px;overflow:visible;filter:drop-shadow(0 7px 4px #40557d18);animation:v5-landmark-float 5.5s ease-in-out infinite}
+.v5-country-weather{position:absolute;right:0;top:1px;font-size:31px;filter:drop-shadow(0 2px 4px #334b6544)}
+.v5-country-arrive .v5-landmark-svg{animation:v5-landmark-enter .44s cubic-bezier(.14,.93,.39,1.19),v5-landmark-float 5.5s ease-in-out .44s infinite}
+.v5-weather-sun{animation:v5-weather-glow 5s ease-in-out infinite}
+.v5-weather-rain,.v5-weather-snow{animation:v5-weather-fall 2.2s ease-in-out infinite}
+.v5-weather-moon,.v5-weather-cloud,.v5-weather-fog{animation:v5-landmark-float 6s ease-in-out infinite}
+@keyframes v5-landmark-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes v5-landmark-enter{from{opacity:.25;transform:translateY(12px) scale(.93)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes v5-weather-glow{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(7deg) scale(1.12)}}
+@keyframes v5-weather-fall{0%,100%{transform:translateY(-4px)}50%{transform:translateY(4px)}}
+.v5-transit-panel{border:1px solid var(--line);border-radius:19px;background:var(--card);padding:15px;margin:10px 0 16px}
+.v5-transit-panel h3{font-size:17px;margin:0 0 6px}
+.v5-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.v5-mode-switch button{flex:1;min-width:120px;background:var(--soft);color:var(--ink);padding:10px;border:1px solid var(--line);border-radius:12px;font-weight:650}
+.v5-mode-switch button[aria-pressed="true"]{background:var(--blue);color:white}
+.v5-departure-query{display:flex;gap:9px;align-items:end;flex-wrap:wrap}
+.v5-departure-query label{flex:1;min-width:190px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.v5-departure-query input{width:100%;color:var(--ink)}
+.v5-departure-result{margin:11px 0;padding:11px;background:var(--soft);border-radius:12px;min-height:44px;font-size:13px}
+.v5-departure-list{margin:10px 0;display:grid;gap:6px}
+.v5-departure-item{padding:9px;border:1px solid var(--line);background:var(--card);border-radius:11px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.v5-departure-item .v1-sub{font-size:11px}
+.v5-eta-realtime{color:#206d55;white-space:nowrap}.v5-eta-schedule{color:var(--ink);white-space:nowrap}
+.v5-transit-panel a{font-size:12px;color:var(--blue)}
+.v3-schedule-event{overflow:hidden;min-height:58px}
+.v3-event-name{display:block;line-height:1.4;overflow-wrap:anywhere}
+.v3-event-time{display:block;line-height:1.3}
+@media(max-width:650px){.v5-country-art{width:90px;right:0;top:13%;height:108px}.v5-landmark-svg{height:105px}.v5-country-weather{font-size:22px}.v5-mode-switch button{min-width:0;font-size:12px;padding:9px 4px}.v5-departure-query{display:grid;grid-template-columns:1fr}.v5-departure-query label{min-width:0}}
+@media(prefers-reduced-motion:reduce){.v5-landmark-svg,.v5-country-arrive .v5-landmark-svg,.v5-country-weather{animation:none!important}}
