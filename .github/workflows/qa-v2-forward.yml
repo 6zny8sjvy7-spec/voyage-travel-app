@@ -4,7 +4,7 @@ on:
     branches:
       - work/voyage-v2-forward
     paths:
-      - 'v2-review-20261112/index.html'
+      - 'v2-review-20261112/**'
       - 'tests/v2-forward.spec.mjs'
       - 'tests/leaflet-stub.js'
       - 'playwright.v2-forward.config.mjs'
