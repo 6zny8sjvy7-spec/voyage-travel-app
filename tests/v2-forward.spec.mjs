@@ -255,7 +255,7 @@ test("pasted Apple Notes with no dates survive reload and become editable dated 
  await expect(page.locator("#v6UnplannedBox .v6-import-card")).toHaveCount(2);
  let trip=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0]);
  expect(trip.unplannedEvents.map(x=>x.name)).toEqual(["明洞逛街","聖水洞"]);
- expect(trip.days.flat().filter(x=>["明洞逛街","聖水洞"].includes(x.name))).toHaveLength(0);
+ expect(trip.days.flat().filter(x=>x.name==="明洞逛街")).toHaveLength(0); // 聖水洞 is already an original demo itinerary item, which must remain unchanged.
  await page.reload();
  await page.locator('.footnav [data-tablink="more"]').click();
  await page.locator("#v1Menu").getByRole("button",{name:/匯入/}).click();
