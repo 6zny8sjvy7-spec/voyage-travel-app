@@ -11,6 +11,7 @@ test('reference UI visual audit for main modes and day timeline',async({page},te
  const output='qa-screenshots';mkdirSync(output,{recursive:true});
  const project=testInfo.project.name.replace(/[^a-z0-9]/gi,'-');
  await page.screenshot({path:output+'/'+project+'-home-daylight.png',fullPage:true});
+ const daylightBg=await page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
  const weatherBounds=await page.evaluate(()=>{const a=document.getElementById("v3WeatherArt")?.getBoundingClientRect(),c=document.getElementById("v4WeatherGlass")?.getBoundingClientRect();return{a:a&&{left:a.left,right:a.right,top:a.top,bottom:a.bottom},c:c&&{left:c.left,right:c.right,top:c.top,bottom:c.bottom}}});
  expect(weatherBounds.a).toBeTruthy();
  expect(weatherBounds.c).toBeTruthy();
@@ -25,6 +26,12 @@ test('reference UI visual audit for main modes and day timeline',async({page},te
  await page.reload();
  await expect(page.locator('#v2Home')).toBeVisible();
  await page.screenshot({path:output+'/'+project+'-home-twilight.png',fullPage:true});
+ const nightPalette=await page.evaluate(()=>({active:document.body.classList.contains("dark"),bg:getComputedStyle(document.body).backgroundColor,card:getComputedStyle(document.querySelector("#v2Home .v2-link")).backgroundColor}));
+ const brightness=css=>{const parts=css.match(/[0-9.]+/g).slice(0,3).map(Number);return parts.reduce((a,b)=>a+b,0)/(3*255)};
+ expect(nightPalette.active).toBe(true);
+ expect(brightness(daylightBg)).toBeGreaterThan(0.75);
+ expect(brightness(nightPalette.bg)).toBeLessThan(0.24);
+ expect(brightness(nightPalette.card)).toBeLessThan(0.42);
  const nightSelect=await page.locator('#tripSelect').evaluate(el=>({background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color,appearance:getComputedStyle(el).appearance}));
  expect(nightSelect.background).not.toBe('rgb(255, 255, 255)');
  expect(nightSelect.color).not.toBe('rgb(255, 255, 255)');
