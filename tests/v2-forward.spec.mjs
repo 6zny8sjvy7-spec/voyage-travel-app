@@ -528,3 +528,43 @@ test("V7 published original URL must show single trip switch, responsive week, a
  await page.getByRole("button",{name:"選取物品刪除"}).click();
  await expect(page.getByRole("button",{name:"刪除勾選"})).toBeVisible();
 });
+
+test("unverified bus stop sequence cannot be saved or mislabeled as one stop",async({page})=>{
+ await page.route("**/api/v1/geocode**",r=>{
+  const q=new URL(r.request().url()).searchParams.get("text")||"";
+  const a=q.includes("A站");
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:a?"A_STOP":"B_STOP",name:a?"A站":"B站",country:"KR",lat:a?37.565:37.575,lon:a?126.975:126.985}])});
+ });
+ await page.route("**/api/v6/plan**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({
+ itineraries:[{duration:950,legs:[{mode:"BUS",displayName:"12",headsign:"往中央車站",from:{name:"A站"},to:{name:"B站"},duration:950}]}]
+ })}));
+ await page.route("**/api/v6/stoptimes**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({stopTimes:[]})}));
+ const before=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0].days.flat().length);
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await page.locator("#transitFrom").fill("A站");
+ await page.locator("#transitTo").fill("B站");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect(page.locator("#v6SelectedRoute")).toContainText("站數尚未核實");
+ await expect(page.locator("#v6SelectedRoute")).not.toContainText("共 1 站");
+ await expect(page.locator("#v6SelectedRoute").getByRole("button",{name:"將這條路線加入行程"})).toBeDisabled();
+ const after=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0].days.flat().length);
+ expect(after).toBe(before);
+});
+test("a transfer between different stop IDs must keep both station names when saved",async({page})=>{
+ const result=await page.evaluate(()=>{
+  const route={legs:[
+   {mode:"BUS",stations:[{id:"A",name:"A站"},{id:"TRANSFER_N",name:"轉乘北側"}]},
+   {mode:"BUS",stations:[{id:"TRANSFER_S",name:"轉乘南側"},{id:"B",name:"B站"}]}
+  ]};
+  return window.VoyageRouteV2.routeStops(route).map(x=>x.id);
+ });
+ expect(result).toEqual(["A","TRANSFER_N","TRANSFER_S","B"]);
+ const deduplicated=await page.evaluate(()=>{
+  const route={legs:[
+   {mode:"SUBWAY",stations:[{id:"A",name:"A站"},{id:"TRANSFER",name:"轉乘站"}]},
+   {mode:"BUS",stations:[{id:"TRANSFER",name:"轉乘站"},{id:"B",name:"B站"}]}
+  ]};
+  return window.VoyageRouteV2.routeStops(route).map(x=>x.id);
+ });
+ expect(deduplicated).toEqual(["A","TRANSFER","B"]);
+});
