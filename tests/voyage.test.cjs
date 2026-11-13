@@ -66,7 +66,7 @@ test("invalid calendar date is rejected even if JavaScript Date rolls forward",(
 test("date can be extended to day 4 without deleting existing three days",()=>{const {ctx,expression}=uiEnv(),v=ctx.VoyageV2;assert.equal(typeof v.addDay,"function");v.addDay();assert.equal(expression("trips[0].days.length"),3);assert.equal(expression("trips[0].days[0][0].name"),"Start");assert.equal(expression("trips[0].days[1][0].name"),"Next")});
 test("known Myeongdong to Hongdae route includes actual station order and transfer",()=>{const {ctx}=uiEnv(),r=ctx.VoyageRouteV2.routeSEO("hongdae","myeongdong");assert.ok(r);assert.equal(r.transfers,1);assert.equal(r.legs.length,2);assert.equal(r.legs[0].stations[0].local,"명동");assert.equal(r.legs[0].stations[2].en,"Seoul Station");assert.equal(r.legs[1].stations[1].en,"Gongdeok");assert.equal(r.legs[1].stations[2].local,"홍대입구")});
 test("safe removal refuses to remove a day containing planned events",()=>{const {ctx,expression}=uiEnv();ctx.VoyageV2.removeLastEmptyDay();assert.equal(expression("trips[0].days.length"),2)});
-test("GPS distance calculation is deterministic and requires no phone permissions at init",()=>{const {ctx}=uiEnv();assert.ok(ctx.VoyageGpsV2);assert.ok(ctx.VoyageGpsV2.haversine(37.5609,126.9865,37.5609,126.9865)<1)});
+test("station GPS and ride-progress tracking are retired, A-to-B route search remains",()=>{const {ctx}=uiEnv();assert.equal(ctx.VoyageGpsV2,undefined);assert.ok(ctx.VoyageRouteV2?.search);assert.equal(ctx.VoyageRouteV2?.startRide,undefined)});
 
 test("Seoul graph routing goes beyond one hardcoded pair",()=>{
  const ctx={window:{}};vm.createContext(ctx);vm.runInContext(read("voyage-seoul-v3.js"),ctx);
