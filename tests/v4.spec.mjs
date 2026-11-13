@@ -80,3 +80,16 @@ test('packing normal mode has a checked-and-struck item; deletion checkboxes onl
  await expect(page.locator('#v1Content .v3-remove-check')).toHaveCount(0);
  await expect(page.locator('#v1Content .v1-struck').first()).toBeVisible();
 });
+
+
+test('translation destination language resets correctly when switching from Korea to Vietnam and back',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/即時翻譯/}).click();
+ await expect(page.locator('#vLanguage')).toHaveValue('ko');
+ await page.evaluate(()=>{
+  trips.push({id:'test-vi',name:'Vietnam trip',country:'越南',countryCode:'VN',city:'河內',tz:'Asia/Ho_Chi_Minh',lat:21.0285,lon:105.8542,days:[[]]});
+  active=trips.length-1;save();render();VoyageUI.showPage('translation');
+ });
+ await expect(page.locator('#vLanguage')).toHaveValue('vi');
+ await page.evaluate(()=>{active=0;save();render();VoyageUI.showPage('translation')});
+ await expect(page.locator('#vLanguage')).toHaveValue('ko');
+});
