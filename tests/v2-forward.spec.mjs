@@ -504,3 +504,27 @@ test("Published V7 original URL has no duplicate controls, readable itinerary, m
  await page.locator('.footnav [data-tablink="expenses"]').click();
  await expect(page.locator("#v1Content")).toContainText("旅程預算");
 });
+
+test("V7 published original URL must show single trip switch, responsive week, and clean packing UI",async({page})=>{
+ await page.goto("https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/",{waitUntil:"domcontentloaded"});
+ await expect(page.locator("#v2Home")).toBeVisible();
+ await expect(page.locator("#v2Home .v7-trip-switch")).toBeVisible();
+ await expect(page.locator("#v2Home #tripSelect")).toBeVisible();
+ await expect(page.locator("#trips")).toBeHidden();
+ await expect(page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/})).toHaveCount(1);
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await page.locator("#weeklyView").click();
+ await expect(page.locator("#week .v3-grid-viewport")).toBeVisible();
+ const css=await page.locator("#week .v3-grid-viewport").evaluate(e=>({overflow:getComputedStyle(e).overflowX,scroll:e.scrollWidth,client:e.clientWidth}));
+ expect(css.overflow).toMatch(/auto|scroll/);
+ await expect(page.locator("#v3InlineMap")).toBeVisible();
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:/行李清單/}).click();
+ await expect(page.locator("#v3PackLibrary")).toHaveCount(1);
+ await expect(page.getByRole("button",{name:"縮小清單"})).toHaveCount(0);
+ await expect(page.getByRole("button",{name:"展開選擇"})).toHaveCount(0);
+ await expect(page.locator("#v1Content .v1-item").getByRole("button",{name:"移除",exact:true})).toHaveCount(0);
+ await expect(page.getByRole("button",{name:"選取物品刪除"})).toBeVisible();
+ await page.getByRole("button",{name:"選取物品刪除"}).click();
+ await expect(page.getByRole("button",{name:"刪除勾選"})).toBeVisible();
+});
