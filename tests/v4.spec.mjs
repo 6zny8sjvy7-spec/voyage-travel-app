@@ -58,13 +58,17 @@ test('Bangkok never borrows prebuilt Seoul metro answer for Seoul-origin words',
  await page.locator('#transitFrom').fill('明洞');
  await page.locator('#transitTo').fill('弘大');
  await page.getByRole('button',{name:/查詢實際交通路線/}).click();
- await expect(page.locator('#v2RouteResults')).toContainText('尚無可驗證的內建站序');
+ await expect(page.locator('#v2RouteResults')).toContainText('本次查不到足以驗證的「泰國 · 曼谷」交通資料');
  await expect(page.locator('#v2RouteResults')).not.toContainText('AREX');
  await expect(page.locator('#v4TransitRegion')).toContainText('曼谷');
 });
 test('packing normal mode has a checked-and-struck item; deletion checkboxes only appear after switching modes',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/行李清單/}).click();
+ // New trips begin without any packing rows: explicitly add the public baseline list.
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#v1Content').getByRole('button',{name:'加入出國通用清單'}).click();
  const first=page.locator('#v1Content > .v1-item').filter({hasText:'護照'}).first();
+ await expect(first).toBeVisible();
  await first.locator('.v1-check').check();
  await expect(first.locator('.v1-struck')).toBeVisible();
  await expect(first.locator('.v1-struck')).toHaveCSS('text-decoration-line','line-through');
