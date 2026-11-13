@@ -349,3 +349,19 @@ test("Bangkok Thai text trip creation works without manual English entry and pre
  await expect(page.locator("#v2Home .v2-hero-copy")).toContainText(/距離出發|今天出發|旅行已開始/);
  await expect(page.locator("#trips #newTrip")).toBeHidden();
 });
+
+test("actual published URL: notes paste and in-app routes are deployed",async({page})=>{
+ await page.goto("https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/",{waitUntil:"domcontentloaded"});
+ await expect(page.locator("#v6Countdown")).toBeVisible();
+ await expect(page.locator("#trips #newTrip")).toBeHidden();
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:/匯入/}).click();
+ await expect(page.locator("#v6NotesPaste")).toBeVisible();
+ await page.locator("#v6NotesPaste").fill("明洞逛街\n弘大烤肉");
+ await page.getByRole("button",{name:"預覽貼上的地點"}).click();
+ await expect(page.locator("#v6ImportPreview .v6-import-card")).toHaveCount(2);
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await expect(page.locator("#v5TransitPanel")).toBeVisible();
+ await expect(page.locator("#transportSection").getByRole("button",{name:/Google Maps|NAVER 路線/})).toHaveCount(0);
+ await expect(page.locator("#v2RouteResults")).toContainText("輸入起終站");
+});
