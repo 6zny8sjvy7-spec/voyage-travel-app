@@ -38,7 +38,7 @@ const stationAlias={
 const normName=v=>String(v||"").normalize("NFKC").toLocaleLowerCase().trim()
  .replace(/[（(][^（）)]*[）)]/g,"")
  .replace(/(?:station|stn|stop|metro|subway|railway)$/ig,"")
- .replace(/[\\s._·・\\-]/g,"")
+ .replace(/[\s._·・-]/g,"")
  .replace(/(?:站|역|駅)$/u,"");
 function aliases(query,code){
  const k=normName(query);
