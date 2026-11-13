@@ -21,8 +21,10 @@ const key=s=>{const n=String(s||"").trim().toLowerCase().replace(/[（(][^)）]*
 const result=E("section",{id:"v2RouteResults",class:"v1-box"});
 const panel=$("transportSection");
 panel.insertBefore(result,panel.querySelector(".transport-panel"));
+const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
+toolbar.append(searchBtn,button("🗺 Google Maps 動態規劃",openProvider),button("🌐 NAVER 路線",()=>{const t=trip();window.open("https://map.naver.com/p/search/"+encodeURIComponent($("transitTo").value+", "+t.city),"_blank","noopener")}));
 const regionInfo=E("div",{id:"v4TransitRegion",class:"v1-box"});
-result.before(regionInfo);
+panel.insertBefore(regionInfo,result);
 const navButtons=toolbar.querySelectorAll("button");
 let lastDestination="";
 function refreshRegion(){
@@ -41,8 +43,7 @@ function refreshRegion(){
  if(navButtons[2])navButtons[2].hidden=reg?.code!=="KR";
 }
 
-const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
-toolbar.append(searchBtn,button("🗺 Google Maps 動態規劃",openProvider),button("🌐 NAVER 路線",()=>{const t=trip();window.open("https://map.naver.com/p/search/"+encodeURIComponent($("transitTo").value+", "+t.city),"_blank","noopener")}));
+
 const form=$("transportSection").querySelector(".transport-panel");
 const toLabel=$("transitTo").closest("label");
 toLabel.after(toolbar);
