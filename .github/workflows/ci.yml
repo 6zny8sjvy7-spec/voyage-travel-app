@@ -103,8 +103,15 @@ jobs:
                       assert response.status==200, f'HTTP {response.status}'
                       assert 'VOYAGE 新版' in body, 'Wrong preview page'
                       assert 'voyage-v2-review-20261112' in body and 'voyage-v02' not in body, 'Preview storage isolation missing'
-                      assert 'VoyageDomain' in body and 'VoyageCalendar' in body and 'VoyageWeatherV3' in body and 'VoyageSeoulNetwork' in body, 'V3 modules missing'
-                      print('USER PREVIEW VERIFIED: HTTP 200, proportional calendar, inline map, dynamic weather, Seoul routing and isolated storage')
+                      modular='<script src="./voyage-domain.js"></script>' in body
+                      if modular:
+                          for script in ['voyage-domain.js','voyage-calendar-v3.js','voyage-weather-v4.js','voyage-seoul-v3.js','voyage-transit-v5.js']:
+                              assert ('src="./'+script+'"') in body, script+' missing from integrated preview'
+                          with urllib.request.urlopen(urllib.request.Request(url+'voyage-domain.js',headers={'User-Agent':'VOYAGE-QA/1.0'}),timeout=20) as asset:
+                              assert asset.status==200 and 'VoyageDomain' in asset.read().decode('utf-8'), 'Integrated preview JS inaccessible'
+                      else:
+                          assert 'VoyageDomain' in body and 'VoyageCalendar' in body and 'VoyageWeatherV3' in body and 'VoyageSeoulNetwork' in body, 'Legacy V2 modules missing'
+                      print('USER PREVIEW VERIFIED: HTTP 200, '+('modular integrated V6' if modular else 'legacy V2')+' and isolated storage')
                       sys.exit(0)
               except Exception as ex:
                   print('Attempt',i+1,'unavailable:',str(ex)[:200],flush=True)
