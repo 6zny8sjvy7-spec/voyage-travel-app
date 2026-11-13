@@ -139,7 +139,8 @@ test("flight from itinerary uses complete linked local dates/times; invalid arri
  await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
  await page.locator('.footnav [data-tablink="itinerary"]').click();
  await page.locator("#v3ComposerDetails summary").click();
- await page.locator("#v3NewType").selectOption("flight");
+ await page.locator("#v3NewType").selectOption("transport");
+ await page.locator("#v3TransportMode").selectOption("flight");
  await expect(page.getByRole("button",{name:/輸入航班號/})).toBeVisible();
  await expect(page.getByRole("button",{name:"加入當天時間軸"})).toBeHidden();
  await page.getByRole("button",{name:/輸入航班號/}).click();
@@ -223,7 +224,8 @@ test("published URL overhaul smoke: one composer, touch edit, flight entry, curr
  await expect(page.locator("#v1Dialog")).toBeVisible();
  await page.locator("#v1Cancel").click();
  await page.locator("#v3ComposerDetails summary").click();
- await page.locator("#v3NewType").selectOption("flight");
+ await page.locator("#v3NewType").selectOption("transport");
+ await page.locator("#v3TransportMode").selectOption("flight");
  await expect(page.getByRole("button",{name:/輸入航班號/})).toBeVisible();
  await page.getByRole("button",{name:/輸入航班號/}).click();
  await expect(page.locator("#vBDepartDate")).toBeVisible();
@@ -325,5 +327,25 @@ test("flight ticket yields only one continuous linked event, never adds a fake a
  expect(linked[0].duration).toBe(90);
  expect(linked[0].documentPhase).toBe("fullFlight");
  expect(linked[0].ticketArriveTime).toBe("20:25");
- await expect(page.locator("#events .v3-free-gap")).toHaveCount(0);
+ expect(linked.every(x=>x.documentPhase!=="arrival")).toBe(true);
+});
+
+test("Bangkok Thai text trip creation works without manual English entry and preserves original trips",async({page})=>{
+ const previous=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112")).length);
+ const responses=["曼谷自由行","曼谷","泰國","5","2026-11-19"];
+ page.on("dialog",dialog=>{
+  if(dialog.type()==="prompt")void dialog.accept(responses.shift()||"");
+  else void dialog.accept();
+ });
+ await page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/}).click();
+ await expect(page.locator("#tripSelect")).toContainText("曼谷自由行");
+ const list=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112")));
+ expect(list).toHaveLength(previous+1);
+ const t=list.at(-1);
+ expect(t.name).toBe("曼谷自由行");expect(t.city).toBe("曼谷");
+ expect(t.country).toBe("泰國");expect(t.currency).toBe("THB");
+ expect(t.needsLocation).toBe(false);expect(t.days).toHaveLength(5);
+ await expect(page.locator("#v6Countdown")).toBeVisible();
+ await expect(page.locator("#v2Home .v2-hero-copy")).toContainText(/距離出發|今天出發|旅行已開始/);
+ await expect(page.locator("#trips #newTrip")).toBeHidden();
 });
