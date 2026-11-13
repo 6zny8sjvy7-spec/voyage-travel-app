@@ -192,7 +192,9 @@ function draw(routes){
   saveButton.disabled=!verified;
   if(!verified)saveButton.title="需要完整停靠站與可靠行車方向，才能把這條方案加入行程";
   details.append(saveButton);
-  window.VoyageTransitUIV5?.lookupForRoute?.($("transitFrom").value.trim(),trip(),route);
+  if(route.kind==="otp-th-static"){
+   details.append(E("p",{class:"v2-route-status",text:"這是泰國 OTP 官方 GTFS 的靜態停靠站順序，已核實各站與路線方向，但沒有即時列車到站預測。請勿把站數當成等候分鐘或保證有班車。"}));
+  }else window.VoyageTransitUIV5?.lookupForRoute?.($("transitFrom").value.trim(),trip(),route);
  }
  unique.forEach((route,i)=>{
   const meta=label(route,i),btn=button(meta.title+" · "+meta.stations+" · "+meta.boarding+" · "+meta.alighting+" · "+meta.extra,()=>select(i));
