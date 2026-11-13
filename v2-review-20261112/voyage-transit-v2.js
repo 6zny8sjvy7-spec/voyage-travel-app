@@ -20,6 +20,8 @@ hongdae:{zh:"弘大入口",local:"홍대입구",en:"Hongik Univ.",lat:37.5572,lo
 const key=s=>{const n=String(s||"").trim().toLowerCase().replace(/[（(][^)）]*[)）]/g,"").replace(/站|station/ig,"").trim();for(const [k,names] of Object.entries(labels))if(names.some(x=>x.toLowerCase()===n||n.includes(x.toLowerCase())&&n.length<24))return k;return null};
 const result=E("section",{id:"v2RouteResults",class:"v1-box"});
 const panel=$("transportSection");
+const legacyExternalRouteButton=$("vTransitRoute");
+if(legacyExternalRouteButton)legacyExternalRouteButton.remove();
 panel.insertBefore(result,panel.querySelector(".transport-panel"));
 const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
 toolbar.append(searchBtn);
