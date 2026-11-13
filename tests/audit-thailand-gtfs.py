@@ -22,6 +22,16 @@ try:
                 rows=list(csv.DictReader(TextIOWrapper(z.open(n),encoding="utf-8-sig")))
                 print(n, "count",len(rows),"head",json.dumps(rows[:3],ensure_ascii=False),flush=True)
             except KeyError: print(n,"not present",flush=True)
+        for info in z.infolist():
+            if info.filename in ("routes.txt","stops.txt","trips.txt","stop_times.txt","frequencies.txt","calendar_dates.txt"):
+                print("GTFS_MEMBER",info.filename,"uncompressed",info.file_size,"compressed",info.compress_size)
+        for name in ("trips.txt","stop_times.txt","frequencies.txt"):
+            try:
+                it=csv.DictReader(TextIOWrapper(z.open(name),encoding="utf-8-sig"))
+                sample=list(next(it,None) for _ in range(3))
+                print("GTFS_SCHEMA",name,"fields",it.fieldnames,"example",json.dumps(sample,ensure_ascii=False)[:900])
+            except KeyError:
+                print("GTFS_SCHEMA",name,"missing")
         try:
             routes=list(csv.DictReader(TextIOWrapper(z.open("routes.txt"),encoding="utf-8-sig")))
             print("Route modes:",dict(Counter(r.get("route_type","") for r in routes)),"total:",len(routes))
