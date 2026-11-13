@@ -12,7 +12,7 @@ function utc(t,date,time,code){if(!D.dayISO(date,0)||!D.validTime(time))throw Er
 function linkedEvents(t,documentId){return t.days.flat().filter(x=>x.linkedDocumentId===documentId)}
 function reconcile(t,doc){
  for(const events of t.days)for(let i=events.length-1;i>=0;i--)if(events[i].linkedDocumentId===doc.id)events.splice(i,1);
- const entry=(date,time,name,phase,duration,notes)=>{const i=dayIndex(t,date);if(i<0)return;const e={id:D.uid(),linkedDocumentId:doc.id,documentPhase:phase,type:doc.type,name,time,duration,notes,from:doc.fromPlace||"",to:doc.toPlace||"",source:"已連動預訂",countryCode:doc.toCountry||R.countryCode(t),url:doc.url||""};t.days[i].push(e)};
+ const entry=(date,time,name,phase,duration,notes)=>{const i=dayIndex(t,date);if(i<0)return;const e={id:D.uid(),linkedDocumentId:doc.id,documentPhase:phase,type:doc.type,name,time,duration,notes,from:doc.fromPlace||"",to:doc.toPlace||"",source:"已連動預訂",countryCode:doc.toCountry||R.countryCode(t),url:doc.url||""};if(doc.type==="flight"){e.ticketDepartDate=doc.departDate||doc.date;e.ticketDepartTime=doc.departTime||doc.time;e.ticketArriveDate=doc.arriveDate||doc.endDate;e.ticketArriveTime=doc.arriveTime||doc.endTime;e.ticketStartTZ=doc.startTZ;e.ticketEndTZ=doc.endTZ}t.days[i].push(e)};
  if(doc.type==="flight"){
   const d=doc.departDate||doc.date,dt=doc.departTime||doc.time,a=doc.arriveDate||doc.endDate,at=doc.arriveTime||doc.endTime;
   const label="✈️ "+doc.name;
