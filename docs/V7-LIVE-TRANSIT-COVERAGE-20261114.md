@@ -34,3 +34,13 @@
 - 越南目前未確認可合法穩定提供整個城市公車＋地鐵完整站序及即時到站的無費用公開 API。
 
 以上僅記錄已經確定的事實和限制，不能把規劃、來源存在或 API 200 誤當完成功能。
+
+## 泰國官方 OTP 免費 GTFS 實際解析（2026-11-14 新證據）
+
+官方公開來源：https://namtang-api.otp.go.th/opendata （CC-BY），ZIP：https://namtang-api.otp.go.th/download/namtang-gtfs.zip。
+- 2026-11-12 版本的 ZIP 成功驗證，41,301,863 bytes、2,066 條 route、17,081 個 stop，服務日期涵蓋 2026 年。
+- BTS Sukhumvit `route_id=1`，`Siam/12 → Chit Lom/28 → Phloen Chit/27 → Nana/26 → Asok/25`；四個實際停靠站。來源的兩語欄位是 `BTS สยาม;BTS Siam`、`BTS อโศก;BTS Asok`；不可用子字串方式把 ASOKHAR 誤判成 Asok。
+- 2026-11-19，官方 GTFS 的 `service_id=1` 經 calendar/calendar_dates 驗證為服務日；`service_id=2` 當日無服務。不代表當日即時進站、班次一定準點或未臨時異動。
+- GitHub Actions source audit： https://github.com/6zny8sjvy7-spec/voyage-travel-app/actions/runs/43468540365 。完整原始 sample GTFS trip_id/stop_id/service_id/站序請見該 run 的 JSON artifact。
+- 工程已加入隔離的 `voyage-thai-otp-v1.js` 靜態路線 fallback 和相應 browser QA，但在測試和部署成功前仍是 **working branch**，不能宣稱已在公開網址可用。
+- 目前尚無泰國可信公開即時到站；不得顯示「剩 4 分鐘」這類從靜態 GTFS 生成的假倒數。其他國家／其他曼谷路線繼續維持未驗收標記。
