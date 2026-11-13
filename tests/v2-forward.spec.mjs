@@ -568,3 +568,49 @@ test("a transfer between different stop IDs must keep both station names when sa
  });
  expect(deduplicated).toEqual(["A","TRANSFER","B"]);
 });
+
+test("V7 live plan query respects scheduled boarding date/time and Seoul timezone, never silently now",async({page})=>{
+ const requests=[];
+ await page.route("**/api/v1/geocode**",r=>{
+  const q=new URL(r.request().url()).searchParams.get("text")||"";
+  const from=q.includes("A站");
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:from?"A_STOP":"B_STOP",name:from?"A站":"B站",lat:from?37.566:37.58,lon:from?126.978:126.997,countryCode:"KR"}])});
+ });
+ await page.route("**/api/v6/plan**",r=>{
+  requests.push(new URL(r.request().url()).searchParams.get("time"));
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({itineraries:[]})});
+ });
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await expect(page.locator("#transitPlanDate")).toBeVisible();
+ await page.locator("#transitPlanDate").fill("2026-11-19");
+ await page.locator("#transitTime").fill("12:35");
+ await page.locator("#transitFrom").fill("A站");
+ await page.locator("#transitTo").fill("B站");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect.poll(()=>requests.length).toBeGreaterThan(0);
+ expect(requests[0]).toBe("2026-11-19T12:35:00+09:00");
+});
+test("V7 Bangkok future trip route search uses Thai timezone and preserves traveler-selected clock",async({page})=>{
+ const responses=["泰國出發測試","曼谷","泰國","3","2026-11-19"];
+ page.on("dialog",d=>{if(d.type()==="prompt")void d.accept(responses.shift()||"");else void d.accept()});
+ await page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/}).click();
+ await expect(page.locator("#v2Home")).toContainText("泰國");
+ const requests=[];
+ await page.route("**/api/v1/geocode**",r=>{
+  const q=new URL(r.request().url()).searchParams.get("text")||"";
+  const from=q.includes("A站");
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:from?"A_STOP":"B_STOP",name:from?"A站":"B站",lat:from?13.75:13.765,lon:from?100.5:100.53,countryCode:"TH"}])});
+ });
+ await page.route("**/api/v6/plan**",r=>{
+  requests.push(new URL(r.request().url()).searchParams.get("time"));
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({itineraries:[]})});
+ });
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await expect(page.locator("#transitPlanDate")).toHaveValue("2026-11-19");
+ await page.locator("#transitTime").fill("09:20");
+ await page.locator("#transitFrom").fill("A站");
+ await page.locator("#transitTo").fill("B站");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect.poll(()=>requests.length).toBeGreaterThan(0);
+ expect(requests[0]).toBe("2026-11-19T09:20:00+07:00");
+});
