@@ -48,9 +48,10 @@ function aliases(query,code){
  }
  return[query];
 }
+function isVirtualStop(label){return /(?:가상|virtual|仮想|虛擬|虚拟|站點模擬)/iu.test(String(label||""))}
 function stationMatches(label,query,code){
  const candidate=normName(label);
- if(!candidate)return false;
+ if(!candidate||isVirtualStop(label))return false;
  // The query can match any documented, EXACT alias, but never a partially similar name.
  // This is deliberately strict: wrong platform/station is worse than an unavailable route.
  return aliases(query,code).some(alias=>normName(alias)===candidate);
@@ -90,7 +91,7 @@ function parseStop(raw){
  if(!raw)return null;
  const p=raw.place||raw,c=safeCoords(p);
  const name=String(p.name||p.stopName||"").trim();
- if(!name)return null;
+ if(!name||isVirtualStop(name))return null;
  const translations=p.translations||p.names||{};
  return{zh:String(translations.zh||translations["zh-TW"]||"").trim(),local:String(translations.local||translations.native||"").trim(),en:String(translations.en||"").trim(),name,id:String(p.id||""),lat:c?.lat,lon:c?.lon};
 }
@@ -110,10 +111,17 @@ function normalizePlan(data,{origin,destination,country}){
  return{mode:l.mode,line:l.displayName||l.routeShortName||l.routeLongName||(isWalk?"步行":"大眾運輸"),headsign:headsign||"方向未提供，請以月台或官方資訊核對",directionVerified:!!headsign,stations:list,sequenceComplete,stationCount:sequenceComplete&&!isWalk?list.length-1:null,duration:Number(l.duration)||0,realtime:l.realTime===true,departure:l.startTime||null,arrival:l.endTime||null,routeId:l.routeId||null};
  });
  const transitLegs=legs.filter(l=>!["WALK","BIKE","CAR"].includes(l.mode));
+ const seenStops=new Set();let previousStop="",loopDetected=false;
+ for(const l of transitLegs)for(const point of l.stations||[]){
+  const stop=normName(point.name||point.zh||point.en||point.local||"");
+  if(!stop||stop===previousStop)continue; // A shared transfer station occurs twice in adjacent legs.
+  if(seenStops.has(stop))loopDetected=true; // Source itinerary revisits an earlier station.
+  seenStops.add(stop);previousStop=stop;
+ }
  const transfers=Math.max(0,transitLegs.length-1);
  const duration=Number(it.duration)||0;
- return{kind:"transitous",country,origin,destination,label:"Transitous 公開交通路線 · 按取得資料顯示站名、線路、方向及班表；只有明確標示的路段使用即時資料",minutes:duration>0?Math.ceil(duration/60):null,transfers,legs,source:ATTRIBUTION,requestedAt:new Date().toISOString(),hasRealtime:transitLegs.some(l=>l.realtime)};
- });
+ return{kind:"transitous",country,origin,destination,label:"Transitous 公開交通路線 · 按取得資料顯示站名、線路、方向及班表；只有明確標示的路段使用即時資料",minutes:duration>0?Math.ceil(duration/60):null,transfers,legs,source:ATTRIBUTION,requestedAt:new Date().toISOString(),hasRealtime:transitLegs.some(l=>l.realtime),loopDetected};
+ }).filter(route=>!route.loopDetected);
 }
 async function plan(from,to,t,{fetcher=fetch,signal,time}={}){
  const c=context(t);
