@@ -48,10 +48,14 @@ function editFlight(previous=null){
   if(!name||!get("vBFrom")||!get("vBTo"))throw Error("請填航班名稱、出發機場與抵達機場");
   if(url&&!/^https:\/\//i.test(url))throw Error("確認網址需要 HTTPS");
   const minutes=Math.round((utc(t,arriveDate,arriveTime,toCountry)-utc(t,departDate,departTime,fromCountry))/60000);
-  if(minutes<=0||minutes>60*48)throw Error("抵達時間換算時區後不正確，請核對機票上的日期、國家及時間");
+  if(minutes<=0)throw Error("抵達日期 "+arriveDate+" "+arriveTime+" 早於出發日期 "+departDate+" "+departTime+"（已考慮兩國時差），請檢查機票上的抵達日期");if(minutes>60*48)throw Error("航班間隔超過48小時，請檢查出發日期 "+departDate+" 與抵達日期 "+arriveDate);
   const doc={...previous,id:previous?.id||D.uid(),type:"flight",name,fromCountry,toCountry,fromPlace:get("vBFrom"),toPlace:get("vBTo"),departDate,departTime,arriveDate,arriveTime,date:departDate,time:departTime,endDate:arriveDate,endTime:arriveTime,startTZ:countries[fromCountry].tz,endTZ:countries[toCountry].tz,elapsedMinutes:minutes,url,note:get("vBNote")};
   saveDoc(t,doc);return true
  });
+ const depart=document.getElementById("vBDepartDate"),arrive=document.getElementById("vBArriveDate");
+ if(depart&&arrive){let previousDate=depart.value;
+  depart.addEventListener("change",()=>{if(arrive.value===previousDate)arrive.value=depart.value;previousDate=depart.value;});
+ }
 }
 function editHotel(previous=null){
  const t=current(),date=D.dayISO(t.startDate||"",day)||t.startDate||"";
