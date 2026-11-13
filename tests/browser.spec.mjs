@@ -167,6 +167,36 @@ test('Myeongdong to Hongdae returns actual station sequence and transfer, withou
  const events=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
  expect(events.some(x=>x.type==='transport'&&x.routeInfo?.transfers===1)).toBe(true);
 });
+test('A to B search shows complete stops and direction, and attaches only matching arrival departures',async({page})=>{
+ await page.route('**/api/v1/geocode**',r=>{
+  const q=new URL(r.request().url()).searchParams.get('text')||'';
+  const a=q.includes('A站'),data=a
+   ?[{id:'TEST_A',name:'A站',country:'KR',lat:37.565,lon:126.979}]
+   :[{id:'TEST_B',name:'B站',country:'KR',lat:37.580,lon:126.995}];
+  return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.route('**/api/v6/plan**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+  itineraries:[{duration:480,legs:[{mode:'SUBWAY',displayName:'Blue Line',headsign:'Toward B',from:{name:'A站'},
+   intermediateStops:[{name:'中間站'}],to:{name:'B站'},duration:480,realTime:false}]}]
+ })}));
+ await page.route('**/api/v6/stoptimes**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+  stopTimes:[
+   {displayName:'Blue Line',headsign:'Opposite Direction',realTime:true,place:{name:'A站',departure:new Date(Date.now()+60000).toISOString(),departureTimestampReason:'PREDICTED'}},
+   {displayName:'Blue Line',headsign:'Toward B',realTime:true,place:{name:'A站',departure:new Date(Date.now()+240000).toISOString(),departureTimestampReason:'PREDICTED'}}
+  ]
+ })}));
+ await page.locator('[data-tablink="transport"]').click();
+ await page.locator('#transitFrom').fill('A站');
+ await page.locator('#transitTo').fill('B站');
+ await page.getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('總共 2 站');
+ await expect(page.locator('#v2RouteResults')).toContainText('搭乘方向：Toward B');
+ await expect(page.locator('#v2RouteResults')).toContainText('中間站');
+ await expect(page.locator('#v5DepartureResult')).toContainText('Toward B');
+ await expect(page.locator('#v5DepartureResult')).toContainText('4 分鐘');
+ await expect(page.locator('#v5DepartureResult')).not.toContainText('Opposite Direction');
+ await expect(page.locator('#rideMode,#boardTrain,#v2GpsAssist')).toHaveCount(0);
+});
 test('theme changes visibly between warm daylight and indigo night',async({page})=>{
  const pick=()=>page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
  await page.evaluate(()=>{localStorage.setItem('voyage-theme','light')});
