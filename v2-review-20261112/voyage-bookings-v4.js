@@ -21,7 +21,7 @@ function reconcile(t,doc){
   entry(d,dt,"✈️ "+doc.name,"flight",doc.elapsedMinutes,
     ["機票出發："+d+" "+dt+"（"+doc.startTZ+"）",
      "機票抵達："+a+" "+at+"（"+doc.endTZ+"）",
-     (doc.fromPlace||"")+" → "+(doc.toPlace||""),doc.note].filter(Boolean).join("\\n"));
+     (doc.fromPlace||"")+" → "+(doc.toPlace||""),doc.note].filter(Boolean).join("\n"));
   const linked=linkedEvents(t,doc.id)[0];
   if(linked){
     linked.ticketDepartDate=d;linked.ticketDepartTime=dt;
