@@ -129,7 +129,7 @@ test('daily schedule exposes a real unscheduled gap and can open prefilled route
  const actual=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
  expect(actual.some(e=>e.type==='transport'&&e.name.includes('早餐店'))).toBe(false);
 });
-test('overlapping schedule events remain selectable in separate lanes and keep source data unchanged',async({page})=>{
+test('overlapping daily events stay in time order, remain individually selectable, and preserve source data',async({page})=>{
  page.on('dialog',dialog=>dialog.accept());
  await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
  for(const entry of [{name:'午餐',time:'15:00',duration:'90'},{name:'同時段購物',time:'15:30',duration:'45'}]){
@@ -142,10 +142,13 @@ test('overlapping schedule events remain selectable in separate lanes and keep s
  }
  const a=page.locator('#events .v3-schedule-event').filter({hasText:'午餐'}),b=page.locator('#events .v3-schedule-event').filter({hasText:'同時段購物'});
  await expect(a).toBeVisible();await expect(b).toBeVisible();
- const positions=await Promise.all([a,b].map(x=>x.evaluate(n=>({x:n.getBoundingClientRect().x,width:n.getBoundingClientRect().width}))));
- expect(positions[0].x).not.toBe(positions[1].x);
+ const positions=await Promise.all([a,b].map(x=>x.evaluate(n=>({y:n.getBoundingClientRect().y,width:n.getBoundingClientRect().width}))));
+ // V5 uses a chronological mobile-friendly list, not the older side-by-side lanes.
+ expect(positions[1].y).toBeGreaterThan(positions[0].y);
+ const before=await page.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]));
  await b.click();
  await expect(page.locator('#v3MapSummary')).toContainText('同時段購物');
+ expect(await page.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]))).toBe(before);
 });
 
 test('one-touch dining shortcut persists category, actual duration, budget and provider link after reload',async({page})=>{
