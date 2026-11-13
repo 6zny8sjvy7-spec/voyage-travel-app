@@ -278,7 +278,7 @@ test("free in-app bus route choices show precise different boarding stops, direc
   return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:a?"A_STOP":"B_STOP",name:a?"A站":"B站",country:"KR",lat:a?37.565:37.575,lon:a?126.975:126.985}])});
  });
  const names=(n,index)=>Array.from({length:n},(_,j)=>({name:"第"+index+"線中間"+(j+1)+"站"}));
- const legs=[["12","往中央車站",3],["48","往東門",6],["99","往市場",2]].map(([line,headsign,middle])=>({mode:"BUS",displayName:line,headsign,from:{name:"A站"},intermediateStops:names(middle,line),to:{name:"B站"},duration:480+middle*60}));
+ const legs=[["12","往中央車站",3,"百貨公司站"],["48","往東門",6,"商圈東門站"],["99","往市場",2,"市場路口站"]].map(([line,headsign,middle,alight])=>({mode:"BUS",displayName:line,headsign,from:{name:"A站"},intermediateStops:names(middle,line),to:{name:alight},duration:480+middle*60}));
  await page.route("**/api/v6/plan**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({itineraries:legs.map(l=>({duration:l.duration,legs:[l]}))})}));
  await page.route("**/api/v6/stoptimes**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({stopTimes:[]})}));
  await page.locator('.footnav [data-tablink="transport"]').click();
@@ -289,14 +289,17 @@ test("free in-app bus route choices show precise different boarding stops, direc
  await expect(options).toHaveCount(3);
  await expect(page.locator("#v6SelectedRoute")).toContainText("共 4 站");
  await expect(page.locator("#v6SelectedRoute")).toContainText("往中央車站");
+ await expect(options.first()).toContainText("下車：百貨公司站");
  await options.nth(1).click();
  await expect(page.locator("#v6SelectedRoute")).toContainText("共 7 站");
  await expect(page.locator("#v6SelectedRoute")).toContainText("48");
  await expect(page.locator("#v6SelectedRoute")).toContainText("往東門");
+ await expect(options.nth(1)).toContainText("下車：商圈東門站");
  await options.nth(2).click();
  await expect(page.locator("#v6SelectedRoute")).toContainText("共 3 站");
  await expect(page.locator("#v6SelectedRoute")).toContainText("99");
  await expect(page.locator("#v6SelectedRoute")).toContainText("往市場");
+ await expect(options.nth(2)).toContainText("下車：市場路口站");
  await expect(page.locator("#transportSection").getByRole("button",{name:/Google Maps|NAVER 路線/})).toHaveCount(0);
 });
 test("flight ticket yields only one continuous linked event, never adds a fake arrival or gap",async({page})=>{
