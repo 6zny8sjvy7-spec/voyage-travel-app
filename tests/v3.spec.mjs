@@ -60,12 +60,16 @@ await page.locator('#v2PackCategory').selectOption('電子與攝影');
 await page.locator('#v3PackLibrary').getByRole('button',{name:'加入目前分類所有項目'}).click();
 const size=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].packing.length);
 expect(size).toBeGreaterThan(5);
-await page.locator('#v3PackLibrary').getByRole('button',{name:'縮小清單'}).click();
+await page.locator('#v3PackLibrary summary').click();
 await expect(page.locator('#v3PackLibrary')).not.toHaveAttribute('open');
 await expect(page.locator('#v3PackBulk')).toBeVisible();
+await expect(page.locator('#v1Content .v3-remove-check')).toHaveCount(0);
+await page.locator('#v3PackBulk').getByRole('button',{name:'勾選要刪的物品'}).click();
+await expect(page.locator('#v1Content .v3-remove-check')).toHaveCount(size);
+await expect(page.locator('#v1Content .v1-check:visible')).toHaveCount(0);
 await page.locator('#v3PackBulk').getByRole('button',{name:'全選要刪的物品'}).click();
 page.once('dialog',dialog=>dialog.accept());
-await page.locator('#v3PackBulk').getByRole('button',{name:'刪除勾選'}).click();
+await page.locator('#v3PackBulk').getByRole('button',{name:'刪除選取項目'}).click();
 expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].packing.length)).toBe(0);
 });
 test('food wishlist supports planned meal as a duration-bearing itinerary event',async({page})=>{
