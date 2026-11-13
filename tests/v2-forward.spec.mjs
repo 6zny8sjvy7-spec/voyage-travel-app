@@ -657,3 +657,24 @@ test("Transit geocoding must REFUSE Myeongbong/ASOKHAR, not return fabricated bo
  expect(errors[0]).toMatch(/無法確認/);
  expect(errors[1]).toMatch(/無法確認/);
 });
+
+test("save a bus route on its explicitly selected travel date, never default to selected Day 1",async({page})=>{
+ await page.locator("#v2Home").getByRole("button",{name:"旅行設定"}).click();
+ await page.locator("#vTripDate").fill("2026-11-19");
+ await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await page.locator("#transitFrom").fill("A站");
+ await page.locator("#transitTo").fill("B站");
+ await page.locator("#transitPlanDate").fill("2026-11-20");
+ await page.locator("#transitTime").fill("09:30");
+ page.on("dialog",d=>void d.accept());
+ const validRoute={kind:"transitous",source:"test fixture",minutes:14,legs:[{
+  mode:"BUS",line:"12",headsign:"往中央車站",directionVerified:true,sequenceComplete:true,
+  stations:[{id:"a",name:"A站"},{id:"i",name:"中途站"},{id:"b",name:"B站"}],duration:840
+ }]};
+ await page.evaluate(route=>window.VoyageRouteV2.saveRoute(route),validRoute);
+ const trip=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0]);
+ expect(trip.days[1].some(x=>x.date==="2026-11-20"&&x.time==="09:30"&&x.name.startsWith("🚌"))).toBe(true);
+ expect(trip.days[0].some(x=>x.date==="2026-11-20"&&x.from==="A站")).toBe(false);
+ expect(trip.days[1].find(x=>x.date==="2026-11-20")?.stopSequence.map(s=>s.name)).toEqual(["A站","中途站","B站"]);
+});
