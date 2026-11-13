@@ -40,3 +40,19 @@
 .v5-trip-fields input,.v5-trip-fields select{width:100%;min-width:0}
 .v5-trip-feedback{background:var(--soft);border-radius:11px;padding:11px;font-size:13px;color:var(--ink);margin:12px 0}
 @media(max-width:600px){.v5-trip-fields{grid-template-columns:1fr}.v5-trip-dialog{padding:15px}}
+
+/* Mobile-first daily timeline: a 5-minute activity must still be readable, while weekly view retains a real time ruler. */
+.v5-day-timeline{display:grid;gap:7px;width:100%;min-width:0}
+.v5-day-title{font-weight:750;color:var(--ink);padding:6px 7px 10px;font-size:14px}
+.v5-day-row,.v5-day-gap-row{display:grid;grid-template-columns:66px minmax(0,1fr);align-items:start;gap:11px;min-width:0}
+.v5-day-time{color:var(--muted);font:650 12px/1.4 ui-sans-serif,-apple-system,BlinkMacSystemFont,sans-serif;text-align:right;padding-top:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.v5-day-timeline .v3-schedule-event{position:relative!important;top:auto!important;left:auto!important;width:100%!important;height:auto!important;min-height:80px;max-height:none;display:block;overflow:visible;padding:12px 45px 12px 15px;border-radius:14px;margin:0;box-sizing:border-box}
+.v5-day-timeline .v3-event-time{white-space:normal;line-height:1.45;margin-bottom:4px;font-size:12px}
+.v5-day-timeline .v3-event-name{white-space:normal;line-height:1.55;font-size:15px;overflow:visible}
+.v5-day-timeline .v3-duration-warning,.v5-day-timeline .v3-event-detail{white-space:normal;line-height:1.4;margin-top:4px;display:block}
+.v5-day-timeline .v3-edit-mini{right:7px;top:9px;position:absolute}
+.v5-day-timeline .v3-free-gap{position:static!important;top:auto!important;height:auto!important;min-height:36px;padding:8px 10px;display:flex;white-space:normal;text-align:left;justify-content:flex-start;width:100%;font-size:12px;margin:0}
+.v5-day-gap-row .v5-day-time{padding-top:12px;font-weight:500}
+.v5-route-summary{font-size:12px;color:var(--muted);margin-top:6px}
+.v5-day-timeline .v3-schedule-event:focus-visible{outline:3px solid #5b91da}
+@media(max-width:600px){.v5-day-row,.v5-day-gap-row{grid-template-columns:51px minmax(0,1fr);gap:7px}.v5-day-time{font-size:11px}.v5-day-timeline .v3-schedule-event{min-height:76px;padding:12px 42px 12px 10px}}
