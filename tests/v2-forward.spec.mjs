@@ -384,9 +384,10 @@ test("V7 all sixteen regression checks: one shared map is after both views and d
  await expect(page.locator("#v3InlineMap")).toHaveCount(1);
  const positions=await page.evaluate(()=>{
   const it=document.querySelector("#itinerary"),week=document.querySelector("#week"),map=document.querySelector("#v3InlineMap");
-  return{mapAfterWeek:!!(week.compareDocumentPosition(map)&Node.DOCUMENT_POSITION_FOLLOWING),dateFont:getComputedStyle(document.querySelector("#dates .date")).fontFamily};
+  const events=document.querySelector("#events");return{mapAfterWeek:!!(week.compareDocumentPosition(map)&Node.DOCUMENT_POSITION_FOLLOWING),mapAfterDaily:!!(events.compareDocumentPosition(map)&Node.DOCUMENT_POSITION_FOLLOWING),dateFont:getComputedStyle(document.querySelector("#dates .date")).fontFamily};
  });
  expect(positions.mapAfterWeek).toBe(true);
+ expect(positions.mapAfterDaily).toBe(true);
  expect(positions.dateFont).toMatch(/ui-rounded|Hiragino Maru Gothic|Arial Rounded/);
 });
 test("V7 all sixteen regression checks: week can scroll left/right and cards don't clip on desktop or iPhone",async({page})=>{
