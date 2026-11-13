@@ -365,3 +365,57 @@ test("actual published URL: notes paste and in-app routes are deployed",async({p
  await expect(page.locator("#transportSection").getByRole("button",{name:/Google Maps|NAVER 路線/})).toHaveCount(0);
  await expect(page.locator("#v2RouteResults")).toContainText("輸入起終站");
 });
+
+test("V7 all sixteen regression checks: packing has one collapse and bulk delete; no per-item remove",async({page})=>{
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:/行李清單/}).click();
+ await expect(page.locator("#v3PackLibrary")).toHaveCount(1);
+ await expect(page.getByRole("button",{name:"縮小清單"})).toHaveCount(0);
+ await expect(page.getByRole("button",{name:"展開選擇"})).toHaveCount(0);
+ await expect(page.locator("#v1Content .v1-item").getByRole("button",{name:"移除",exact:true})).toHaveCount(0);
+ await page.getByRole("button",{name:/勾選要刪的物品/}).click();
+ await expect(page.getByRole("button",{name:/刪除選取項目/})).toBeVisible();
+});
+test("V7 all sixteen regression checks: one shared map is after both views and date labels are rounded",async({page})=>{
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator("#v3InlineMap")).toHaveCount(1);
+ const positions=await page.evaluate(()=>{
+  const it=document.querySelector("#itinerary"),week=document.querySelector("#week"),map=document.querySelector("#v3InlineMap");
+  return{mapAfterWeek:!!(week.compareDocumentPosition(map)&Node.DOCUMENT_POSITION_FOLLOWING),dateFont:getComputedStyle(document.querySelector("#dates .date")).fontFamily};
+ });
+ expect(positions.mapAfterWeek).toBe(true);
+ expect(positions.dateFont).toMatch(/ui-rounded|Hiragino Maru Gothic|Arial Rounded/);
+});
+test("V7 all sixteen regression checks: week can scroll left/right and cards don't clip on desktop or iPhone",async({page})=>{
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await page.locator("#weeklyView").click();
+ const week=page.locator("#week .v3-grid-viewport");
+ await expect(week).toBeVisible();
+ const before=await week.evaluate(e=>({width:e.clientWidth,content:e.scrollWidth,overflow:getComputedStyle(e).overflowX}));
+ expect(before.content).toBeGreaterThan(before.width+50);
+ const position=await week.evaluate(e=>{e.scrollLeft=99999;return e.scrollLeft});
+ expect(position).toBeGreaterThan(100);
+ const left=await week.evaluate(e=>{e.scrollLeft=0;return e.scrollLeft});
+ expect(left).toBe(0);
+ const card=page.locator("#week .v3-schedule-event").first();
+ const heights=await card.evaluate(e=>({height:e.getBoundingClientRect().height,scroll:e.scrollHeight,overflow:getComputedStyle(e).overflow}));
+ expect(heights.height).toBeGreaterThanOrEqual(80);
+ expect(heights.scroll).toBeLessThanOrEqual(heights.height+2);
+});
+test("V7 all sixteen regression checks: imported dated item uses same double-tap editor",async({page})=>{
+ await page.locator("#v2Home").getByRole("button",{name:"旅行設定"}).click();
+ await page.locator("#vTripDate").fill("2026-11-19");
+ await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:/匯入/}).click();
+ await page.locator("#v6NotesPaste").fill("全新測試景點");
+ await page.getByRole("button",{name:"預覽貼上的地點"}).click();
+ await page.locator("#v6ImportPreview .v6-import-card").first().locator('input[type="date"]').fill("2026-11-19");
+ await page.locator("#v6ImportPreview .v6-import-card").first().locator('input[type="time"]').fill("13:00");
+ await page.getByRole("button",{name:"儲存勾選項目"}).click();
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ const card=page.locator("#events .v3-schedule-event").filter({hasText:"全新測試景點"});
+ await expect(card).toHaveCount(1);
+ await card.dblclick();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+});
