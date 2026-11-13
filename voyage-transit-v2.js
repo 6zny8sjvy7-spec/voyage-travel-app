@@ -44,13 +44,9 @@ function refreshRegion(){
 }
 
 
-const form=$("transportSection").querySelector(".transport-panel");
 const toLabel=$("transitTo").closest("label");
 toLabel.after(toolbar);
-const advanced=E("details"),advancedTitle=E("summary",{text:"進階：自行輸入或修改線路方向（只有已查到的路線才會自動填入）"});
-const lineLabel=$("transitLine").closest("label");
-advanced.append(advancedTitle,lineLabel);
-form.append(advanced);
+// Boarding direction is a ROUTE RESULT, never a field the traveler must guess.
 const routeStyle=E("style",{text:".v2-route-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0}.v2-route-card h3{font-size:16px;margin:0 0 7px}.v2-route-leg{border-left:3px solid #f0ab72;margin:12px 0 0 9px;padding:2px 0 4px 18px}.v2-route-leg strong{font-size:14px}.v2-route-station{position:relative;padding:8px 2px;font-size:13px;border-bottom:1px solid var(--line)}.v2-route-station:before{content:'';position:absolute;left:-27px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid #de9c77}.v2-route-station:last-child:before{background:#d48563}.v2-route-source{font-size:11px;color:var(--muted);line-height:1.65}.v2-route-source a{color:var(--blue)}.v2-route-status{background:var(--soft);border-radius:12px;padding:10px;font-size:12px;margin:8px 0}"});
 document.head.append(routeStyle);
 let selectedRoute=null;
