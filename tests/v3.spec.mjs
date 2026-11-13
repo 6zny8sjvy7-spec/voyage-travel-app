@@ -179,7 +179,7 @@ test('Traditional Chinese country + currency names appear throughout expense, FX
  await currency.selectOption('JPY');
  await expect(currency).toHaveValue('JPY');
  await page.locator('#v1Cancel').click();
- await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await page.locator('nav.footnav [data-tablink="trips"]').click();
  await page.locator('#v2Home').getByRole('button',{name:/旅行設定/}).click();
  await expect(page.locator('#vTripCurrency option[value="KRW"]')).toHaveText('韓國・韓元（KRW）');
 });
