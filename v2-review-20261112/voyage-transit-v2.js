@@ -125,16 +125,20 @@ function draw(routes){
   const count=verified?counts.reduce((a,b)=>a+b,0):null;
   const main=legs.map(l=>(l.mode==="BUS"?"🚌 ":"🚇 ")+(l.line||"未知車號")).join(" → ");
   const walk=route.legs.filter(l=>["WALK","BIKE"].includes(l.mode)).reduce((n,l)=>n+(Number(l.duration)||0),0);
+  const first=legs[0]?.stations?.[0],lastLeg=legs[legs.length-1],last=lastLeg?.stations?.[(lastLeg.stations||[]).length-1];
+  const stationName=st=>st?([st.zh,st.en,st.local,st.name].filter(Boolean)[0]||"站名待核對"):"站名資料不足";
   return {
    title:"方案 "+(index+1)+" · "+main,
    stations:count===null?"站數尚未核實":"共 "+count+" 站",
+   boarding:"上車："+stationName(first),
+   alighting:"下車："+stationName(last),
    extra:route.transfers+" 次轉乘"+(route.minutes?" · 約 "+route.minutes+" 分":"")+(walk>0?" · 步行約 "+Math.ceil(walk/60)+" 分":"")
   };
  }
  function select(index){
   buttons.forEach((btn,i)=>btn.setAttribute("aria-pressed",String(i===index)));
   const route=unique[index],info=label(route,index);
-  details.replaceChildren(E("h3",{text:info.title}),E("p",{class:"v1-sub",text:info.stations+" · "+info.extra}));
+  details.replaceChildren(E("h3",{text:info.title}),E("p",{class:"v1-sub",text:info.stations+" · "+info.extra}),E("p",{class:"v1-sub",text:info.boarding+" ｜ "+info.alighting}));
   const trainLegs=route.legs.filter(x=>!["WALK","BIKE","CAR"].includes(x.mode));
   const counts=trainLegs.map(x=>knownCount(x,route));
   if(!counts.length||counts.some(x=>x===null))details.append(E("p",{class:"v2-route-status",text:"資料來源未提供完整停靠站順序，不能確認總站數；不會把只有起終點的路段誤算為 1 站，也不會猜測公車站數。"}));
@@ -159,7 +163,7 @@ function draw(routes){
   window.VoyageTransitUIV5?.lookupForRoute?.($("transitFrom").value.trim(),trip(),route);
  }
  unique.forEach((route,i)=>{
-  const meta=label(route,i),btn=button(meta.title+" · "+meta.stations+" · "+meta.extra,()=>select(i));
+  const meta=label(route,i),btn=button(meta.title+" · "+meta.stations+" · "+meta.boarding+" · "+meta.alighting+" · "+meta.extra,()=>select(i));
   btn.className="v6-route-choice";btn.setAttribute("aria-pressed",String(i===0));
   chooser.append(btn);buttons.push(btn);
  });

@@ -1,0 +1,43 @@
+/* VOYAGE V7: iPhone Safari layout, legibility and date polish. Original V2 theme remains. */
+#dates .date{border-radius:19px!important;font-family:ui-rounded,"Hiragino Maru Gothic ProN","Arial Rounded MT Bold","Noto Sans TC",system-ui,sans-serif!important;letter-spacing:.025em;box-shadow:0 3px 12px #30446a10}
+#dates .date b{font-size:20px;font-weight:800;letter-spacing:.06em}
+#dates .date span{font-size:13px;font-weight:700}
+#dates .date small{font-family:inherit;font-weight:650}
+.v3-schedule-event{touch-action:manipulation}
+#week{min-width:0;max-width:100%}
+#week .v3-grid-viewport{overflow-x:auto!important;-webkit-overflow-scrolling:touch;scroll-snap-type:none!important;overscroll-behavior-x:auto;touch-action:pan-x pan-y;width:100%;max-width:100%}
+#week .v3-calendar-grid{display:flex;flex:0 0 auto!important;min-width:max-content!important;width:max-content!important;gap:12px;padding:0 14px 5px 0}
+#week .v3-time-column{flex:0 0 288px!important;min-width:288px!important;max-width:288px!important}
+#week .v3-column-heading{font-family:ui-rounded,"Hiragino Maru Gothic ProN",system-ui,sans-serif;font-size:14px;height:auto;min-height:51px}
+#week .v3-ruler{flex:0 0 50px;min-width:50px}
+@media(max-width:767px){
+ #week .v3-grid-viewport{display:flex;scroll-snap-type:none!important}
+ #week .v3-ruler,#events .v3-ruler{display:none!important}
+ #week .v3-calendar-grid{width:max-content!important;min-width:max-content!important;flex:0 0 auto!important}
+ #week .v3-time-column{min-width:288px!important;width:288px!important;flex:0 0 288px!important}
+ #week .v3-time-track,#events .v3-time-track{display:flex;flex-direction:column;gap:10px;height:auto!important;min-height:0!important;padding:12px!important;background:transparent!important}
+ #week .v3-grid-line,#events .v3-grid-line,#week .v3-free-gap,#events .v3-free-gap{display:none!important}
+ #week .v3-schedule-event,#events .v3-schedule-event{position:relative!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;min-width:0!important;min-height:83px!important;height:auto!important;max-height:none!important;overflow:visible!important;flex:none!important;margin:0!important;padding:10px 12px!important;transform:none!important;white-space:normal!important;z-index:1}
+ #week .v3-event-name,#events .v3-event-name{font-size:14px!important;line-height:1.45!important;white-space:normal!important;overflow-wrap:anywhere}
+ #week .v3-event-time,#events .v3-event-time{font-size:12px!important;line-height:1.45!important;white-space:normal!important;overflow-wrap:anywhere}
+ #week .v3-event-detail,#events .v3-event-detail{display:block!important;-webkit-line-clamp:unset!important;max-height:none!important;overflow:visible!important;font-size:12px!important;line-height:1.4!important;overflow-wrap:anywhere}
+ #week .v3-duration-warning,#events .v3-duration-warning{font-size:11px}
+ #events .v3-time-column{width:100%!important;min-width:0!important;max-width:100%!important}
+ #events .v3-calendar-grid{width:100%!important;min-width:0!important}
+}
+
+/* V7 week full-content: no fixed-height clipping on desktop OR mobile. */
+#week .v3-ruler{display:none!important}
+#week .v3-time-track{display:flex!important;flex-direction:column!important;gap:10px!important;height:auto!important;min-height:0!important;padding:12px!important;background:transparent!important}
+#week .v3-grid-line,#week .v3-free-gap{display:none!important}
+#week .v3-schedule-event{position:relative!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;min-width:0!important;min-height:82px!important;height:auto!important;max-height:none!important;overflow:visible!important;flex:none!important;margin:0!important;padding:10px 12px!important;transform:none!important;white-space:normal!important}
+#week .v3-event-name{font-size:14px!important;line-height:1.4!important;overflow-wrap:anywhere;white-space:normal!important}
+#week .v3-event-time{font-size:12px!important;line-height:1.45!important;white-space:normal!important;overflow-wrap:anywhere}
+#week .v3-event-detail{display:block!important;-webkit-line-clamp:unset!important;max-height:none!important;overflow:visible!important;font-size:12px!important;line-height:1.4!important;overflow-wrap:anywhere}
+
+/* Keep exactly one trip-creation button (on the hero). Switch existing trips with one compact selector. */
+body[data-tab] #trips{display:none!important}
+#v2Home .v7-trip-switch{margin:12px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 15px;border:1px solid var(--line);border-radius:15px;background:var(--card)}
+#v2Home .v7-trip-switch label{font:700 13px/1.4 ui-rounded,"Noto Sans TC",system-ui,sans-serif;color:var(--ink)}
+#v2Home .v7-trip-switch select{flex:1;min-width:min(100%,220px);max-width:100%;font-size:15px;padding:10px 11px;border-radius:12px}
+@media(max-width:520px){#v2Home .v7-trip-switch{display:grid;gap:6px}#v2Home .v7-trip-switch select{width:100%;min-width:0}}
