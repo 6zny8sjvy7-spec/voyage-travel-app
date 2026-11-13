@@ -678,3 +678,23 @@ test("save a bus route on its explicitly selected travel date, never default to 
  expect(trip.days[0].some(x=>x.date==="2026-11-20"&&x.from==="A站")).toBe(false);
  expect(trip.days[1].find(x=>x.date==="2026-11-20")?.stopSequence.map(s=>s.name)).toEqual(["A站","中途站","B站"]);
 });
+
+test("published V7: travel date route engine and strict Thai station names",async({page})=>{
+ await page.goto("https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/",{waitUntil:"domcontentloaded"});
+ await expect(page.locator("#v2Home")).toBeVisible();
+ await expect(page.locator("#transitPlanDate")).toHaveCount(1);
+ await expect(page.locator('.footnav [data-tablink="expenses"]')).toHaveCount(1);
+ const check=await page.evaluate(()=>{
+   const m=window.VoyageTransitV5?.stationMatches;
+   const stops=window.VoyageRouteV2?.routeStops;
+   const route={legs:[
+    {mode:"BUS",stations:[{id:"A",name:"A站"},{id:"N",name:"北側轉乘站"}]},
+    {mode:"SUBWAY",stations:[{id:"S",name:"南側轉乘站"},{id:"B",name:"B站"}]}
+   ]};
+   return {hasRoute:typeof stops==="function",asok:m?.("Asok BTS","Asok","TH"),wrong:m?.("ASOKHAR","Asok","TH"),transferStops:stops?.(route).map(x=>x.id)};
+ });
+ expect(check.hasRoute).toBe(true);
+ expect(check.asok).toBe(true);
+ expect(check.wrong).toBe(false);
+ expect(check.transferStops).toEqual(["A","N","S","B"]);
+});
