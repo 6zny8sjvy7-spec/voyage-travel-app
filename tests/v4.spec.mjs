@@ -64,7 +64,7 @@ test('Bangkok never borrows prebuilt Seoul metro answer for Seoul-origin words',
 });
 test('packing normal mode has a checked-and-struck item; deletion checkboxes only appear after switching modes',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/行李清單/}).click();
- const first=page.locator('#v1Content .v1-item').filter({hasText:'護照'}).first();
+ const first=page.locator('#v1Content > .v1-item').filter({hasText:'護照'}).first();
  await first.locator('.v1-check').check();
  await expect(first.locator('.v1-struck')).toBeVisible();
  await expect(first.locator('.v1-struck')).toHaveCSS('text-decoration-line','line-through');
