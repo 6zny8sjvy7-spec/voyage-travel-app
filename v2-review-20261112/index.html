@@ -338,6 +338,21 @@ body[data-tab="expenses"] .footnav a[data-tablink="expenses"]{color:var(--blue)}
 #v3Composer{max-width:100%}
 @media(max-width:600px){.v3-composer-fields{grid-template-columns:1fr 1fr!important}}
 @media(max-width:375px){.v3-composer-fields{grid-template-columns:1fr!important}}
+</style><style id="v2-forward-landmark-qa">
+.hero-inner{position:relative;padding-bottom:22px}.hero .glass{position:relative;z-index:3}
+.hero-art{z-index:1;max-width:46vw;right:clamp(12px,3vw,45px);bottom:10px}
+.hero-art span,.v2-home-hero .v2-big-icon,.v2-home-hero .v2-small-icon{animation:none!important}
+.hero-art span.v2-date-bounce,.v2-home-hero .v2-big-icon.v2-date-bounce{animation:v2-date-pop .66s cubic-bezier(.12,.86,.36,1.1) 1!important}
+@keyframes v2-date-pop{0%{transform:translateY(0)}42%{transform:translateY(-12px) scale(1.04)}100%{transform:translateY(0)}}
+@media(max-width:680px){.hero{min-height:210px}.hero-inner{padding-bottom:77px}.hero .glass{max-width:min(58vw,265px)}
+.hero-art{bottom:7px;right:12px;font-size:clamp(31px,9vw,48px);max-width:44vw}
+#v2Home .v2-home-hero .v2-hero-copy{max-width:64%}
+#v2Home .v2-home-hero .v2-big-icon{right:5%;font-size:clamp(40px,12vw,64px)}}
+.v2-approved-route-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:10px 0 14px}
+.v2-approved-route-row span{font-size:12px;color:var(--muted)}
+#v2ApprovedBookingPanel{margin:10px 0}#v2ApprovedBookingPanel .primary{margin-top:8px}
+#v3Composer label[hidden],#v3Composer [hidden]{display:none!important}
+#rideMode,#rideFields,#v2GpsAssist{display:none!important}
 </style></head><body><style>#v2ReviewTop{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px max(12px,calc((100vw - 1050px)/2));font:12px/1.55 -apple-system,BlinkMacSystemFont,sans-serif;color:#274365;background:#f3f8ff;border-bottom:1px solid #dce8f8}#v2ReviewTop strong{font-size:13px}#v2ReviewTop button,#v2ReviewTop a{display:inline-block;background:white;border:1px solid #bdd1e6;border-radius:10px;padding:6px 9px;color:#315b96;text-decoration:none;cursor:pointer}#v2ReviewTop details{width:100%;font-size:12px}#v2ReviewTop summary{cursor:pointer;font-weight:600}</style><aside id="v2ReviewTop" aria-label="新版體驗說明"><strong>✈ VOYAGE 新版｜日期、餐飲、交通、行程地圖連動</strong><div style="display:flex;gap:7px;align-items:center"><a href="../">返回正式網站</a><button type="button" id="v2PreviewReset">清空本頁測試資料</button></div><details><summary>功能與資料安全說明</summary><p>同一頁可測日／週時間行事曆、日期移動回饋、點活動定位下方地圖、交通空檔搜尋、餐飲與購物、行李批次整理及天氣動畫。這裡使用獨立測試資料，不覆蓋正式網站。公共交通並非全球即時到站；跨手機共同編輯仍需後端設定。</p></details></aside><script>document.addEventListener("DOMContentLoaded",()=>{const b=document.getElementById("v2PreviewReset");if(b)b.onclick=()=>{if(confirm("僅清除本體驗區的測試資料，不影響正式 VOYAGE。確定嗎？")){localStorage.removeItem("voyage-v2-review-20261112");localStorage.removeItem("voyage-theme-v2-review-20261112");location.reload()}}});</script>
 <header class="hero" id="top"><div class="weatherfx" id="fx"></div><div class="hero-inner"><div class="hero-top"><span class="brand">VOYAGE<span style="color:#b8dcff">.</span></span><button class="theme" id="themeBtn">◐ 自動日夜</button></div><div class="overline" style="margin-top:27px">你的旅行，從這裡開始</div><h1 id="heroTitle">把每一天，變成值得記住的旅行。</h1><p id="heroSub">多城市行程・真實地圖・旅行記憶</p><div class="glass"><span id="weatherEmoji" style="font-size:33px">☀️</span><div><div><span class="temp" id="temp">--°</span> <span id="cityLabel">首爾</span></div><div class="sub" id="weatherDesc">正在讀取當地天氣</div></div></div></div></header>
 <main class="shell"><section class="card" id="trips"><div class="eyebrow">我的旅行</div><div class="tripbar"><select id="tripSelect" aria-label="選擇旅行"></select><button class="secondary" id="newTrip">＋ 新旅行</button><button class="ghost" id="settingsToggle">⚙ 設定</button></div><p class="hint" id="tripMeta"></p></section>
@@ -1166,12 +1181,12 @@ U.renderMore();
 (function(){
 "use strict";
 const $=id=>document.getElementById(id),E=(tag,attrs={},children=[])=>{const x=document.createElement(tag);for(const [k,v] of Object.entries(attrs)){if(k==="class")x.className=v;else if(k==="text")x.textContent=String(v);else x.setAttribute(k,v)}for(const c of children)x.append(c);return x};
-const hero=document.querySelector(".hero-art"),glass=document.querySelector(".hero .glass");if(!glass)return;if(hero)hero.style.display="none";
+const hero=document.querySelector(".hero-art"),glass=document.querySelector(".hero .glass");if(!glass)return;
 const weather=E("div",{id:"v3WeatherArt","aria-live":"polite",role:"img"}),source=E("div",{id:"v3WeatherSource"});
 glass.append(weather,source);
 const badge=$("weatherEmoji");
 function classify(code,isDay){const n=Number(code);if(!Number.isFinite(n))return "unknown";if(n>=95)return "storm";if(n>=71&&n<=86)return "snow";if(n>=51&&n<=67||n>=80&&n<=82)return "rain";if(n===45||n===48)return "fog";if(n===0||n===1)return isDay?"sun":"moon";if(n>=2&&n<=3)return "cloud";return isDay?"cloud":"moon"}
-function draw(payload){if(!glass.contains(weather))glass.append(weather,source);if(hero)hero.style.display="none";const w=payload&&payload.city===trip().city?payload:null,kind=w?classify(w.code,w.isDay):"unknown";
+function draw(payload){if(!glass.contains(weather))glass.append(weather,source);const w=payload&&payload.city===trip().city?payload:null,kind=w?classify(w.code,w.isDay):"unknown";
 weather.className="v3-weather-"+kind;weather.replaceChildren();const main=E("div",{class:"v3-weather-scene"});
 if(kind==="sun"){main.append(E("span",{class:"v3-sun",text:"☀"}),E("span",{class:"v3-small-cloud",text:"☁"}))}
 else if(kind==="moon"){main.append(E("span",{class:"v3-moon",text:"☾"}),E("span",{class:"v3-stars",text:"✦ ✧"}))}
@@ -1185,9 +1200,7 @@ const label={sun:"晴朗",moon:"晴朗夜晚",cloud:"多雲",rain:"有雨",storm
 weather.setAttribute("aria-label","目的地目前天氣："+label);
 source.textContent=w?"依 "+w.city+" 當地現在天氣（"+label+"）變化":"尚無目的地即時天氣資料";
 if(badge)badge.textContent={sun:"☀️",moon:"🌙",cloud:"☁️",rain:"🌧️",storm:"⛈️",snow:"❄️",fog:"🌫️",unknown:"◌"}[kind];
-const homeIcon=$("v2Home")?.querySelector(".v2-big-icon"),homeSmall=$("v2Home")?.querySelector(".v2-small-icon");
-if(homeIcon){homeIcon.textContent=badge?.textContent||"◌";homeIcon.setAttribute("aria-label","目前天氣 "+label)}
-if(homeSmall)homeSmall.textContent="";
+// Preserve approved country landmark; weather changes only inside its own panel.
 }
 document.addEventListener("voyage-weather",event=>draw(event.detail));
 const old=render;render=function(){old();try{draw(window.VoyageCurrentWeather)}catch(e){console.error("VOYAGE live-weather visual",e)}};
@@ -1196,4 +1209,9 @@ window.VoyageWeatherV3={classify,draw};
 })();
 
 </script>
+<script src="./voyage-region-v4.js"></script>
+<script src="./voyage-bookings-v4.js"></script>
+<script src="./voyage-transit-v5.js"></script>
+<script src="./voyage-transit-ui-v5.js"></script>
+<script src="./voyage-forward-ui.js"></script>
 </body></html>
