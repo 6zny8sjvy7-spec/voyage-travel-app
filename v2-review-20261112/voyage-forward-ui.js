@@ -85,7 +85,7 @@
  },true);
  // Obsolete ride tracking stays disabled. Do not request foreground/background GPS.
  const ride=$("rideMode"),rideArea=$("rideFields");
- if(ride)ride.style.display="none";
- if(rideArea)rideArea.style.display="none";
+ if(ride)ride.remove();
+ if(rideArea)rideArea.remove();
  const oldGps=$("v2GpsAssist");if(oldGps)oldGps.remove();
 })();
