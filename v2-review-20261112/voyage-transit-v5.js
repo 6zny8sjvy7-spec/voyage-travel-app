@@ -33,7 +33,13 @@ const stationAlias={
  JP:{"新宿":["Shinjuku","新宿"],"澀谷":["Shibuya","渋谷"],"東京站":["Tokyo","東京"],"大阪":["Osaka","大阪"],"梅田":["Umeda","梅田"]},
  VN:{"濱城市場":["Bến Thành","Ben Thanh"],"檳城市場":["Bến Thành","Ben Thanh"],"濱城":["Bến Thành","Ben Thanh"],"河內":["Hà Nội","Hanoi"]}
 };
-const normName=v=>String(v||"").toLocaleLowerCase().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
+// Strict canonical stop names: free-text fuzzy substrings can resolve to the WRONG boarding station.
+// "Myeongbong" is not "Myeongdong", and "ASOKHAR" is not "Asok".
+const normName=v=>String(v||"").normalize("NFKC").toLocaleLowerCase().trim()
+ .replace(/[（(][^（）)]*[）)]/g,"")
+ .replace(/(?:station|stn|stop|metro|subway|railway)$/ig,"")
+ .replace(/[\\s._·・\\-]/g,"")
+ .replace(/(?:站|역|駅)$/u,"");
 function aliases(query,code){
  const k=normName(query);
  for(const [main,others] of Object.entries(stationAlias[code]||{})){
@@ -43,14 +49,11 @@ function aliases(query,code){
  return[query];
 }
 function stationMatches(label,query,code){
- const normalize=x=>String(x||"").toLocaleLowerCase().trim().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
- const name=normalize(label),q=normalize(query);
- if(!name||!q)return false;
- if(name===q||name.includes(q)&&q.length>=2||q.includes(name)&&name.length>=3)return true;
- const names=aliases(query,code);
- if(names.some(x=>normalize(x)===name))return true;
- if(names.some(x=>normalize(x).length>=2&&name.includes(normalize(x))))return true;
- return false;
+ const candidate=normName(label);
+ if(!candidate)return false;
+ // The query can match any documented, EXACT alias, but never a partially similar name.
+ // This is deliberately strict: wrong platform/station is worse than an unavailable route.
+ return aliases(query,code).some(alias=>normName(alias)===candidate);
 }
 function suggestStation(entries,phrase,t){
  const list=Array.isArray(entries)?entries:Array.isArray(entries?.results)?entries.results:[];
@@ -60,7 +63,8 @@ function suggestStation(entries,phrase,t){
  const km=origin?distance(origin,c):Infinity;if(!origin||km>120)return null;
  const label=String(p.name||p.place?.name||p.stopName||"").trim();
  if(!stationMatches(label,phrase,code))return null;
- let score=km/10+(label.toLowerCase()===q?-10:label.toLowerCase().includes(q)?-3:0);
+ const candidate=normName(label);
+ let score=km/10+(candidate===normName(phrase)?-20:-10);
  return{p,c,km,score,label,id:String(p.id||p.place?.id||"")};
  }).filter(Boolean).sort((a,b)=>a.score-b.score)[0]||null;
 }
@@ -72,7 +76,7 @@ async function json(url,signal,fetcher=fetch){
 function context(t){const country=R?.countryCode(t)||"";if(!supported.has(country))throw new Error("目前先支援韓國、泰國、日本、越南四國");if(!cityOrigin(t))throw new Error("尚未確認目的地城市座標，請先設定正確城市");return{country,language:lang[country],origin:cityOrigin(t)}}
 async function geocode(name,t,{fetcher=fetch,signal}={}){
  const cfg=context(t),q=String(name||"").trim();if(!q)throw new Error("請輸入站名");
- const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x+", "+t.city,x])],seen=new Set();
+ const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x,x+", "+t.city])],seen=new Set();
  for(const term of variants){
  if(seen.has(term))continue;seen.add(term);
  const p=new URLSearchParams({text:term,type:"STOP",place:cfg.origin.lat+","+cfg.origin.lon,numResults:"10",language:cfg.language});
@@ -80,7 +84,7 @@ async function geocode(name,t,{fetcher=fetch,signal}={}){
  const best=suggestStation(found,q,t);
  if(best)return{...best.c,id:best.id,name:best.label,source:"Transitous / OpenStreetMap",country:cfg.country};
  }
- throw new Error("公開站名資料沒有查到「"+q+"」附近的可靠車站");
+ throw new Error("無法確認「"+q+"」的精確車站名稱；相似站名不會自動選取，以免搭錯方向。可改輸入完整官方英文／當地站名後在 VOYAGE 重新查詢");
 }
 function parseStop(raw){
  if(!raw)return null;
