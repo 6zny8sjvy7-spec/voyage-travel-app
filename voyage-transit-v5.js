@@ -20,7 +20,27 @@ function distance(a,b){
  return 6371*2*Math.atan2(Math.sqrt(Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2),Math.sqrt(Math.max(0,1-(Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2))));
 }
 function cityOrigin(t){const c=R?.trustedCoords(t);return c?{lat:c.latitude,lon:c.longitude}:null}
-function matchesCountry(entry,code){const match=String(entry?.country||entry?.place?.country||"").toUpperCase();return !match||match===code}
+function matchesCountry(entry,code){
+ const match=String(entry?.countryCode||entry?.country||entry?.place?.countryCode||entry?.place?.country||"").trim().toUpperCase();
+ if(!match)return true;
+ const aliases={KR:["KR","KOR","REPUBLIC OF KOREA","SOUTH KOREA","대한민국","한국"],TH:["TH","THA","THAILAND","ประเทศไทย"],JP:["JP","JPN","JAPAN","日本"],VN:["VN","VNM","VIETNAM","VIỆT NAM","越南"]};
+ return (aliases[code]||[]).includes(match);
+}
+function stationMatches(label,query,code){
+ const normalize=x=>String(x||"").toLocaleLowerCase().trim().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
+ const name=normalize(label),q=normalize(query);
+ if(!name||!q)return false;
+ if(name===q||name.includes(q)&&q.length>=2||q.includes(name)&&name.length>=3)return true;
+ const known={
+  KR:{"明洞":["명동","myeongdong"],"弘大":["홍대","hongik"],"弘大入口":["홍대","hongik"],"首爾":["서울","seoul"],"首爾站":["서울","seoul"],"聖水":["성수","seongsu"]},
+  TH:{"siam":["สยาม"],"อโศก":["asok","อโศก"],"asok":["อโศก"]},
+  JP:{"shinjuku":["新宿"],"shibuya":["渋谷","澀谷"],"tokyo":["東京"]}
+ };
+ for(const [alias,candidates] of Object.entries(known[code]||{})){
+  if(normalize(alias)===q&&candidates.some(x=>name.includes(normalize(x))))return true;
+ }
+ return false;
+}
 function suggestStation(entries,phrase,t){
  const list=Array.isArray(entries)?entries:Array.isArray(entries?.results)?entries.results:[];
  const origin=cityOrigin(t),code=R?.countryCode(t),q=String(phrase).trim().toLowerCase();
@@ -28,6 +48,7 @@ function suggestStation(entries,phrase,t){
  const c=safeCoords(p);if(!c||!matchesCountry(p,code))return null;
  const km=origin?distance(origin,c):Infinity;if(!origin||km>120)return null;
  const label=String(p.name||p.place?.name||p.stopName||"").trim();
+ if(!stationMatches(label,phrase,code))return null;
  let score=km/10+(label.toLowerCase()===q?-10:label.toLowerCase().includes(q)?-3:0);
  return{p,c,km,score,label,id:String(p.id||p.place?.id||"")};
  }).filter(Boolean).sort((a,b)=>a.score-b.score)[0]||null;
@@ -109,5 +130,5 @@ function google(from,to,t){return"https://www.google.com/maps/dir/?api=1&origin=
 function naver(from,to,t){return"https://map.naver.com/p/search/"+encodeURIComponent(to+", "+t.city+", "+t.country)}
 const countryText={KR:"韓國：地鐵／AREX／可取得的公車資料",TH:"泰國：BTS／MRT／機場快線／可取得的公車資料",JP:"日本：地鐵／鐵道／可取得的公車資料",VN:"越南：城市鐵路／可取得的公車資料"};
 function description(t){const code=R?.countryCode(t);return countryText[code]||"尚未加入的國家"}
-global.VoyageTransitV5={supported,context,geocode,plan,departures,normalizePlan,readableDeparture,suggestStation,safeCoords,distance,google,naver,description,ATTRIBUTION};
+global.VoyageTransitV5={supported,context,geocode,plan,departures,normalizePlan,readableDeparture,suggestStation,stationMatches,matchesCountry,safeCoords,distance,google,naver,description,ATTRIBUTION};
 })(window);
