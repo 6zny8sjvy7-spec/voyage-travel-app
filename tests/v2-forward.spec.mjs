@@ -376,8 +376,8 @@ test("V7 all sixteen regression checks: packing has one collapse and bulk delete
  await expect(page.getByRole("button",{name:"縮小清單"})).toHaveCount(0);
  await expect(page.getByRole("button",{name:"展開選擇"})).toHaveCount(0);
  await expect(page.locator("#v1Content .v1-item").getByRole("button",{name:"移除",exact:true})).toHaveCount(0);
- await page.getByRole("button",{name:/勾選要刪的物品/}).click();
- await expect(page.getByRole("button",{name:/刪除選取項目/})).toBeVisible();
+ await page.getByRole("button",{name:"選取物品刪除"}).click();
+ await expect(page.getByRole("button",{name:"刪除勾選"})).toBeVisible();
 });
 test("V7 all sixteen regression checks: one shared map is after both views and date labels are rounded",async({page})=>{
  await page.locator('.footnav [data-tablink="itinerary"]').click();
@@ -455,10 +455,12 @@ test("V7 trip switch and reload must preserve previous country, schedule, packin
  expect(tripsNow.at(-1).days[0].some(e=>e.name==="暹羅站旁咖啡廳"&&e.time==="13:45")).toBe(true);
  const summarize=t=>({id:t.id,name:t.name,startDate:t.startDate,dayNames:t.days.map(day=>day.map(e=>e.name)),expenses:(t.expenses||[]).map(x=>x.title),packing:(t.packing||[]).map(x=>x.name)});
  expect(summarize(tripsNow[0])).toEqual(summarize(original));
+ await page.locator('.footnav [data-tablink="trips"]').click();
  await page.locator("#tripSelect").selectOption("0");
  await expect(page.locator("#v2Home")).toContainText("韓國");
  await page.reload();
  await expect(page.locator("#tripSelect")).toContainText("曼谷出發測試");
+ await page.locator('.footnav [data-tablink="trips"]').click();
  await page.locator("#tripSelect").selectOption(String(initial.length));
  await expect(page.locator("#v2Home")).toContainText("泰國");
  await page.locator('.footnav [data-tablink="itinerary"]').click();
