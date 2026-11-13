@@ -97,6 +97,5 @@ body.dark .v3-event-name,body.dark .v3-event-time{color:#eff6ff!important}
 body.dark .v3-event-detail,body.dark .v3-duration-warning{color:#c2d2e8!important}
 body.dark .v3-time-column,body.dark .v3-grid-viewport{background:#162741;color:#d3e1f5}
 body.dark .footnav{background:#152640f5!important;border-color:#385274!important;color:#e6f1ff!important}
-body.dark .footnav a{color:#d6e4fc!important}
-body.dark .footnav a[style*="rgb(112, 135, 162)"]{color:#bbcae2!important}
+body.dark .footnav a{color:#d6e4fc}
 body.dark .v5-eta-realtime{color:#8deac4}
