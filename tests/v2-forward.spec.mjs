@@ -78,3 +78,112 @@ test("published fixed review URL serves the same approved expense navigation",as
  await expect(page.locator("#v3InlineMap")).toBeVisible();
  await expect(page.locator("#mapSection")).toBeHidden();
 });
+
+
+test("approved animated country landmark remains distinct from weather and works in both widths",async({page})=>{
+ await expect(page.locator(".hero-art span").first()).toBeVisible();
+ await expect(page.locator("#v2Home .v2-big-icon")).toContainText("🏯");
+ await expect(page.locator(".hero .glass")).toBeVisible();
+ const boxes=await page.evaluate(()=>{
+  const a=document.querySelector(".hero-art").getBoundingClientRect(),
+        b=document.querySelector(".hero .glass").getBoundingClientRect();
+  return {overlap:Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top))};
+ });
+ expect(boxes.overlap).toBeLessThan(30);
+});
+test("only one expandable activity composer and single click map, double click edit",async({page})=>{
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator(".v3-category-shortcuts")).toHaveCount(0);
+ await expect(page.locator("#v3ComposerDetails")).toHaveCount(1);
+ await expect(page.locator("#v3ComposerDetails")).not.toHaveAttribute("open","");
+ await page.locator("#v3ComposerDetails summary").click();
+ await expect(page.locator("#v3Composer")).toBeVisible();
+ const scene=page.locator("#events .v3-schedule-event").filter({hasText:"景福宮"}).first();
+ await expect(scene.locator(".v3-edit-mini")).toHaveCount(0);
+ await scene.click();
+ await expect(page.locator("#v3MapSummary")).toContainText("景福宮");
+ await scene.dblclick();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+ await page.locator("#v1Cancel").click();
+ await page.locator("#weeklyView").click();
+ const week=page.locator("#week .v3-schedule-event").filter({hasText:"景福宮"}).first();
+ await expect(week).toBeVisible();
+ await expect(week.locator(".v3-edit-mini")).toHaveCount(0);
+ await week.dblclick();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+});
+test("transport composer changes fields for walking rail taxi bus and saves the route endpoints",async({page})=>{
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await page.locator("#v3ComposerDetails summary").click();
+ await page.locator("#v3NewType").selectOption("transport");
+ await expect(page.locator("#v3TransportMode")).toBeVisible();
+ for(const mode of ["walk","rail","taxi","bus","flight"]){
+  await page.locator("#v3TransportMode").selectOption(mode);
+  if(mode==="rail")await expect(page.getByRole("button",{name:/查詢 A→B 的站名/})).toBeVisible();
+  if(mode==="flight")await expect(page.getByRole("button",{name:/輸入航班號/})).toBeVisible();
+ }
+ await page.locator("#v3TransportMode").selectOption("walk");
+ await page.locator("#v3NewFrom").fill("A 飯店");
+ await page.locator("#v3NewTo").fill("B 車站");
+ await page.locator("#v3NewTime").fill("13:40");
+ await page.locator("#v3NewDuration").fill("18");
+ await page.getByRole("button",{name:"加入當天時間軸"}).click();
+ const t=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0]);
+ const entry=t.days.flat().find(x=>x.from==="A 飯店"&&x.to==="B 車站");
+ expect(entry).toBeTruthy();expect(entry.transportMode).toBe("walk");expect(entry.duration).toBe(18);
+ expect(entry.source).toMatch(/非已驗證/);
+});
+test("flight from itinerary uses complete linked local dates/times; invalid arrival is explained",async({page})=>{
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await page.locator("#v3ComposerDetails summary").click();
+ await page.locator("#v3NewType").selectOption("flight");
+ await expect(page.getByRole("button",{name:/輸入航班號/})).toBeVisible();
+ await expect(page.getByRole("button",{name:"加入當天時間軸"})).toBeHidden();
+ await page.getByRole("button",{name:/輸入航班號/}).click();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+ for(const id of ["vBFlight","vBFromCountry","vBToCountry","vBDepartDate","vBDepartTime","vBArriveDate","vBArriveTime"]){
+  await expect(page.locator("#"+id)).toBeVisible();
+ }
+ const date=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0].startDate);
+ expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+ await page.locator("#vBFlight").fill("IT-ABC");
+ await page.locator("#vBFromCountry").selectOption("TW");
+ await page.locator("#vBToCountry").selectOption("KR");
+ await page.locator("#vBFrom").fill("高雄");
+ await page.locator("#vBTo").fill("首爾");
+ await page.locator("#vBDepartDate").fill(date);
+ await page.locator("#vBArriveDate").fill(date);
+ await page.locator("#vBDepartTime").fill("19:00");
+ await page.locator("#vBArriveTime").fill("16:00");
+ await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
+ await expect(page.locator("#v1DialogWarning")).toContainText("抵達日期");
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+ await page.locator("#vBArriveTime").fill("23:00");
+ await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
+ await expect(page.locator("#v1Dialog")).toBeHidden();
+ const t=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0]);
+ expect(t.documents.some(d=>d.name==="IT-ABC"&&d.departDate===date&&d.arriveDate===date)).toBe(true);
+ expect(t.days.flat().some(d=>d.linkedDocumentId&&d.name.includes("IT-ABC"))).toBe(true);
+});
+test("A-to-B lookup only states exact stop count with complete source, shows direction and matching arrival",async({page})=>{
+ await page.route("**/api/v1/geocode**",r=>{
+  const query=new URL(r.request().url()).searchParams.get("text")||"";
+  const a=query.includes("A站");
+  return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:a?"A_STOP":"B_STOP",name:a?"A站":"B站",country:"KR",lat:a?37.565:37.575,lon:a?126.975:126.985}])});
+ });
+ await page.route("**/api/v6/plan**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({itineraries:[{duration:600,legs:[{mode:"SUBWAY",displayName:"Line 1",headsign:"Toward B",from:{name:"A站"},intermediateStops:[{name:"中間站"}],to:{name:"B站"},duration:600}]}]})}));
+ await page.route("**/api/v6/stoptimes**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify({stopTimes:[
+  {displayName:"Line 1",headsign:"Wrong Direction",realTime:true,place:{name:"A站",departure:new Date(Date.now()+60000).toISOString(),departureTimestampReason:"PREDICTED"}},
+  {displayName:"Line 1",headsign:"Toward B",realTime:true,place:{name:"A站",departure:new Date(Date.now()+240000).toISOString(),departureTimestampReason:"PREDICTED"}}
+ ]})}));
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await page.locator("#transitFrom").fill("A站");await page.locator("#transitTo").fill("B站");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect(page.locator("#v2RouteResults")).toContainText("共 2 站");
+ await expect(page.locator("#v2RouteResults")).toContainText("搭乘方向：Toward B");
+ await expect(page.locator("#v2RouteResults")).toContainText("中間站");
+ await expect(page.locator("#v5DepartureResult")).toContainText("Toward B");
+ await expect(page.locator("#v5DepartureResult")).not.toContainText("Wrong Direction");
+ await expect(page.locator("#rideMode")).toBeHidden();
+ await expect(page.locator("#v2GpsAssist")).toHaveCount(0);
+});
