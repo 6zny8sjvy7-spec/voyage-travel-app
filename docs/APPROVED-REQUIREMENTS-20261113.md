@@ -113,6 +113,6 @@
 
 ### 版本與安全
 - 固定網址：https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/
-- 最新這批公開 V2 程式提交：2420a609c3888167b7c6dfe5b81a5308888dcb9a；30 項桌面／模擬 iPhone QA： https://github.com/6zny8sjvy7-spec/voyage-travel-app/actions/runs/43454308905
+- 最新這批公開 V2 程式提交：2420a609c3888167b7c6dfe5b81a5308888dcb9a；32 項桌面／模擬 iPhone QA（包含**真正公開固定網址**的備忘錄貼上與內嵌交通模組 smoke）： https://github.com/6zny8sjvy7-spec/voyage-travel-app/actions/runs/43455236459
 - 回退前完整備份：`backup/v2-before-notes-transit-20261113`，正式根頁 `main/index.html` SHA 保持不變 `acefa83e8eddfb950e22f0d6766fc626ad5da9d7`。
 - 模擬資料測試通過只證明流程與序列演算法，不可拿來宣稱實際四國公車已全接通。每次改動動到 V2 任一 JS 都須跑 QA（已修正 workflow paths）。
