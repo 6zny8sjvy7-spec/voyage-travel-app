@@ -119,6 +119,22 @@ try:
                     "agency": agencies.get(r.get("agency_id", ""), ""),
                 }
         RESULT["candidate_rail_trips"] = len(trip_metadata)
+        # Calendar and exceptions determine which GTFS pattern is valid on a
+        # traveller's chosen date. A route geometry alone is not enough.
+        calendar = {row.get("service_id"): row for row in rows("calendar.txt")}
+        exceptions = {}
+        for row in rows("calendar_dates.txt"):
+            exceptions[(row.get("service_id"),row.get("date"))] = row.get("exception_type")
+        def is_active(service_id, day):
+            if exceptions.get((service_id,day)) == "1":
+                return True
+            if exceptions.get((service_id,day)) == "2":
+                return False
+            row = calendar.get(service_id)
+            if not row or not(row.get("start_date","") <= day <= row.get("end_date","")):
+                return False
+            weekday = dt.datetime.strptime(day, "%Y%m%d").strftime("%A").lower()
+            return row.get(weekday) == "1"
         markers = {}
         siam_ids, asok_ids = located["Siam"], located["Asok"]
         for x in rows("stop_times.txt"):
@@ -168,7 +184,9 @@ try:
                 "alighting_sequence":asok[0],
                 "stop_count":len(segment)-1,
                 "stops":[{"sequence":seq,"id":sid,"name":name} for seq,sid,name in segment],
-                "verified_service_date": False
+                "sample_travel_date": "2026-11-19",
+                "sample_date_service_active": is_active(trip_metadata[tid]["service_id"],"20261119"),
+                "verified_service_date": is_active(trip_metadata[tid]["service_id"],"20261119")
             })
         RESULT["status"] = "sample_static_sequences_found" if RESULT["cases"] else "no_exact_Siam_Asok_sequence"
         RESULT["warning"] = (
@@ -183,5 +201,5 @@ finally:
         json.dump(RESULT,f,ensure_ascii=False,indent=2)
     print(json.dumps({k:RESULT.get(k) for k in ["status","error","size_bytes","feed_start_date","feed_end_date","route_count","stop_count","matching_forward_trips"]},ensure_ascii=False))
     for item in RESULT["cases"][:3]:
-        print("SAMPLE",item["trip_metadata"]["line"],item["trip_metadata"]["headsign"],"STOPS",item["stop_count"],"NAMES",[s["name"] for s in item["stops"]])
+        print("SAMPLE",item["trip_metadata"]["line"],item["trip_metadata"]["headsign"],"SERVICE",item["trip_metadata"]["service_id"],"2026-11-19 ACTIVE",item["sample_date_service_active"],"STOPS",item["stop_count"],"NAMES",[s["name"] for s in item["stops"]])
     print("AUDIT OUTPUT:",OUT, "-- result is NOT a live-arrival guarantee")
