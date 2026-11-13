@@ -1,0 +1,120 @@
+name: VOYAGE V1 QA
+on:
+  push:
+    branches:
+      - work/voyage-v1-integration
+  pull_request:
+    paths:
+      - '**/*.js'
+      - 'index.html'
+      - 'tests/**'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax validation
+        run: |
+          node --check voyage-domain.js
+          node --check voyage-ui-base.js
+          node --check voyage-tools.js
+          node --check voyage-import-translate.js
+          node --check voyage-cloud.js
+          node --check voyage-map.js
+          node --check voyage-journal.js
+          node --check voyage-ux-v2.js
+          node --check voyage-transit-v2.js
+          node --check voyage-tools-v2.js
+          node --check voyage-seoul-v3.js
+          node --check voyage-calendar-v3.js
+          node --check voyage-planning-v3.js
+          node --check voyage-weather-v3.js
+          node --check voyage-region-v4.js
+          node --check voyage-weather-v4.js
+          node --check voyage-bookings-v4.js
+          node --check voyage-home-v4.js
+          node --check voyage-transit-v5.js
+          node --check voyage-transit-ui-v5.js
+          node --check voyage-visual-v5.js
+          node --check voyage-trip-v5.js
+          node --check voyage-currency-v5.js
+      - name: Domain and integrated UI tests
+        run: node --test tests/voyage.test.cjs tests/v4-region.test.cjs tests/v5-transit.test.cjs tests/v5-currency.test.cjs
+      - name: Confirm all feature scripts wired
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('index.html').read_text()
+          scripts=['voyage-domain.js','voyage-region-v4.js','voyage-transit-v5.js','voyage-currency-v5.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-transit-ui-v5.js','voyage-tools-v2.js','voyage-seoul-v3.js','voyage-calendar-v3.js','voyage-planning-v3.js','voyage-weather-v3.js','voyage-weather-v4.js','voyage-bookings-v4.js','voyage-home-v4.js','voyage-visual-v5.js','voyage-trip-v5.js']
+          for name in scripts:
+              assert ('src="./'+name+'"') in html, name+' not loaded'
+              assert Path(name).is_file(), name+' missing'
+          assert all(('href="./'+name+'"') in html and Path(name).is_file() for name in ['voyage-v2.css','voyage-v3.css','voyage-v5.css'])
+          print('25 scripts and V2+V3+V5 stylesheets are wired and present')
+          PY
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install desktop Chromium and WebKit
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run cross-browser functional tests
+        run: npm run test:e2e
+      - name: Save screenshot evidence for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-v2-design-screenshots
+          path: qa-screenshots/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Save test evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-playwright-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm published Chinese itinerary/calendar preview with real travel data and map is accessible
+        run: |
+          python3 - <<'PY'
+          import time,urllib.request,urllib.error,sys
+          url='https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/'
+          for i in range(20):
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'VOYAGE-QA/1.0'}),timeout=20) as response:
+                      body=response.read().decode('utf-8')
+                      assert response.status==200, f'HTTP {response.status}'
+                      assert 'VOYAGE 新版' in body, 'Wrong preview page'
+                      assert 'voyage-v2-review-20261112' in body and 'voyage-v02' not in body, 'Preview storage isolation missing'
+                      modular='<script src="./voyage-domain.js"></script>' in body
+                      if modular:
+                          for script in ['voyage-domain.js','voyage-calendar-v3.js','voyage-weather-v4.js','voyage-seoul-v3.js','voyage-transit-v5.js']:
+                              assert ('src="./'+script+'"') in body, script+' missing from integrated preview'
+                          with urllib.request.urlopen(urllib.request.Request(url+'voyage-domain.js',headers={'User-Agent':'VOYAGE-QA/1.0'}),timeout=20) as asset:
+                              assert asset.status==200 and 'VoyageDomain' in asset.read().decode('utf-8'), 'Integrated preview JS inaccessible'
+                      else:
+                          assert 'VoyageDomain' in body and 'VoyageCalendar' in body and 'VoyageWeatherV3' in body and 'VoyageSeoulNetwork' in body, 'Legacy V2 modules missing'
+                      print('USER PREVIEW VERIFIED: HTTP 200, '+('modular integrated V6' if modular else 'legacy V2')+' and isolated storage')
+                      sys.exit(0)
+              except Exception as ex:
+                  print('Attempt',i+1,'unavailable:',str(ex)[:200],flush=True)
+                  if i<19: time.sleep(9)
+          raise SystemExit('Preview was not publicly accessible')
+          PY

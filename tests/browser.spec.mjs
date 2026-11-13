@@ -1,0 +1,215 @@
+import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+const leaflet=readFileSync(new URL('./leaflet-stub.js', import.meta.url),'utf8');
+test.beforeEach(async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto('/');
+ await expect(page.locator('#v2Home')).toBeVisible();
+});
+test('five tabs, A-to-B transit search and seven-day calendar',async({page})=>{
+ await page.locator('[data-tablink="transport"]').click();
+ await expect(page.locator('#transportSection')).toBeVisible();
+ await expect(page.locator('#transitFrom')).toBeVisible();
+ await expect(page.locator('#transitTo')).toBeVisible();
+ await expect(page.locator('#rideMode,#rideFields,#boardTrain,#nextStation,#v2GpsAssist')).toHaveCount(0);
+ await page.locator('[data-tablink="more"]').click();
+ await expect(page.locator('#v1More')).toBeVisible();
+ await expect(page.locator('#transportSection')).toBeHidden();
+ await page.locator('[data-tablink="map"]').click();
+ await expect(page.locator('#mapSection')).toBeVisible();
+ await page.locator('[data-tablink="itinerary"]').click();
+ await expect(page.locator('#itinerary')).toBeVisible();
+ await page.locator('#weeklyView').click();
+ await expect(page.locator('#week')).toBeVisible();
+ await expect(page.locator('#week')).toContainText('第 1');
+});
+test('expense and rate are persisted across reload',async({page})=>{
+ await page.locator('#v1ExpenseQuick').click();
+ await expect(page.locator('#v1Dialog')).toBeVisible();
+ await page.locator('#vExTitle').fill('晚餐');
+ await page.locator('#vExAmount').fill('1200');
+ await page.locator('#vExCurrency').selectOption('KRW');
+ await page.locator('#vExRate').fill('0.025');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ await expect(page.locator('#v1Dialog')).toBeHidden();
+ const get=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].expenses.find(e=>e.title==='晚餐'));
+ expect((await get()).twd).toBe(30);
+ await page.reload();
+ await expect(page.locator('#v2Home')).toBeVisible();
+ expect((await get()).amount).toBe(1200);
+});
+test('travel companions have independent packing status',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:'旅行設定'}).click();
+ await page.locator('#vTripPeople').fill('甲、乙');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ await page.locator('#v2Home').getByRole('button',{name:/行李清單/}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增物品/}).click();
+ await page.locator('#vPackName').fill('充電線');
+ await page.locator('#vPackOwner').selectOption('甲');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ let check=page.locator('#v1Content > .v1-item input.v1-check').first();
+ await check.check();expect(await check.isChecked()).toBe(true);
+ await page.locator('#vPackPerson').selectOption('乙');
+ check=page.locator('#v1Content > .v1-item input.v1-check').first();
+ expect(await check.isChecked()).toBe(false);
+ await page.locator('#vPackPerson').selectOption('甲');
+ expect(await page.locator('#v1Content > .v1-item input.v1-check').first().isChecked()).toBe(true);
+});
+test('CSV import previews and only appends to existing trip',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/匯入行程/}).click();
+ await page.locator('#vImportFile').setInputFiles({name:'trip.csv',mimeType:'text/csv',buffer:Buffer.from('name,time,day\n水族館,13:30,1\n')});
+ await expect(page.locator('#vImportPreview input[data-role="name"]')).toHaveValue('水族館');
+ page.once('dialog',d=>d.accept());
+ await page.locator('#vImportPreview').getByRole('button',{name:/確認附加勾選活動/}).click();
+ const items=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
+ expect(items.some(e=>e.name==='景福宮')).toBe(true);
+ expect(items.some(e=>e.name==='水族館')).toBe(true);
+});
+test('retired AI recommendation and nearby discovery are not visible or loaded',async({page})=>{
+ await expect(page.locator('#recommend,#v1Discover,#suggestions')).toHaveCount(0);
+ await expect(page.locator('#v2Home').getByRole('button',{name:/探索景點|AI.*推薦/})).toHaveCount(0);
+ await expect(page.locator('script[src*="voyage-discover.js"]')).toHaveCount(0);
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await expect(page.locator('#itinerary')).toBeVisible();
+});
+test('cloud collaboration remains gated until backend is provided',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/多人協作/}).click();
+ await expect(page.locator('#v1Content')).toContainText('Supabase');
+ await expect(page.locator('#vCloudURL')).toBeAttached();
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-cloud-settings-v1'))).toBeNull();
+});
+
+test('travel diary notes and shopping wishlist survive reload',async({page})=>{
+ await page.locator('[data-tablink="more"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'旅行回憶'}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增旅行回憶/}).click();
+ await page.locator('#vDiaryTitle').fill('首爾第一天');
+ await page.locator('#vDiaryBody').fill('景福宮散步與晚餐');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'購物願望'}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增購物願望/}).click();
+ await page.locator('#vWishTitle').fill('旅行紀念品');
+ await page.locator('#vWishCost').fill('125');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ const get=()=>page.evaluate(()=>{const t=JSON.parse(localStorage.getItem('voyage-v02'))[0];return {journal:t.journal,wishlist:t.wishlist}});
+ expect((await get()).journal[0].title).toBe('首爾第一天');
+ expect((await get()).wishlist[0].cost).toBe(125);
+ await page.reload();
+ await page.locator('[data-tablink="more"]').click();
+ await page.locator('#v1Menu').getByRole('button',{name:'旅行回憶'}).click();
+ await expect(page.locator('#v1Content')).toContainText('景福宮散步與晚餐');
+ await page.locator('#v1Menu').getByRole('button',{name:'購物願望'}).click();
+ await expect(page.locator('#v1Content')).toContainText('旅行紀念品');
+});
+test('airline date entry respects two endpoint local times with automatic approved country timezone',async({page})=>{
+ await page.evaluate(()=>{trip().startDate='2026-11-21';save();render()});
+ await page.locator('#v2Home').getByRole('button',{name:/機票住宿/}).click();
+ await page.locator('#v1Content').getByRole('button',{name:/新增航班/}).click();
+ await page.locator('#vBFlight').fill('IT-TEST');
+ await page.locator('#vBFromCountry').selectOption('TW');
+ await page.locator('#vBToCountry').selectOption('KR');
+ await page.locator('#vBFrom').fill('台灣機場');
+ await page.locator('#vBTo').fill('韓國機場');
+ await page.locator('#vBDepartDate').fill('2026-11-21');
+ await page.locator('#vBDepartTime').fill('17:00');
+ await page.locator('#vBArriveDate').fill('2026-11-21');
+ await page.locator('#vBArriveTime').fill('20:20');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ const doc=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].documents[0]);
+ expect(doc.startTZ).toBe('Asia/Taipei');
+ expect(doc.endTZ).toBe('Asia/Seoul');
+ expect(doc.endTime).toBe('20:20');
+ expect(doc.elapsedMinutes).toBe(140);
+});
+test('countdown reads destination-local calendar date',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:'旅行設定'}).click();
+ await page.locator('#vTripDate').fill('2026-12-25');
+ await page.locator('#v1DialogForm button[type="submit"]').click();
+ await expect(page.locator('#v2Home')).toContainText('倒數');
+ await page.reload();
+ await expect(page.locator('#v2Home')).toContainText('倒數');
+});
+
+test('new days extend safely and survive reload, with date strip linking maps',async({page})=>{
+ await page.locator('[data-tablink="itinerary"]').click();
+ const before=await page.locator('#dates .date').count();
+ expect(before).toBe(3);
+ await page.locator('#v2AddDay').click();
+ await page.locator('#v2AddDay').click();
+ await expect(page.locator('#dates .date')).toHaveCount(5);
+ await page.reload();
+ await expect(page.locator('#dates .date')).toHaveCount(5);
+ await page.locator('[data-tablink="itinerary"]').click();
+ await page.locator('#dates .date').first().click();
+ await page.locator('#events .v3-schedule-event').first().click();
+ await expect(page.locator('#v3MapSummary')).toContainText('景福宮');
+ await page.locator('#v3MapSummary').getByRole('button',{name:/行程詳情/}).click();
+ await expect(page.locator('#v2EventDialog')).toBeVisible();
+ await page.locator('#v2EventDialog').getByRole('button',{name:/查看地圖/}).click();
+ await expect(page.locator('#v3InlineMap')).toBeVisible();
+ expect(await page.locator('body').getAttribute('data-tab')).toBe('itinerary');
+});
+test('Myeongdong to Hongdae returns actual station sequence and transfer, without manual direction',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
+ await page.locator('#transitFrom').fill('明洞');
+ await page.locator('#transitTo').fill('弘大');
+ await page.locator('#v2RouteResults').locator('..').getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('明洞');
+ await expect(page.locator('#v2RouteResults')).toContainText('會賢');
+ await expect(page.locator('#v2RouteResults')).toContainText('首爾站');
+ await expect(page.locator('#v2RouteResults')).toContainText('孔德');
+ await expect(page.locator('#v2RouteResults')).toContainText('弘大入口');
+ await expect(page.locator('#v2RouteResults')).toContainText('AREX');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#v2RouteResults').getByRole('button',{name:/加入我的行程/}).click();
+ const events=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
+ expect(events.some(x=>x.type==='transport'&&x.routeInfo?.transfers===1)).toBe(true);
+});
+test('A to B search shows complete stops and direction, and attaches only matching arrival departures',async({page})=>{
+ await page.route('**/api/v1/geocode**',r=>{
+  const q=new URL(r.request().url()).searchParams.get('text')||'';
+  const a=q.includes('A站'),data=a
+   ?[{id:'TEST_A',name:'A站',country:'KR',lat:37.565,lon:126.979}]
+   :[{id:'TEST_B',name:'B站',country:'KR',lat:37.580,lon:126.995}];
+  return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.route('**/api/v6/plan**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+  itineraries:[{duration:480,legs:[{mode:'SUBWAY',displayName:'Blue Line',headsign:'Toward B',from:{name:'A站'},
+   intermediateStops:[{name:'中間站'}],to:{name:'B站'},duration:480,realTime:false}]}]
+ })}));
+ await page.route('**/api/v6/stoptimes**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+  stopTimes:[
+   {displayName:'Blue Line',headsign:'Opposite Direction',realTime:true,place:{name:'A站',departure:new Date(Date.now()+60000).toISOString(),departureTimestampReason:'PREDICTED'}},
+   {displayName:'Blue Line',headsign:'Toward B',realTime:true,place:{name:'A站',departure:new Date(Date.now()+240000).toISOString(),departureTimestampReason:'PREDICTED'}}
+  ]
+ })}));
+ await page.locator('[data-tablink="transport"]').click();
+ await page.locator('#transitFrom').fill('A站');
+ await page.locator('#transitTo').fill('B站');
+ await page.getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('總共 2 站');
+ await expect(page.locator('#v2RouteResults')).toContainText('搭乘方向：Toward B');
+ await expect(page.locator('#v2RouteResults')).toContainText('中間站');
+ await expect(page.locator('#v5DepartureResult')).toContainText('Toward B');
+ await expect(page.locator('#v5DepartureResult')).toContainText('4 分鐘');
+ await expect(page.locator('#v5DepartureResult')).not.toContainText('Opposite Direction');
+ await expect(page.locator('#rideMode,#boardTrain,#v2GpsAssist')).toHaveCount(0);
+});
+test('theme changes visibly between warm daylight and indigo night',async({page})=>{
+ const pick=()=>page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
+ await page.evaluate(()=>{localStorage.setItem('voyage-theme','light')});
+ await page.reload();
+ const light=await pick();
+ await page.evaluate(()=>{localStorage.setItem('voyage-theme','dark')});
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>document.body.classList.contains('dark')),{timeout:7000}).toBe(true);
+ await expect.poll(pick,{timeout:7000,intervals:[100,250,500]}).not.toBe(light);
+});
+test('translation textbox appears before example phrasebook',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/即時翻譯/}).click();
+ const positions=await page.evaluate(()=>{const box=document.getElementById('v1Content');return{form:[...box.children].findIndex(e=>e.classList.contains('v1-box')),phrases:[...box.children].findIndex(e=>e.tagName==='H3'&&e.textContent.includes('常用旅行句型'))}});
+ expect(positions.form).toBeGreaterThan(-1);
+ expect(positions.phrases).toBeGreaterThan(positions.form);
+});
