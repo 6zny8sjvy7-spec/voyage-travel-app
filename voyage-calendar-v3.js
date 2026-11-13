@@ -24,16 +24,16 @@ function routeText(x){if(x.type!=="transport")return"";const parts=x.routeInfo?.
 function visibleDays(){const total=trip().days.length,start=Math.floor(day/7)*7;return Array.from({length:Math.min(7,total-start)},(_,i)=>start+i)}
 function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)for(const x of trip().days[i]||[]){const time=timeInfo(x);earliest=Math.min(earliest,time.start);latest=Math.max(latest,time.start+time.duration)}earliest=Math.max(0,Math.floor((earliest-30)/60)*60);latest=Math.min(2880,Math.ceil((latest+40)/60)*60);return{first:earliest,last:Math.max(latest,earliest+360),height:(Math.max(latest,earliest+360)-earliest)*pxPerMin}}
 function makeRuler(b){const r=E("div",{class:"v3-ruler"});for(let t=b.first;t<=b.last;t+=60){r.append(E("span",{class:"v3-hour",text:formatMinutes(t).replace("（隔日）","")}));}return r}
-function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(28,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(x.done?" is-done":"")+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
+function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(58,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(x.done?" is-done":"")+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
 card.style.top=y+"px";card.style.height=h+"px";
 const time=E("div",{class:"v3-event-time",text:(t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定")});
-card.append(time,E("strong",{class:"v3-event-name",text:x.name}));
+const symbols={place:"🏛️",food:"🍽️",transport:"🚆",shop:"🛍️",hotel:"🛏️",flight:"✈️",other:"✨"};card.append(time,E("strong",{class:"v3-event-name",text:(symbols[kind]||"📍")+" "+x.name}));
 if(kind==="transport"){card.append(E("small",{class:"v3-event-detail",text:routeText(x)||"交通時間"}));}
 else if(x.notes&&h>80){card.append(E("small",{class:"v3-event-detail",text:x.notes.slice(0,90)}))}
 if(!t.actual)card.append(E("small",{class:"v3-duration-warning",text:"請設定停留分鐘（目前僅為排版占位）"}));
 const click=()=>{selected.event=x;selected.day=dayIndex;if(day!==dayIndex){day=dayIndex;render()}focusPlace(x,{scroll:true});};
-card.onclick=click;card.onkeydown=event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();click()}};
-if(single){card.append(button("編輯",e=>{}, "ghost"));const edit=card.lastElementChild;edit.className="v3-edit-mini";edit.onclick=ev=>{ev.stopPropagation();day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0)U.eventEditor(index,false)};}
+card.onclick=click;card.onkeydown=event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();click()}};card.ondblclick=event=>{event.preventDefault();event.stopPropagation();day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0)U.eventEditor(index,false)};
+if(true){card.append(button("✎ 編輯",e=>{}, "ghost"));const edit=card.lastElementChild;edit.className="v3-edit-mini";edit.onclick=ev=>{ev.stopPropagation();day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0)U.eventEditor(index,false)};}
 return card}
 function drawGrid(indices,single){const b=bounds(indices),container=E("div",{class:"v3-grid-viewport"}),inner=E("div",{class:"v3-calendar-grid"}),ruler=makeRuler(b);
 container.append(ruler,inner);
@@ -43,13 +43,13 @@ const scheduled=(trip().days[i]||[]).filter(x=>timeInfo(x).hasStart).slice().sor
 const lanes=[], cards=[];
 for(const x of trip().days[i]||[]){
  const info=timeInfo(x);let lane=0;while(lane<3&&(lanes[lane]??-1)>info.start)lane++;
- lane=Math.min(lane,2);lanes[lane]=info.start+info.duration;
+ lane=Math.min(lane,2);lanes[lane]=info.start+Math.max(info.duration,58/pxPerMin);
  const eventCard=createEvent(x,i,b,single);eventCard.dataset.lane=String(lane);
  if(lane>0)eventCard.classList.add("v3-overlapping");
  cards.push({x,info,lane,card:eventCard});track.append(eventCard);
 }
 for(const item of cards){
- const competitors=cards.filter(y=>y!==item&&y.info.start<item.info.start+item.info.duration&&item.info.start<y.info.start+y.info.duration);
+ const competitors=cards.filter(y=>y!==item&&y.info.start<item.info.start+Math.max(item.info.duration,58/pxPerMin)&&item.info.start<y.info.start+Math.max(y.info.duration,58/pxPerMin));
  if(competitors.length){const count=Math.min(3,Math.max(item.lane+1,...competitors.map(y=>y.lane+1)));item.card.style.left=(item.lane*100/count+1)+"%";item.card.style.width=(98/count)+"%";item.card.title="時間有重疊，請核對行程"}
 }
 if(single){let prev=null;for(const e of scheduled){if(prev){const gap=gapRender(prev,e,b,true);if(gap)track.append(gap)}const end=timeInfo(e).start+timeInfo(e).duration;if(!prev||end>timeInfo(prev).start+timeInfo(prev).duration)prev=e}}
