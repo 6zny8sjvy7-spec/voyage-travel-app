@@ -26,19 +26,30 @@ function matchesCountry(entry,code){
  const aliases={KR:["KR","KOR","REPUBLIC OF KOREA","SOUTH KOREA","대한민국","한국"],TH:["TH","THA","THAILAND","ประเทศไทย"],JP:["JP","JPN","JAPAN","日本"],VN:["VN","VNM","VIETNAM","VIỆT NAM","越南"]};
  return (aliases[code]||[]).includes(match);
 }
+// Display/search aliases are lookup hints, never invented verified stop sequences.
+const stationAlias={
+ KR:{"明洞":["Myeongdong","명동"],"弘大":["Hongik Univ.","홍대입구","Hongdae"],"弘大入口":["Hongik Univ.","홍대입구"],"聖水":["Seongsu","성수"],"首爾站":["Seoul Station","서울역"],"江南":["Gangnam","강남"],"孔德":["Gongdeok","공덕"]},
+ TH:{"暹羅":["Siam","สยาม"],"阿索克":["Asok","อโศก"],"奇隆":["Chit Lom","ชิดลม"],"勝利紀念碑":["Victory Monument","อนุสาวรีย์ชัยสมรภูมิ"],"莫奇":["Mo Chit","หมอชิต"]},
+ JP:{"新宿":["Shinjuku","新宿"],"澀谷":["Shibuya","渋谷"],"東京站":["Tokyo","東京"],"大阪":["Osaka","大阪"],"梅田":["Umeda","梅田"]},
+ VN:{"濱城市場":["Bến Thành","Ben Thanh"],"檳城市場":["Bến Thành","Ben Thanh"],"濱城":["Bến Thành","Ben Thanh"],"河內":["Hà Nội","Hanoi"]}
+};
+const normName=v=>String(v||"").toLocaleLowerCase().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
+function aliases(query,code){
+ const k=normName(query);
+ for(const [main,others] of Object.entries(stationAlias[code]||{})){
+  const group=[main,...others];
+  if(group.some(name=>normName(name)===k))return group;
+ }
+ return[query];
+}
 function stationMatches(label,query,code){
  const normalize=x=>String(x||"").toLocaleLowerCase().trim().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
  const name=normalize(label),q=normalize(query);
  if(!name||!q)return false;
  if(name===q||name.includes(q)&&q.length>=2||q.includes(name)&&name.length>=3)return true;
- const known={
-  KR:{"明洞":["명동","myeongdong"],"弘大":["홍대","hongik"],"弘大入口":["홍대","hongik"],"首爾":["서울","seoul"],"首爾站":["서울","seoul"],"聖水":["성수","seongsu"]},
-  TH:{"siam":["สยาม"],"อโศก":["asok","อโศก"],"asok":["อโศก"]},
-  JP:{"shinjuku":["新宿"],"shibuya":["渋谷","澀谷"],"tokyo":["東京"]}
- };
- for(const [alias,candidates] of Object.entries(known[code]||{})){
-  if(normalize(alias)===q&&candidates.some(x=>name.includes(normalize(x))))return true;
- }
+ const names=aliases(query,code);
+ if(names.some(x=>normalize(x)===name))return true;
+ if(names.some(x=>normalize(x).length>=2&&name.includes(normalize(x))))return true;
  return false;
 }
 function suggestStation(entries,phrase,t){
@@ -61,7 +72,7 @@ async function json(url,signal,fetcher=fetch){
 function context(t){const country=R?.countryCode(t)||"";if(!supported.has(country))throw new Error("目前先支援韓國、泰國、日本、越南四國");if(!cityOrigin(t))throw new Error("尚未確認目的地城市座標，請先設定正確城市");return{country,language:lang[country],origin:cityOrigin(t)}}
 async function geocode(name,t,{fetcher=fetch,signal}={}){
  const cfg=context(t),q=String(name||"").trim();if(!q)throw new Error("請輸入站名");
- const variants=[q+", "+t.city,q],seen=new Set();
+ const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x+", "+t.city,x])],seen=new Set();
  for(const term of variants){
  if(seen.has(term))continue;seen.add(term);
  const p=new URLSearchParams({text:term,type:"STOP",place:cfg.origin.lat+","+cfg.origin.lon,numResults:"10",language:cfg.language});
@@ -76,12 +87,13 @@ function parseStop(raw){
  const p=raw.place||raw,c=safeCoords(p);
  const name=String(p.name||p.stopName||"").trim();
  if(!name)return null;
- return{zh:name,local:name,en:name,name,id:String(p.id||""),lat:c?.lat,lon:c?.lon};
+ const translations=p.translations||p.names||{};
+ return{zh:String(translations.zh||translations["zh-TW"]||"").trim(),local:String(translations.local||translations.native||"").trim(),en:String(translations.en||"").trim(),name,id:String(p.id||""),lat:c?.lat,lon:c?.lon};
 }
 function normalizePlan(data,{origin,destination,country}){
  if(!Array.isArray(data?.itineraries))throw new Error("路線資料格式不完整");
  return data.itineraries.filter(it=>Array.isArray(it.legs)&&it.legs.some(l=>l.mode!=="WALK"&&l.mode!=="BIKE"&&l.mode!=="CAR"))
- .slice(0,3).map(it=>{
+ .slice(0,8).map(it=>{
  const legs=it.legs.map(l=>{
  const intermediate=Array.isArray(l.intermediateStops)?l.intermediateStops:null;
  const rawStops=[l.from,...(intermediate||[]),l.to];
@@ -103,7 +115,7 @@ async function plan(from,to,t,{fetcher=fetch,signal}={}){
  const c=context(t);
  const a=await geocode(from,t,{fetcher,signal}),b=await geocode(to,t,{fetcher,signal});
  if(distance(a,b)<.15)throw new Error("起點和終點距離太近，請確認站名");
- const query=new URLSearchParams({fromPlace:a.id||a.lat+","+a.lon,toPlace:b.id||b.lat+","+b.lon,numItineraries:"3",detailedLegs:"true",language:c.language});
+ const query=new URLSearchParams({fromPlace:a.id||a.lat+","+a.lon,toPlace:b.id||b.lat+","+b.lon,numItineraries:"8",detailedLegs:"true",language:c.language});
  const result=normalizePlan(await json(SERVICE+"/api/v6/plan?"+query,signal,fetcher),{origin:a,destination:b,country:c.country});
  if(!result.length)throw new Error("此城市的公開交通資料目前沒有可驗證的乘車路線");
  return result;
