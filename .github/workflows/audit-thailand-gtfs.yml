@@ -1,0 +1,15 @@
+name: Audit Free Thai Official GTFS Availability
+on:
+  push:
+    branches: [work/voyage-v2-forward]
+    paths:
+      - 'tests/audit-thailand-gtfs.py'
+      - '.github/workflows/audit-thailand-gtfs.yml'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tests/audit-thailand-gtfs.py
