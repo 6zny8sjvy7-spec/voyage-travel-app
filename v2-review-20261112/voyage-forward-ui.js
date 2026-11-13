@@ -37,7 +37,7 @@
  const show=()=>{
   const v=type.value,transport=v==="transport",sub=select.value;
   const booking=v==="flight"||v==="hotel"||(transport&&sub==="flight");
-  for(const el of [modeField,fromField,toField])el.hidden=!transport||booking;
+  modeField.hidden=!transport;for(const el of [fromField,toField])el.hidden=!transport||booking;
   const nonType=[...fields.querySelectorAll("label")].filter(n=>![type.parentElement,modeField,fromField,toField].includes(n));
   for(const el of nonType)el.hidden=booking;
   bookingPanel.replaceChildren();
