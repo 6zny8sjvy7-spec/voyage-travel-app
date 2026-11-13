@@ -183,3 +183,10 @@ body.dark .v3-free-gap{color:#3d5872;background:#dce7f3;border-color:#829ec2}
 .v3-composer-fields label:nth-child(6){grid-column:1 / 2}
 .v3-composer-fields label:nth-child(7){grid-column:2 / -1}
 @media(max-width:650px){.v3-category-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.v3-category-shortcuts button{font-size:11px;padding:8px 1px;white-space:nowrap}.v3-composer-fields label:nth-child(6),.v3-composer-fields label:nth-child(7){grid-column:1/-1}}
+
+/* Packing has one operational checkbox only. Completed packing remains visible with strikethrough. */
+#v1Content .v1-struck{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:var(--muted);opacity:.65}
+#v1Content input[type=checkbox][hidden],#v1Content button[hidden]{display:none!important}
+#v1Content .v3-pack-bulk .v1-actions{flex-wrap:wrap;gap:8px}
+#v1Content .v3-remove-check{order:5;margin-left:auto}
+#v1Content .v3-pack-bulk{border-style:solid;background:var(--card)}
