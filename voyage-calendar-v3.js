@@ -90,7 +90,31 @@ function gapRender(a,b,boundsInfo,single){
 function drawWeek(){const w=$("week");if(!w)return;const existing=w.querySelector(".v3-grid-viewport"),scrollLeft=existing?existing.scrollLeft:0;const days=visibleDays();w.replaceChildren(E("div",{class:"v3-calendar-top"},[E("strong",{text:"第 "+(days[0]+1)+"–"+(days[days.length-1]+1)+" 天 · 時間行事曆"}),button("← 前七天",()=>{day=Math.max(0,Math.floor(day/7)*7-7);render()}),button("後七天 →",()=>{day=Math.min(trip().days.length-1,Math.floor(day/7)*7+7);render()})]));
 const grid=drawGrid(days,false);w.append(grid);grid.scrollLeft=scrollLeft}
 renderWeek=drawWeek;
-function drawDaily(){const box=$("events");box.replaceChildren(drawGrid([day],true));}
+function drawDaily(){
+ const box=$("events"),t=trip(),items=(t.days[day]||[]).slice().sort((a,b)=>timeInfo(a).start-timeInfo(b).start);
+ const timeline=E("div",{class:"v5-day-timeline"});
+ const date=t.startDate?D.dayISO(t.startDate,day):"";
+ const title=date?date+" · "+weekday(day):"第 "+(day+1)+" 天";
+ timeline.append(E("div",{class:"v5-day-title",text:"📅 "+title+" · "+items.length+" 項活動"}));
+ if(!items.length)timeline.append(E("div",{class:"v1-notice",text:"這一天尚未安排活動，請從上方景點／餐飲／交通／購物新增。"}));
+ let last=null;
+ for(const item of items){
+  if(last){const gap=gapRender(last,item,{first:0},true);if(gap){
+    gap.removeAttribute("style");
+    const wrap=E("div",{class:"v5-day-gap-row"},[E("span",{class:"v5-day-time",text:"空檔"}),gap]);timeline.append(wrap)
+  }}
+  const info=timeInfo(item),stamp=info.hasStart?formatMinutes(info.start):"未定",card=createEvent(item,day,{first:0},true);
+  card.style.top="auto";card.style.height="auto";
+  card.classList.add("v5-day-event");
+  const durationInfo=card.querySelector(".v3-event-time");
+  if(durationInfo)durationInfo.textContent=eventClockLabel(item,info);
+  const row=E("div",{class:"v5-day-row"},[E("span",{class:"v5-day-time",text:stamp}),card]);
+  if(item.type==="transport"&&item.routeInfo?.legs?.length)card.append(E("div",{class:"v5-route-summary",text:"🚇 "+item.routeInfo.legs.length+" 段交通 · "+Math.max(0,item.routeInfo.transfers||0)+" 次轉乘。點選查看完整地圖及路線詳情。"}));
+  timeline.append(row);
+  if(!last||timeInfo(item).start+timeInfo(item).duration>=timeInfo(last).start+timeInfo(last).duration)last=item;
+ }
+ box.replaceChildren(timeline);
+}
 function focusMarker(oldIndex,newIndex){const dates=[...dateRow.querySelectorAll(".date")],target=dates[newIndex];if(!target||!marker)return;const wrapRect=wrap.getBoundingClientRect(),targetRect=target.getBoundingClientRect(),targetX=targetRect.left-wrapRect.left+targetRect.width/2-11;
 const old=dates[oldIndex],oldRect=old?.getBoundingClientRect(),oldX=oldRect?(oldRect.left-wrapRect.left+oldRect.width/2-11):targetX;
 marker.style.left=targetX+"px";
