@@ -904,7 +904,7 @@ const wrap=E("div",{class:"v3-date-wrap"}),marker=E("span",{id:"v3MovingDateIcon
 const dateRow=$("dates");dateRow.parentNode.insertBefore(wrap,dateRow);wrap.append(dateRow,marker);
 const preview=E("section",{id:"v3InlineMap",class:"v3-inline-map"}),mapHead=E("div",{class:"v3-map-head"}),mapDiv=E("div",{id:"v3LeafletMap"}),mapSummary=E("div",{id:"v3MapSummary",class:"v1-notice"});
 preview.append(mapHead,mapDiv,mapSummary);
-$("week").after(preview);
+$("events").after(preview);
 const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"}),composerDetails=E("details",{id:"v3ComposerDetails",class:"v3-compose-shell"}),composerToggle=E("summary",{class:"v3-compose-toggle",text:"＋ 安排活動 · 景點／餐飲／交通／購物"});composerDetails.append(composerToggle,composer);
 if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.before(composerDetails);else form.before(composerDetails)}
 function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has,hasStart:start!==null};}
