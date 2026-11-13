@@ -23,7 +23,7 @@ const refresh=button("查詢此站下一班",lookup,"secondary");
 query.append(E("label",{},[E("span",{text:"本站到站／發車資訊（有即時資料才標即時）"}),input]),refresh);
 const arrivals=E("div",{id:"v5DepartureResult",class:"v5-departure-result",text:"輸入車站名稱，再按查詢；沒有可靠即時資料時，只顯示班表或無資料。"});
 bar.append(query,arrivals,E("p",{class:"v1-sub",text:"免費開放資料：Transitous（依來源授權、資料覆蓋及可用量限制）；任何到站分鐘都是從來源回應計算，不使用固定班距假裝即時倒數。"}));
-const attribution=E("a",{href:A.ATTRIBUTION,target:"_blank",rel:"noopener noreferrer",text:"查看公開交通資料來源"});bar.append(attribution);
+const attribution=E("p",{class:"v1-sub",text:"資料來源：Transitous（依各城市已開放的免費路線資料）；查不到時留在 VOYAGE 說明，不跳轉外站。"});bar.append(attribution);
 section.insertBefore(bar,toolbar);
 function refreshCountry(){
  const t=trip(),code=R?.countryCode(t)||"",key=code+"|"+t.city+"|"+t.id;
@@ -39,19 +39,29 @@ async function lookup(){
   const data=await A.departures(term,t);
   if(generation!==version||key!==[trip().id,R?.countryCode(trip()),trip().city].join("|"))return;
   lastData=data;arrivals.replaceChildren(E("strong",{text:data.station.name+" · 查詢時間 "+new Date(data.at).toLocaleTimeString("zh-TW")}));
-  if(!data.items.length){arrivals.append(E("p",{text:"此站目前沒有可驗證的下一班資料。請開啟當地交通 App 或官方班表，不會偽造到站分鐘。"}));return}
+  if(!data.items.length){arrivals.append(E("p",{text:"此站目前沒有可驗證的下一班資料。可以修改站名、方向或稍後在 VOYAGE 重新查詢；不偽造到站分鐘。"}));return}
   const group=E("div",{class:"v5-departure-list"});
   for(const item of data.items.slice(0,10)){
    const row=E("div",{class:"v5-departure-item"});
-   const info=E("div",{},[E("b",{text:item.line+" · "+item.headsign}),E("div",{class:"v1-sub",text:item.cancelled?"已取消":item.realtime?"即時資料（來源有標記）":"班表預估／無即時資料"})]);
-   const eta=E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:item.cancelled?"取消":item.minutes===0?"即將到站":item.minutes+" 分鐘"});
+   const info=E("div",{},[E("b",{text:item.line+" · "+item.headsign}),E("div",{class:"v1-sub",text:item.cancelled?"已取消":item.realtime?"即時到站／來源有標記":"僅有表定時間，非即時倒數"})]);
+   const eta=E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:displayTime(item,t)});
    row.append(info,eta);group.append(row)
   }
   arrivals.append(group);
   arrivals.append(E("p",{class:"v1-sub",text:"更新時間："+new Date(data.at).toLocaleString("zh-TW")+"。此結果不會持續倒數；超過 60 秒請按重新查詢。"}));
  }catch(error){
-  if(generation===version)arrivals.textContent="暫無可核實的到站資料："+String(error?.message||"來源無回應")+"。可使用當地官方交通服務核對。";
+  if(generation===version)arrivals.textContent="暫無可核實的到站資料："+String(error?.message||"來源無回應")+"。可更換站點候選名稱並在 VOYAGE 重試。";
  }finally{if(generation===version)refresh.disabled=false}
+}
+function displayTime(item,t){
+ if(item.cancelled)return "班次取消";
+ if(item.realtime)return item.minutes===0?"即將到站":"預計 "+item.minutes+" 分鐘";
+ const time=Date.parse(item.time||"");
+ if(!Number.isFinite(time))return "班表時間未提供";
+ let local="";
+ try{local=new Intl.DateTimeFormat("zh-TW",{timeZone:t.tz||"Asia/Taipei",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(time))}
+ catch{local=new Date(time).toISOString().slice(11,16)}
+ return "表定 "+local;
 }
 function sameService(a,b){
  // Never attach a departure from a different line or opposite direction.
@@ -81,7 +91,7 @@ async function lookupForRoute(from,t,route){
   const group=E("div",{class:"v5-departure-list"});
   for(const item of matches.slice(0,5)){
    const row=E("div",{class:"v5-departure-item"});
-   row.append(E("div",{},[E("b",{text:item.line+" · "+item.headsign}),E("div",{class:"v1-sub",text:item.realtime?"來源標示即時到站":"時刻表預估，非即時"})]),E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:item.minutes===0?"即將到站":item.minutes+" 分鐘"}));
+   row.append(E("div",{},[E("b",{text:item.line+" · "+item.headsign}),E("div",{class:"v1-sub",text:item.realtime?"來源標示即時到站":"時刻表預估，非即時"})]),E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:displayTime(item,t)}));
    group.append(row);
   }
   arrivals.append(group,E("p",{class:"v1-sub",text:"查詢時間："+new Date(data.at).toLocaleString("zh-TW")+"。不是持續即時倒數；資訊過期請重新搜尋 A→B。"}));
