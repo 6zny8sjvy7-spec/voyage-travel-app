@@ -14,10 +14,24 @@ function reconcile(t,doc){
  for(const events of t.days)for(let i=events.length-1;i>=0;i--)if(events[i].linkedDocumentId===doc.id)events.splice(i,1);
  const entry=(date,time,name,phase,duration,notes)=>{const i=dayIndex(t,date);if(i<0)return;const e={id:D.uid(),linkedDocumentId:doc.id,documentPhase:phase,type:doc.type,name,time,duration,notes,from:doc.fromPlace||"",to:doc.toPlace||"",source:"已連動預訂",countryCode:doc.toCountry||R.countryCode(t),url:doc.url||""};if(doc.type==="flight"){e.ticketDepartDate=doc.departDate||doc.date;e.ticketDepartTime=doc.departTime||doc.time;e.ticketArriveDate=doc.arriveDate||doc.endDate;e.ticketArriveTime=doc.arriveTime||doc.endTime;e.ticketStartTZ=doc.startTZ;e.ticketEndTZ=doc.endTZ}t.days[i].push(e)};
  if(doc.type==="flight"){
-  const d=doc.departDate||doc.date,dt=doc.departTime||doc.time,a=doc.arriveDate||doc.endDate,at=doc.arriveTime||doc.endTime;
-  const label="✈️ "+doc.name;
-  entry(d,dt,label+" · "+(countries[doc.fromCountry]?.name||"出發")+"起飛","departure",doc.elapsedMinutes||30,["機票出發："+d+" "+dt+"（"+doc.startTZ+"）","機票抵達："+a+" "+at+"（"+doc.endTZ+"）",doc.fromPlace+" → "+doc.toPlace,doc.note].filter(Boolean).join("\n"));
-  if(a!==d||doc.fromCountry!==doc.toCountry)entry(a,at,"🛬 "+doc.name+" · 抵達 "+(doc.toPlace||countries[doc.toCountry]?.name||"目的地"),"arrival",15,["機票標示抵達時間："+a+" "+at+"（"+doc.endTZ+"）",doc.note].filter(Boolean).join("\n"));
+  const d=doc.departDate||doc.date,dt=doc.departTime||doc.time;
+  const a=doc.arriveDate||doc.endDate,at=doc.arriveTime||doc.endTime;
+  // Preserve the two local clocks EXACTLY as printed on the ticket.
+  // A flight is one continuous itinerary item, never two fake activities.
+  entry(d,dt,"✈️ "+doc.name,"flight",doc.elapsedMinutes,
+    ["機票出發："+d+" "+dt+"（"+doc.startTZ+"）",
+     "機票抵達："+a+" "+at+"（"+doc.endTZ+"）",
+     (doc.fromPlace||"")+" → "+(doc.toPlace||""),doc.note].filter(Boolean).join("\\n"));
+  const linked=linkedEvents(t,doc.id)[0];
+  if(linked){
+    linked.ticketDepartDate=d;linked.ticketDepartTime=dt;
+    linked.ticketArriveDate=a;linked.ticketArriveTime=at;
+    linked.ticketFromCountry=doc.fromCountry;linked.ticketToCountry=doc.toCountry;
+    linked.ticketFromPlace=doc.fromPlace;linked.ticketToPlace=doc.toPlace;
+    linked.flightMinutes=doc.elapsedMinutes;
+    linked.documentPhase="fullFlight";
+    linked.source="照機票原始日期時間保存；完整單段航班";
+  }
  }else if(doc.type==="hotel"){
   entry(doc.date,doc.time,"🏨 入住 · "+doc.name,"checkin",30,[doc.place,doc.note].filter(Boolean).join("\n"));
   entry(doc.endDate,doc.endTime,"🧳 退房 · "+doc.name,"checkout",20,[doc.place,doc.note].filter(Boolean).join("\n"));
@@ -52,10 +66,8 @@ function editFlight(previous=null){
   const doc={...previous,id:previous?.id||D.uid(),type:"flight",name,fromCountry,toCountry,fromPlace:get("vBFrom"),toPlace:get("vBTo"),departDate,departTime,arriveDate,arriveTime,date:departDate,time:departTime,endDate:arriveDate,endTime:arriveTime,startTZ:countries[fromCountry].tz,endTZ:countries[toCountry].tz,elapsedMinutes:minutes,url,note:get("vBNote")};
   saveDoc(t,doc);return true
  });
- const depart=document.getElementById("vBDepartDate"),arrive=document.getElementById("vBArriveDate");
- if(depart&&arrive){let previousDate=depart.value;
-  depart.addEventListener("change",()=>{if(arrive.value===previousDate)arrive.value=depart.value;previousDate=depart.value;});
- }
+ // Never alter the arrival date in response to a departure date edit: ticket values are authoritative.
+
 }
 function editHotel(previous=null){
  const t=current(),date=D.dayISO(t.startDate||"",day)||t.startDate||"";
