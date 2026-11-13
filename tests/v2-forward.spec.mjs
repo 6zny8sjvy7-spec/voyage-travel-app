@@ -698,3 +698,27 @@ test("published V7: travel date route engine and strict Thai station names",asyn
  expect(check.wrong).toBe(false);
  expect(check.transferStops).toEqual(["A","N","S","B"]);
 });
+
+test("dark mode has a genuinely dark body and card palette, not an unchanged pastel background",async({page})=>{
+ const color=async()=>page.evaluate(()=>{
+  const body=getComputedStyle(document.body);
+  const home=document.querySelector("#v2Home .v2-home-hero");
+  const tile=document.querySelector("#v2Home .v2-link");
+  const navbar=document.querySelector(".footnav");
+  return {body:body.backgroundColor,hero:getComputedStyle(home).backgroundImage,tile:getComputedStyle(tile).backgroundColor,nav:getComputedStyle(navbar).backgroundColor};
+ });
+ await page.evaluate(()=>localStorage.setItem("voyage-theme-v2-review-20261112","light"));
+ await page.reload();
+ await expect(page.locator("body.dark")).toHaveCount(0);
+ const day=await color();
+ await page.evaluate(()=>localStorage.setItem("voyage-theme-v2-review-20261112","dark"));
+ await page.reload();
+ await expect(page.locator("body.dark")).toHaveCount(1);
+ const night=await color();
+ const lum=x=>{const m=x.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);return m?Number(m[1])*.2126+Number(m[2])*.7152+Number(m[3])*.0722:NaN};
+ expect(lum(night.body)).toBeLessThan(65);
+ expect(lum(day.body)-lum(night.body)).toBeGreaterThan(95);
+ expect(lum(night.tile)).toBeLessThan(lum(day.tile)-65);
+ expect(night.hero).not.toBe(day.hero);
+ expect(night.nav).not.toBe(day.nav);
+});
