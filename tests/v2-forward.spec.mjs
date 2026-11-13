@@ -63,3 +63,18 @@ test("itinerary still has embedded map and existing date/edit flow; old map rout
  await expect(page.locator("body")).toHaveAttribute("data-tab","itinerary");
  await expect(page.locator("#mapSection")).toBeHidden();
 });
+
+test("published fixed review URL serves the same approved expense navigation",async({page})=>{
+ await page.goto("https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/",{waitUntil:"domcontentloaded"});
+ await expect(page.locator("#v2Home")).toBeVisible();
+ await expect(page.locator('.footnav [data-tablink="expenses"]')).toHaveCount(1);
+ await expect(page.locator('.footnav [data-tablink="map"]')).toHaveCount(0);
+ await expect(page.locator("#v2Home .v2-link").filter({hasText:"旅行地圖"})).toHaveCount(0);
+ await page.locator('.footnav [data-tablink="expenses"]').click();
+ await expect(page.locator("body")).toHaveAttribute("data-tab","expenses");
+ await expect(page.locator("#v1Content")).toContainText("已記帳台幣");
+ await expect(page.locator("#v1Content")).toContainText("最新公開參考匯率");
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator("#v3InlineMap")).toBeVisible();
+ await expect(page.locator("#mapSection")).toBeHidden();
+});
