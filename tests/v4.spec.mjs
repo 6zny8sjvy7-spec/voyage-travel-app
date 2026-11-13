@@ -64,9 +64,9 @@ test('Bangkok never borrows prebuilt Seoul metro answer for Seoul-origin words',
 });
 test('packing normal mode has a checked-and-struck item; deletion checkboxes only appear after switching modes',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/行李清單/}).click();
- // New trips begin without any packing rows: explicitly add the public baseline list.
- page.once('dialog',dialog=>dialog.accept());
- await page.locator('#v1Content').getByRole('button',{name:'加入出國通用清單'}).click();
+ // Use the CURRENT category picker, not the retired "加入出國通用清單" button.
+ await page.locator('#v2PackCategory').selectOption('證件與付款');
+ await page.locator('#v3PackLibrary').getByRole('button',{name:'加入目前分類所有項目'}).click();
  const first=page.locator('#v1Content > .v1-item').filter({hasText:'護照'}).first();
  await expect(first).toBeVisible();
  await first.locator('.v1-check').check();
