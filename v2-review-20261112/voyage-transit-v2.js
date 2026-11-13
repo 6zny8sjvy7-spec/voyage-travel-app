@@ -29,8 +29,29 @@ const regionInfo=E("div",{id:"v4TransitRegion",class:"v1-box"});
 panel.insertBefore(regionInfo,result);
 const navButtons=toolbar.querySelectorAll("button");
 let lastDestination="";
+let seededDateKey="";
+function destinationToday(t){
+ const code=window.VoyageRegionV4?.countryCode(t)||"";
+ const zone=({"KR":"Asia/Seoul","JP":"Asia/Tokyo","TH":"Asia/Bangkok","VN":"Asia/Ho_Chi_Minh"})[code]||t.tz||"Asia/Taipei";
+ try{
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return parts.year+"-"+parts.month+"-"+parts.day;
+ }catch{return new Date().toISOString().slice(0,10)}
+}
+function ensurePlanDate(t){
+ const input=$("transitPlanDate");if(!input)return "";
+ const key=t.id+"|"+day;
+ if(seededDateKey!==key){
+  seededDateKey=key;
+  const today=destinationToday(t);
+  const target=t.startDate?D.dayISO(t.startDate,day):"";
+  input.value=target&&target>=today?target:today;
+ }
+ return input.value;
+}
 function refreshRegion(){
  const t=trip(),reg=window.VoyageRegionV4?.get(t),name=(t.country||"未設定國家")+" · "+(t.city||"未設定城市"),identifier=[t.id,reg?.code,t.city].join("|");
+ ensurePlanDate(t);
  if(!regionInfo.firstChild||lastDestination!==identifier){
   regionInfo.replaceChildren();
   const heading=E("strong",{text:"📍 目前查詢地區："+name});
@@ -65,7 +86,13 @@ function status(text){result.replaceChildren(E("p",{class:"v2-route-status",text
 async function apiSearch(from,to){
  const adapter=window.VoyageTransitV5;
  if(!adapter)throw Error("四國公開交通資料引擎尚未載入");
- return adapter.plan(from,to,trip());
+ const t=trip(),date=ensurePlanDate(t),clock=$("transitTime")?.value||"";
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||D.dayISO(date,0)!==date)throw Error("請選擇有效的搭車日期");
+ if(!D.validTime(clock))throw Error("請選擇有效的當地出發時間");
+ const code=window.VoyageRegionV4?.countryCode(t)||"";
+ const offset=code==="KR"||code==="JP"?"+09:00":code==="TH"||code==="VN"?"+07:00":null;
+ if(!offset)throw Error("此國家的交通時區尚未建立");
+ return adapter.plan(from,to,t,{time:date+"T"+clock+":00"+offset});
 }
 let searchVersion=0;
 function countryRouteFallback(from,to){
@@ -86,7 +113,7 @@ async function search(){
  if(!from||!to){status("請先填出發站及抵達站");return}
  if(from===to){status("起點和終點相同，請確認站名");return}
  const generation=++searchVersion,country=window.VoyageRegionV4?.countryCode(t),tripId=t.id;
- status("正在查詢「"+t.city+"」的公開交通資料。來源查不到時不會編造站序與即時到站。");
+ status("正在查詢「"+t.city+"」"+ensurePlanDate(t)+" "+($("transitTime")?.value||"") +"（當地時間）的公開交通資料。來源查不到時不會編造站序與即時到站。");
  searchBtn.disabled=true;
  try{
   const routes=filterMode(await apiSearch(from,to));
@@ -159,7 +186,12 @@ function draw(routes){
    details.append(row);
   }
   details.append(E("p",{class:"v2-route-source",text:"資料依據："+(route.source||"來源未註明")+" · 查詢時間："+new Date(route.requestedAt||Date.now()).toLocaleString("zh-TW")+"；即時班次僅在來源可核對時才另行顯示。"}));
-  details.append(button("將這條路線加入行程",()=>saveRoute(route),"primary"));
+  const saveButton=button("將這條路線加入行程",()=>saveRoute(route),"primary");
+  const validLegs=route.legs.filter(x=>!["WALK","BIKE","CAR"].includes(x.mode));
+  const verified=validLegs.length>0&&validLegs.every(x=>knownCount(x,route)!==null&&!!x.headsign&&x.directionVerified!==false);
+  saveButton.disabled=!verified;
+  if(!verified)saveButton.title="需要完整停靠站與可靠行車方向，才能把這條方案加入行程";
+  details.append(saveButton);
   window.VoyageTransitUIV5?.lookupForRoute?.($("transitFrom").value.trim(),trip(),route);
  }
  unique.forEach((route,i)=>{
@@ -170,8 +202,35 @@ function draw(routes){
  result.append(chooser,details);
  select(0);
 }
-function routeStops(route){return route.legs.flatMap((leg,i)=>{const arr=leg.stations||[];return i>0&&arr.length?arr.slice(1):arr})}
-function saveRoute(route){const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("把查詢到的 "+route.legs.length+" 段交通路線加入 DAY "+(day+1)+"？不會改動其他行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[day].push({id:D.uid(),type:"transport",name:"🚆 "+from+" → "+to,from,to,time,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});save();render();setTab("itinerary");U.toast("交通路線已加入這一天的時間軸")}
+function routeStops(route){
+ const result=[];
+ const sameStop=(a,b)=>{if(!a||!b)return false;if(a.id&&b.id)return a.id===b.id;
+  const name=x=>String(x.name||x.local||x.en||x.zh||"").trim().toLowerCase();
+  return !!name(a)&&name(a)===name(b)};
+ for(const leg of route.legs||[]){
+  for(const station of leg.stations||[]){
+   if(result.length&&sameStop(result[result.length-1],station))continue;
+   result.push(station);
+  }
+ }
+ return result;
+}
+function saveRoute(route){
+ const transit=(route.legs||[]).filter(x=>!["WALK","BIKE","CAR"].includes(x.mode));
+ if(!transit.length||transit.some(leg=>knownCount(leg,route)===null||!leg.headsign||leg.directionVerified===false)){
+  U.toast("本路線尚缺完整停靠站或行車方向，無法核實站數；請勿把不完整資訊當成已確認搭乘方案");
+  return;
+ }
+ const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";
+ const chosenDate=$("transitPlanDate")?.value||"",firstDate=t.startDate||"";
+ if(!firstDate||!chosenDate||D.dayISO(chosenDate,0)!==chosenDate){
+  U.toast("請先設定旅行開始日期與正確的實際搭車日期，才能將路線加入當天行程");return;
+ }
+ const chosenDateIndex=Math.round((Date.parse(chosenDate+"T12:00:00Z")-Date.parse(firstDate+"T12:00:00Z"))/86400000);
+ if(!Number.isInteger(chosenDateIndex)||chosenDateIndex<0||chosenDateIndex>=t.days.length){
+  U.toast("搭車日期「"+chosenDate+"」不在旅行天數內；請先調整日期或新增天數");return;
+ }
+ if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("將 "+route.legs.length+" 段交通路線加入 "+chosenDate+"（第 "+(chosenDateIndex+1)+" 天）？不會更改你填寫的時間與既有行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[chosenDateIndex].push({id:D.uid(),type:"transport",name:(first?.mode==="BUS"?"🚌 ":"🚆 ")+from+" → "+to,from,to,time,date:chosenDate,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});day=chosenDateIndex;save();render();setTab("itinerary");U.toast("交通路線已加入 "+chosenDate+" 的時間軸")}
 window.VoyageRouteV2={search,routeSEO,routeStops,saveRoute};
 status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
 const oldRender=render;
