@@ -88,21 +88,28 @@ const food=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02')
 expect(food.type).toBe('food');
 expect(food.duration).toBe(75);
 });
-test('Seoul route search supports Myeongdong to Seongsu with all interchange stops',async({page})=>{
-await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
-await page.locator('#transitFrom').fill('明洞');
-await page.locator('#transitTo').fill('聖水');
-await page.getByRole('button',{name:/查詢實際交通路線/}).click();
-for(const text of ['明洞','忠武路','東大門歷史文化公園','新堂','往十里','聖水']){
-await expect(page.locator('#v2RouteResults')).toContainText(text)}
-await expect(page.locator('#v2RouteResults')).toContainText('非即時');
+test('Seoul A-B refuses to fabricate a full Myeongdong-to-Seongsu route when provider data is unavailable',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
+ await page.locator('#transitFrom').fill('明洞');
+ await page.locator('#transitTo').fill('聖水');
+ await page.getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('查不到足以驗證');
+ await expect(page.locator('#v2RouteResults')).not.toContainText('總共 1 站');
+ await expect(page.locator('#v2RouteResults')).not.toContainText('路線 1 ·');
 });
-test('twilight stays light enough to use without an almost-black background',async({page})=>{
-await page.evaluate(()=>localStorage.setItem('voyage-theme','dark'));
-await page.reload();
-await expect(page.locator('body.dark')).toBeVisible();
-const bg=await page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
-const m=bg.match(/\d+/g).map(Number);expect(m.every(v=>v>160)).toBe(true);
+test('dark mode is a genuine navy night with readable text, not near-identical to daylight',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('voyage-theme','dark'));
+ await page.reload();
+ await expect(page.locator('body.dark')).toBeVisible();
+ const palette=await page.evaluate(()=>({
+  bg:getComputedStyle(document.body).backgroundColor,
+  ink:getComputedStyle(document.body).color,
+  card:getComputedStyle(document.querySelector('#v2Home .v2-link')).backgroundColor
+ }));
+ const r=css=>css.match(/\d+/g).slice(0,3).map(Number);
+ expect(r(palette.bg).every(v=>v<70)).toBe(true);
+ expect(r(palette.ink).every(v=>v>180)).toBe(true);
+ expect(r(palette.card).every(v=>v<110)).toBe(true);
 });
 
 test('daily schedule exposes a real unscheduled gap and can open prefilled route lookup without inventing ride duration',async({page})=>{
