@@ -6,13 +6,13 @@ const R=global.VoyageRegionV4;if(!R)return;
 const $=id=>document.getElementById(id);
 const cacheName="voyage-weather-v4:"+location.pathname;
 const MAX_AGE=12*60*60*1000,REFRESH=15*60*1000;
-let controller=null,seq=0,lastKey="",running=false;
+let controller=null,seq=0,lastKey="",running=false,lastError="";
 const key=t=>[R.countryCode(t),String(t.city||"").trim(),Number(t.lat).toFixed(4),Number(t.lon).toFixed(4)].join("|");
 const current=()=>typeof trip==="function"?trip():null;
 function readCache(t){try{const data=JSON.parse(localStorage.getItem(cacheName)||"{}");const row=data[key(t)];return row&&Number.isFinite(row.at)&&Date.now()-row.at<=MAX_AGE?row:null}catch{return null}}
 function writeCache(t,value){try{const all=JSON.parse(localStorage.getItem(cacheName)||"{}");all[key(t)]={...value,at:Date.now()};const entries=Object.entries(all).sort((a,b)=>(b[1]?.at||0)-(a[1]?.at||0)).slice(0,12);localStorage.setItem(cacheName,JSON.stringify(Object.fromEntries(entries)))}catch{/* Private browsing or storage limit */}}
 function slot(){const glass=document.querySelector(".hero .glass");if(!glass)return null;let e=$("v4WeatherStatus");if(!e){e=document.createElement("div");e.id="v4WeatherStatus";e.className="v4-weather-status";const button=document.createElement("button");button.id="v4WeatherRetry";button.type="button";button.textContent="↻ 重試";button.onclick=()=>load({force:true});e.append(button);glass.append(e)}return e}
-function label(message,canRetry=true){const el=slot();if(!el)return;el.childNodes.forEach(n=>{if(n.nodeType===3)n.remove()});el.prepend(document.createTextNode(message+" "));const b=$("v4WeatherRetry");if(b){b.hidden=!canRetry;b.disabled=running}}
+function label(message,canRetry=true){const el=slot();if(!el)return;for(const n of Array.from(el.childNodes))if(n.nodeType===3)n.remove();el.prepend(document.createTextNode(message+" "));const b=$("v4WeatherRetry");if(b){b.hidden=!canRetry;b.disabled=running}}
 function weatherEvent(info){global.VoyageCurrentWeather=info;if(typeof CustomEvent!=="undefined")document.dispatchEvent(new CustomEvent("voyage-weather",{detail:info}))}
 function show(info,mode){const t=current();if(!t)return;const temp=$("temp"),city=$("cityLabel"),desc=$("weatherDesc");if(city)city.textContent=t.city||"未設定城市";
  if(!info){weatherEvent(null);if(temp)temp.textContent="--°";if(desc)desc.textContent="尚未取得目的地天氣";label("尚未取得目的地天氣，請重試");return}
@@ -63,14 +63,14 @@ async function load(options={}){
  if(existing)show(existing,"cached");
  else{show(null);const d=$("weatherDesc");if(d)d.textContent="天氣暫時無法取得 · 可按重試";}
  label(existing?"更新失敗，顯示同一城市最近一次成功資料":"天氣無法更新，請稍後重試");
- global.VoyageWeatherV4.lastError=String(error?.message||"未知原因");
+ lastError=String(error?.message||"未知原因");
 }
 function init(){slot();load();
  global.addEventListener?.("online",()=>load({force:true}));
  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now()-(readCache(current())?.at||0)>REFRESH)load()});
  setInterval(()=>{if(!document.hidden&&current())load()},REFRESH);
 }
-global.VoyageWeatherV4={load,abort,valid,readCache,get lastError(){return""},get country(){return R.countryCode(current())}};
+global.VoyageWeatherV4={load,abort,valid,readCache,get lastError(){return lastError},get country(){return R.countryCode(current())}};
 loadWeather=()=>load({force:true});
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })(window);
