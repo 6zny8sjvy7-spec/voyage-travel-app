@@ -478,7 +478,7 @@ field("vTripCurrency","目的地幣別","select",currencyGuess(t),{options:windo
 field("vTripPeople","旅伴名稱（以頓號分隔）","text",t.people.join("、"),{full:true}),field("vTripNotes","旅行備註","textarea",t.notes||"",{full:true})
 ],()=>{const name=get("vTripName"),date=get("vTripDate"),ps=get("vTripPeople").split(/[、,，]/).map(s=>D.clean(s,40)).filter(Boolean);if(!name)throw Error("旅行名稱不可空白");if(date&&!D.dayISO(date,0))throw Error("開始日期有誤");t.name=name;t.startDate=date;t.budget=D.amount(get("vTripBudget"))||0;t.currency=get("vTripCurrency");t.people=ps.length?[...new Set(ps)]:["我"];t.notes=get("vTripNotes");return true})}
 function eventEditor(index,isNew=false){const t=current(),events=t.days[day],e=isNew?{name:"",time:"10:00",duration:60,type:"place"}:events[index];if(!e)return;openDialog(isNew?"新增完整行程":"編輯行程",[
-field("vEvName","名稱","text",e.name),field("vEvType","類別","select",e.type||"place",{options:[["place","景點"],["food","餐飲"],["shop","購物"],["transport","交通"],["hotel","住宿"],["flight","航班"],["other","其他"]]}),
+field("vEvName","名稱","text",e.name),field("vEvType","類別","select",e.type||"place",{options:[["place","景點"],["food","餐飲"],["shop","購物"],["transport","交通"],["hotel","住宿"],["other","其他"],...(e.type==="flight"?[["flight","既有航班（請使用完整航班表單編輯）"]]:[])]}),
 field("vEvTime","開始時間","time",e.time||"10:00"),field("vEvDuration","預估分鐘","number",e.duration||60,{min:0}),
 field("vEvNotes","備註／地址／預訂資訊","textarea",e.notes||"",{full:true}),field("vEvCost","預估費用（旅行幣別）","number",e.cost||0,{min:0,step:"0.01"}),
 field("vEvURL","地點網址（HTTPS）","url",e.mapUrl||e.url||"",{full:true}),field("vEvPhoto","可選填景點照片 HTTPS 網址（不支援相簿上傳）","url",e.photoUrl||"",{full:true}),field("vEvFrom","交通起點","text",e.from||""),field("vEvTo","交通終點","text",e.to||""),field("vEvLine","路線及搭乘方向","text",e.line||"")
