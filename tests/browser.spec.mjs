@@ -8,16 +8,12 @@ test.beforeEach(async({page})=>{
  await page.goto('/');
  await expect(page.locator('#v2Home')).toBeVisible();
 });
-test('five tabs, transport and seven-day calendar',async({page})=>{
+test('five tabs, A-to-B transit search and seven-day calendar',async({page})=>{
  await page.locator('[data-tablink="transport"]').click();
  await expect(page.locator('#transportSection')).toBeVisible();
- await page.locator('#rideMode').click();
- await expect(page.locator('#rideFields')).toBeVisible();
- await page.locator('#transitStops').fill('Siam\nRatchadamri\nSala Daeng');
- await page.locator('#boardTrain').click();
- await expect(page.locator('#rideStatus')).toContainText('手動追蹤中');
- await page.locator('#nextStation').click();
- await expect(page.locator('#rideStatus')).toContainText('Ratchadamri');
+ await expect(page.locator('#transitFrom')).toBeVisible();
+ await expect(page.locator('#transitTo')).toBeVisible();
+ await expect(page.locator('#rideMode,#rideFields,#boardTrain,#nextStation,#v2GpsAssist')).toHaveCount(0);
  await page.locator('[data-tablink="more"]').click();
  await expect(page.locator('#v1More')).toBeVisible();
  await expect(page.locator('#transportSection')).toBeHidden();
