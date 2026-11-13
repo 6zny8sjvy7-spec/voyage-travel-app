@@ -25,6 +25,14 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
       - name: Run source-of-truth V2 fee-navigation and no-map-regression tests
         run: npx playwright test --config playwright.v2-forward.config.mjs
+      - name: Save actual rendered V2 screenshots for visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-v2-forward-visuals
+          path: visual-evidence/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Save failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
