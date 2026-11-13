@@ -653,6 +653,7 @@ for(const row of remote){const r=E("div",{class:"v1-item"}),name=(row.payload&&r
 };
 if(settings)setTimeout(()=>execute(async()=>{await connect();if(user)await listRemote()}),10);
 U.renderMore();
+if(requestedJoin)setTimeout(()=>{try{U.showPage("collab")}catch(e){console.warn("Invite page unavailable",e)}},350);
 })();
 
 </script>
