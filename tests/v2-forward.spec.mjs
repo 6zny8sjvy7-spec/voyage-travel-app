@@ -468,3 +468,39 @@ test("V7 trip switch and reload must preserve previous country, schedule, packin
  tripsNow=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112")));
  expect(summarize(tripsNow[0])).toEqual(summarize(original));
 });
+
+test("Published V7 original URL has no duplicate controls, readable itinerary, maps after both views and preserved fee tab",async({page})=>{
+ await page.goto("https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/",{waitUntil:"domcontentloaded"});
+ await expect(page.locator(".v7-trip-switch")).toBeVisible();
+ await expect(page.locator("#v2Home")).toBeVisible();
+ await expect(page.locator("#trips #newTrip")).toBeHidden();
+ await expect(page.locator('.footnav [data-tablink="expenses"]')).toHaveCount(1);
+ await expect(page.locator('.footnav [data-tablink="map"]')).toHaveCount(0);
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator("#v3ComposerDetails")).toHaveCount(1);
+ await expect(page.locator("#v3InlineMap")).toHaveCount(1);
+ const sourceOrder=await page.evaluate(()=>{
+   const week=document.querySelector("#week"),events=document.querySelector("#events"),map=document.querySelector("#v3InlineMap");
+   return {
+    afterWeek:!!(week.compareDocumentPosition(map)&Node.DOCUMENT_POSITION_FOLLOWING),
+    afterDay:!!(events.compareDocumentPosition(map)&Node.DOCUMENT_POSITION_FOLLOWING),
+    fonts:getComputedStyle(document.querySelector("#dates .date")).fontFamily
+   };
+ });
+ expect(sourceOrder.afterWeek).toBe(true);
+ expect(sourceOrder.afterDay).toBe(true);
+ expect(sourceOrder.fonts).toMatch(/ui-rounded|Hiragino Maru Gothic|Arial Rounded/);
+ await page.locator("#weeklyView").click();
+ await expect(page.locator("#week .v3-grid-viewport")).toBeVisible();
+ const card=page.locator("#week .v3-schedule-event").first();
+ const dimensions=await card.evaluate(e=>({client:e.getBoundingClientRect().height,scroll:e.scrollHeight}));
+ expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+2);
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:/行李清單/}).click();
+ await expect(page.locator("#v3PackLibrary")).toHaveCount(1);
+ await expect(page.getByRole("button",{name:"縮小清單"})).toHaveCount(0);
+ await expect(page.getByRole("button",{name:"展開選擇"})).toHaveCount(0);
+ await expect(page.getByRole("button",{name:"選取物品刪除"})).toBeVisible();
+ await page.locator('.footnav [data-tablink="expenses"]').click();
+ await expect(page.locator("#v1Content")).toContainText("旅程預算");
+});
