@@ -115,11 +115,12 @@ function normalizePlan(data,{origin,destination,country}){
  return{kind:"transitous",country,origin,destination,label:"Transitous 公開交通路線 · 按取得資料顯示站名、線路、方向及班表；只有明確標示的路段使用即時資料",minutes:duration>0?Math.ceil(duration/60):null,transfers,legs,source:ATTRIBUTION,requestedAt:new Date().toISOString(),hasRealtime:transitLegs.some(l=>l.realtime)};
  });
 }
-async function plan(from,to,t,{fetcher=fetch,signal}={}){
+async function plan(from,to,t,{fetcher=fetch,signal,time}={}){
  const c=context(t);
  const a=await geocode(from,t,{fetcher,signal}),b=await geocode(to,t,{fetcher,signal});
  if(distance(a,b)<.15)throw new Error("起點和終點距離太近，請確認站名");
  const query=new URLSearchParams({fromPlace:a.id||a.lat+","+a.lon,toPlace:b.id||b.lat+","+b.lon,numItineraries:"8",detailedLegs:"true",language:c.language});
+ if(time){if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(time))throw new Error("搭車日期或時區不完整");query.set("time",time)}
  const result=normalizePlan(await json(SERVICE+"/api/v6/plan?"+query,signal,fetcher),{origin:a,destination:b,country:c.country});
  if(!result.length)throw new Error("此城市的公開交通資料目前沒有可驗證的乘車路線");
  return result;
