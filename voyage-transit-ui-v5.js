@@ -53,7 +53,43 @@ async function lookup(){
   if(generation===version)arrivals.textContent="暫無可核實的到站資料："+String(error?.message||"來源無回應")+"。可使用當地官方交通服務核對。";
  }finally{if(generation===version)refresh.disabled=false}
 }
+function sameService(a,b){
+ // Never attach a departure from a different line or opposite direction.
+ const norm=x=>String(x||"").toLocaleLowerCase().replace(/[\\s·（）()\-]/g,"");
+ const x=norm(a),y=norm(b);
+ return !!x&&!!y&&(x===y);
+}
+async function lookupForRoute(from,t,route){
+ const first=route?.legs?.find(l=>!["WALK","BIKE","CAR"].includes(l.mode));
+ const key=[t.id,R?.countryCode(t),t.city].join("|"),generation=++version;
+ input.value=from||"";
+ if(!first||!first.line||!first.headsign||first.directionVerified===false){
+  arrivals.textContent="此路線的車次或方向資料不完整，不能查證相符的進站分鐘；請看上方官方資料來源。";
+  return;
+ }
+ arrivals.textContent="正在查詢 A 站「"+from+"」的 "+first.line+"／"+first.headsign+" 班次…";
+ refresh.disabled=true;
+ try{
+  const data=await A.departures(from,t);
+  if(generation!==version||key!==[trip().id,R?.countryCode(trip()),trip().city].join("|"))return;
+  const matches=data.items.filter(item=>!item.cancelled&&sameService(item.line,first.line)&&sameService(item.headsign,first.headsign)).sort((a,b)=>a.minutes-b.minutes);
+  arrivals.replaceChildren(E("strong",{text:"A 站 · "+data.station.name+" · "+first.line+" · "+first.headsign}));
+  if(!matches.length){
+   arrivals.append(E("p",{class:"v1-sub",text:"未取得可確認同一路線及同方向的列車進站資訊。不能把其他線路的班次當成這班車，也不會猜測分鐘數。"}));
+   return;
+  }
+  const group=E("div",{class:"v5-departure-list"});
+  for(const item of matches.slice(0,5)){
+   const row=E("div",{class:"v5-departure-item"});
+   row.append(E("div",{},[E("b",{text:item.line+" · "+item.headsign}),E("div",{class:"v1-sub",text:item.realtime?"來源標示即時到站":"時刻表預估，非即時"})]),E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:item.minutes===0?"即將到站":item.minutes+" 分鐘"}));
+   group.append(row);
+  }
+  arrivals.append(group,E("p",{class:"v1-sub",text:"查詢時間："+new Date(data.at).toLocaleString("zh-TW")+"。不是持續即時倒數；資訊過期請重新搜尋 A→B。"}));
+ }catch(error){
+  if(generation===version)arrivals.textContent="本次無法核對 A 站同線同方向的班次："+String(error?.message||"資料來源無回應")+"。";
+ }finally{if(generation===version)refresh.disabled=false}
+}
 const oldRender=render;render=function(){oldRender();refreshCountry()};
 refreshCountry();
-global.VoyageTransitUIV5={get mode(){return mode},refreshCountry,lookup};
+global.VoyageTransitUIV5={get mode(){return mode},refreshCountry,lookup,lookupForRoute};
 })(window);
