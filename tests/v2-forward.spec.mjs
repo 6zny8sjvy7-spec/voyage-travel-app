@@ -131,7 +131,7 @@ test("transport composer changes fields for walking rail taxi bus and saves the 
  const t=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112"))[0]);
  const entry=t.days.flat().find(x=>x.from==="A 飯店"&&x.to==="B 車站");
  expect(entry).toBeTruthy();expect(entry.transportMode).toBe("walk");expect(entry.duration).toBe(18);
- expect(entry.source).toMatch(/非已驗證/);
+ expect(entry.source).toMatch(/尚未驗證路線、搭乘方向及站序/);
 });
 test("flight from itinerary uses complete linked local dates/times; invalid arrival is explained",async({page})=>{
  await page.locator("#v2Home").getByRole("button",{name:"旅行設定"}).click();
