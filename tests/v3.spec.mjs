@@ -167,3 +167,19 @@ test('one-touch dining shortcut persists category, actual duration, budget and p
  await page.locator('#weeklyView').click();
  await expect(page.locator('#week .v3-schedule-event').filter({hasText:'聖水烤肉晚餐'})).toContainText('80 分');
 });
+
+test('Traditional Chinese country + currency names appear throughout expense, FX and trip settings without changing saved ISO values',async({page})=>{
+ await page.locator('#v2Home').getByRole('button',{name:/費用與分帳/}).click();
+ await page.getByRole('button',{name:/新增費用/}).click();
+ const currency=page.locator('#vExCurrency');
+ await expect(currency.locator('option[value="KRW"]')).toHaveText('韓國・韓元（KRW）');
+ await expect(currency.locator('option[value="JPY"]')).toHaveText('日本・日圓（JPY）');
+ await expect(currency.locator('option[value="THB"]')).toHaveText('泰國・泰銖（THB）');
+ await expect(currency.locator('option[value="VND"]')).toHaveText('越南・越南盾（VND）');
+ await currency.selectOption('JPY');
+ await expect(currency).toHaveValue('JPY');
+ await page.locator('#v1Cancel').click();
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await page.locator('#v2Home').getByRole('button',{name:/旅行設定/}).click();
+ await expect(page.locator('#vTripCurrency option[value="KRW"]')).toHaveText('韓國・韓元（KRW）');
+});
