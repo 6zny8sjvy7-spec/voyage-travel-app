@@ -55,7 +55,7 @@ async function lookup(){
 }
 function sameService(a,b){
  // Never attach a departure from a different line or opposite direction.
- const norm=x=>String(x||"").toLocaleLowerCase().replace(/[\\s·（）()\-]/g,"");
+ const norm=x=>String(x||"").toLocaleLowerCase().replaceAll(" ","").replaceAll("·","").replaceAll("（","").replaceAll("）","").replaceAll("(","").replaceAll(")","").replaceAll("-","");
  const x=norm(a),y=norm(b);
  return !!x&&!!y&&(x===y);
 }
