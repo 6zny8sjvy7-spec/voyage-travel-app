@@ -61,7 +61,7 @@ function openDialog(title,fields,submit){$v("v1DialogTitle").textContent=title;$
 function currencyGuess(t){const c=t.currency;if(c&&c!=="TWD")return c;const s=t.country+" "+t.city;return /韓國|Korea/i.test(s)?"KRW":/日本|Japan/i.test(s)?"JPY":/泰國|Thailand/i.test(s)?"THB":/新加坡|Singapore/i.test(s)?"SGD":/美國|USA|United States/i.test(s)?"USD":"TWD"}
 function tripEditor(){const t=current();openDialog("旅行設定",[
 field("vTripName","旅行名稱","text",t.name),field("vTripDate","開始日期（可留空）","date",t.startDate||""),field("vTripBudget","旅程預算（台幣）","number",t.budget||0,{min:0}),
-field("vTripCurrency","目的地幣別","select",currencyGuess(t),{options:["TWD","KRW","JPY","THB","USD","EUR","SGD","HKD","CNY","GBP","AUD","CAD","VND","MYR","PHP","IDR"].map(c=>[c,c])}),
+field("vTripCurrency","目的地幣別","select",currencyGuess(t),{options:window.VoyageCurrencyV5.options(["TWD","KRW","JPY","THB","USD","EUR","SGD","HKD","CNY","GBP","AUD","CAD","VND","MYR","PHP","IDR"])}),
 field("vTripPeople","旅伴名稱（以頓號分隔）","text",t.people.join("、"),{full:true}),field("vTripNotes","旅行備註","textarea",t.notes||"",{full:true})
 ],()=>{const name=get("vTripName"),date=get("vTripDate"),ps=get("vTripPeople").split(/[、,，]/).map(s=>D.clean(s,40)).filter(Boolean);if(!name)throw Error("旅行名稱不可空白");if(date&&!D.dayISO(date,0))throw Error("開始日期有誤");t.name=name;t.startDate=date;t.budget=D.amount(get("vTripBudget"))||0;t.currency=get("vTripCurrency");t.people=ps.length?[...new Set(ps)]:["我"];t.notes=get("vTripNotes");return true})}
 function eventEditor(index,isNew=false){const t=current(),events=t.days[day],e=isNew?{name:"",time:"10:00",duration:60,type:"place"}:events[index];if(!e)return;openDialog(isNew?"新增完整行程":"編輯行程",[
