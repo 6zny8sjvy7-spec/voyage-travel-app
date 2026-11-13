@@ -9,7 +9,7 @@ let selectedMember="";
 function currency(t){if(t.currency&&t.currency!=="TWD")return t.currency;const s=t.country+" "+t.city;return /韓國|Korea/i.test(s)?"KRW":/日本|Japan/i.test(s)?"JPY":/泰國|Thailand/i.test(s)?"THB":/新加坡|Singapore/i.test(s)?"SGD":/美國|USA|United States/i.test(s)?"USD":"TWD"}
 function expenseEditor(){const t=current(),people=t.people;let rateSource="使用者手動輸入",rateAt=new Date().toISOString();openDialog("＋ 新增旅行費用",[
 field("vExTitle","項目","text",""),field("vExCategory","類別","select","food",{options:[["food","餐飲"],["transport","交通"],["stay","住宿"],["shop","購物"],["ticket","門票"],["other","其他"]]}),
-field("vExAmount","原幣金額","number","",{min:0,step:"0.01"}),field("vExCurrency","幣別","select",currency(t),{options:countryCurrencies.map(c=>[c,c])}),
+field("vExAmount","原幣金額","number","",{min:0,step:"0.01"}),field("vExCurrency","幣別","select",currency(t),{options:window.VoyageCurrencyV5.options(countryCurrencies)}),
 field("vExRate","每 1 原幣換算台幣（可取得每日參考匯率）","number",currency(t)==="TWD"?"1":"",{min:0,step:"0.000001"}),field("vExPaid","付款者","select",people[0],{options:people.map(p=>[p,p])}),
 field("vExShare","分攤成員（以頓號分隔；留空＝全部）","text",people.join("、"),{full:true}),
 field("vExNote","備註","textarea","",{full:true})
