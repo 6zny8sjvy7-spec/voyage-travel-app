@@ -24,7 +24,6 @@ jobs:
           node --check voyage-tools.js
           node --check voyage-import-translate.js
           node --check voyage-cloud.js
-          node --check voyage-discover.js
           node --check voyage-map.js
           node --check voyage-journal.js
           node --check voyage-ux-v2.js
@@ -51,7 +50,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text()
-          scripts=['voyage-domain.js','voyage-region-v4.js','voyage-transit-v5.js','voyage-currency-v5.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-transit-ui-v5.js','voyage-gps-v2.js','voyage-tools-v2.js','voyage-seoul-v3.js','voyage-calendar-v3.js','voyage-planning-v3.js','voyage-weather-v3.js','voyage-weather-v4.js','voyage-bookings-v4.js','voyage-home-v4.js','voyage-visual-v5.js','voyage-trip-v5.js']
+          scripts=['voyage-domain.js','voyage-region-v4.js','voyage-transit-v5.js','voyage-currency-v5.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-transit-ui-v5.js','voyage-gps-v2.js','voyage-tools-v2.js','voyage-seoul-v3.js','voyage-calendar-v3.js','voyage-planning-v3.js','voyage-weather-v3.js','voyage-weather-v4.js','voyage-bookings-v4.js','voyage-home-v4.js','voyage-visual-v5.js','voyage-trip-v5.js']
           for name in scripts:
               assert ('src="./'+name+'"') in html, name+' not loaded'
               assert Path(name).is_file(), name+' missing'
