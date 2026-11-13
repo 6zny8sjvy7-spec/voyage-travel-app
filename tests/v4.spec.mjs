@@ -74,6 +74,7 @@ test('packing normal mode has a checked-and-struck item; deletion checkboxes onl
  await expect(first.locator('.v1-struck')).toHaveCSS('text-decoration-line','line-through');
  await expect(page.locator('#v1Content .v3-remove-check')).toHaveCount(0);
  await page.locator('#v3PackBulk').getByRole('button',{name:'勾選要刪的物品'}).click();
+ await expect(page.locator('#v3PackLibrary')).toBeHidden();
  await expect(page.locator('#v1Content .v3-remove-check').first()).toBeVisible();
  await expect(page.locator('#v1Content .v1-check:visible')).toHaveCount(0);
  await page.locator('#v3PackBulk').getByRole('button',{name:'取消刪除模式'}).click();
