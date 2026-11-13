@@ -431,3 +431,37 @@ test("V7 native iPhone double tap on imported itinerary opens editor without nee
  await page.touchscreen.tap(x,y);
  await expect(page.locator("#v1Dialog")).toBeVisible();
 });
+
+test("V7 trip switch and reload must preserve previous country, schedule, packing and expenses",async({page})=>{
+ const initial=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112")));
+ const original=initial[0];
+ const responses=["曼谷出發測試","曼谷","泰國","4","2026-11-19"];
+ page.on("dialog",d=>{
+  if(d.type()==="prompt")void d.accept(responses.shift()||"");
+  else void d.accept();
+ });
+ await page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/}).click();
+ await expect(page.locator("#tripSelect")).toContainText("曼谷出發測試");
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await page.locator("#v3ComposerDetails summary").click();
+ await page.locator("#v3NewType").selectOption("place");
+ await page.locator("#v3NewName").fill("暹羅站旁咖啡廳");
+ await page.locator("#v3NewTime").fill("13:45");
+ await page.locator("#v3NewDuration").fill("40");
+ await page.getByRole("button",{name:/加入當天時間軸/}).click();
+ let tripsNow=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112")));
+ expect(tripsNow).toHaveLength(initial.length+1);
+ expect(tripsNow.at(-1).days[0].some(e=>e.name==="暹羅站旁咖啡廳"&&e.time==="13:45")).toBe(true);
+ const summarize=t=>({id:t.id,name:t.name,startDate:t.startDate,dayNames:t.days.map(day=>day.map(e=>e.name)),expenses:(t.expenses||[]).map(x=>x.title),packing:(t.packing||[]).map(x=>x.name)});
+ expect(summarize(tripsNow[0])).toEqual(summarize(original));
+ await page.locator("#tripSelect").selectOption("0");
+ await expect(page.locator("#v2Home")).toContainText("韓國");
+ await page.reload();
+ await expect(page.locator("#tripSelect")).toContainText("曼谷出發測試");
+ await page.locator("#tripSelect").selectOption(String(initial.length));
+ await expect(page.locator("#v2Home")).toContainText("泰國");
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator("#events .v3-schedule-event").filter({hasText:"暹羅站旁咖啡廳"})).toHaveCount(1);
+ tripsNow=await page.evaluate(()=>JSON.parse(localStorage.getItem("voyage-v2-review-20261112")));
+ expect(summarize(tripsNow[0])).toEqual(summarize(original));
+});
