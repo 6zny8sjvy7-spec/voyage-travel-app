@@ -37,7 +37,7 @@ const stationAlias={
 // "Myeongbong" is not "Myeongdong", and "ASOKHAR" is not "Asok".
 const normName=v=>String(v||"").normalize("NFKC").toLocaleLowerCase().trim()
  .replace(/[（(][^（）)]*[）)]/g,"")
- .replace(/(?:station|stn|stop|metro|subway|railway)$/ig,"")
+ .replace(/(?:station|stn|stop|metro|subway|railway|bts|mrt|brt)$/ig,"")
  .replace(/[\s._·・-]/g,"")
  .replace(/(?:站|역|駅)$/u,"");
 function aliases(query,code){
