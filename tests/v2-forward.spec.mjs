@@ -415,3 +415,16 @@ test("V7 all sixteen regression checks: imported dated item uses same double-tap
  await card.dblclick();
  await expect(page.locator("#v1Dialog")).toBeVisible();
 });
+
+test("V7 native iPhone double tap on imported itinerary opens editor without needing long-press",async({page},testInfo)=>{
+ test.skip(!testInfo.project.name.includes("iPhone"),"Touchscreen behavior is iPhone-specific");
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ const card=page.locator("#events .v3-schedule-event").filter({hasText:"景福宮"}).first();
+ await expect(card).toBeVisible();
+ await card.scrollIntoViewIfNeeded();
+ const box=await card.boundingBox();expect(box).not.toBeNull();
+ const x=box.x+box.width/2,y=box.y+Math.min(box.height/2,22);
+ await page.touchscreen.tap(x,y);
+ await page.touchscreen.tap(x,y);
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+});
