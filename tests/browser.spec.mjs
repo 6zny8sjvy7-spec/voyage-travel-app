@@ -71,15 +71,12 @@ test('CSV import previews and only appends to existing trip',async({page})=>{
  expect(items.some(e=>e.name==='景福宮')).toBe(true);
  expect(items.some(e=>e.name==='水族館')).toBe(true);
 });
-test('nearby Wikipedia result has a visible source and requires approval',async({page})=>{
- await page.route('**/w/api.php?**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({query:{pages:{'100':{pageid:100,index:1,title:'示範百科景點',coordinates:[{lat:37.58,lon:126.99}],fullurl:'https://zh.wikipedia.org/wiki/%E7%A4%BA%E7%AF%84'}}}})}));
- await page.locator('#v2Home').getByRole('button',{name:/探索景點/}).click();
- await page.locator('#v1Discover').getByRole('button',{name:/查詢附近百科景點/}).click();
- await expect(page.locator('#v1Discover')).toContainText('示範百科景點');
- page.on('dialog',async d=>{if(d.type()==='prompt')await d.accept('15:00');else await d.accept()});
- await page.locator('#v1Discover').getByRole('button',{name:/預覽並加入/}).first().click();
- const items=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02'))[0].days[0]);
- expect(items.some(e=>e.name==='示範百科景點'&&e.source==='Wikipedia')).toBe(true);
+test('retired AI recommendation and nearby discovery are not visible or loaded',async({page})=>{
+ await expect(page.locator('#recommend,#v1Discover,#suggestions')).toHaveCount(0);
+ await expect(page.locator('#v2Home').getByRole('button',{name:/探索景點|AI.*推薦/})).toHaveCount(0);
+ await expect(page.locator('script[src*="voyage-discover.js"]')).toHaveCount(0);
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await expect(page.locator('#itinerary')).toBeVisible();
 });
 test('cloud collaboration remains gated until backend is provided',async({page})=>{
  await page.locator('#v2Home').getByRole('button',{name:/多人協作/}).click();
