@@ -134,6 +134,9 @@ test("transport composer changes fields for walking rail taxi bus and saves the 
  expect(entry.source).toMatch(/非已驗證/);
 });
 test("flight from itinerary uses complete linked local dates/times; invalid arrival is explained",async({page})=>{
+ await page.locator("#v2Home").getByRole("button",{name:"旅行設定"}).click();
+ await page.locator("#vTripDate").fill("2026-11-26");
+ await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
  await page.locator('.footnav [data-tablink="itinerary"]').click();
  await page.locator("#v3ComposerDetails summary").click();
  await page.locator("#v3NewType").selectOption("flight");
