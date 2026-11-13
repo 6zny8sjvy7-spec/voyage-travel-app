@@ -33,7 +33,13 @@ const stationAlias={
  JP:{"新宿":["Shinjuku","新宿"],"澀谷":["Shibuya","渋谷"],"東京站":["Tokyo","東京"],"大阪":["Osaka","大阪"],"梅田":["Umeda","梅田"]},
  VN:{"濱城市場":["Bến Thành","Ben Thanh"],"檳城市場":["Bến Thành","Ben Thanh"],"濱城":["Bến Thành","Ben Thanh"],"河內":["Hà Nội","Hanoi"]}
 };
-const normName=v=>String(v||"").toLocaleLowerCase().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
+// Strict canonical stop names: free-text fuzzy substrings can resolve to the WRONG boarding station.
+// "Myeongbong" is not "Myeongdong", and "ASOKHAR" is not "Asok".
+const normName=v=>String(v||"").normalize("NFKC").toLocaleLowerCase().trim()
+ .replace(/[（(][^（）)]*[）)]/g,"")
+ .replace(/(?:station|stn|stop|metro|subway|railway|bts|mrt|brt)$/ig,"")
+ .replace(/[\s._·・-]/g,"")
+ .replace(/(?:站|역|駅)$/u,"");
 function aliases(query,code){
  const k=normName(query);
  for(const [main,others] of Object.entries(stationAlias[code]||{})){
@@ -42,15 +48,13 @@ function aliases(query,code){
  }
  return[query];
 }
+function isVirtualStop(label){return /(?:가상|virtual|仮想|虛擬|虚拟|站點模擬)/iu.test(String(label||""))}
 function stationMatches(label,query,code){
- const normalize=x=>String(x||"").toLocaleLowerCase().trim().replaceAll(" ","").replaceAll("站","").replaceAll("역","");
- const name=normalize(label),q=normalize(query);
- if(!name||!q)return false;
- if(name===q||name.includes(q)&&q.length>=2||q.includes(name)&&name.length>=3)return true;
- const names=aliases(query,code);
- if(names.some(x=>normalize(x)===name))return true;
- if(names.some(x=>normalize(x).length>=2&&name.includes(normalize(x))))return true;
- return false;
+ const candidate=normName(label);
+ if(!candidate||isVirtualStop(label))return false;
+ // The query can match any documented, EXACT alias, but never a partially similar name.
+ // This is deliberately strict: wrong platform/station is worse than an unavailable route.
+ return aliases(query,code).some(alias=>normName(alias)===candidate);
 }
 function suggestStation(entries,phrase,t){
  const list=Array.isArray(entries)?entries:Array.isArray(entries?.results)?entries.results:[];
@@ -60,7 +64,8 @@ function suggestStation(entries,phrase,t){
  const km=origin?distance(origin,c):Infinity;if(!origin||km>120)return null;
  const label=String(p.name||p.place?.name||p.stopName||"").trim();
  if(!stationMatches(label,phrase,code))return null;
- let score=km/10+(label.toLowerCase()===q?-10:label.toLowerCase().includes(q)?-3:0);
+ const candidate=normName(label);
+ let score=km/10+(candidate===normName(phrase)?-20:-10);
  return{p,c,km,score,label,id:String(p.id||p.place?.id||"")};
  }).filter(Boolean).sort((a,b)=>a.score-b.score)[0]||null;
 }
@@ -72,7 +77,7 @@ async function json(url,signal,fetcher=fetch){
 function context(t){const country=R?.countryCode(t)||"";if(!supported.has(country))throw new Error("目前先支援韓國、泰國、日本、越南四國");if(!cityOrigin(t))throw new Error("尚未確認目的地城市座標，請先設定正確城市");return{country,language:lang[country],origin:cityOrigin(t)}}
 async function geocode(name,t,{fetcher=fetch,signal}={}){
  const cfg=context(t),q=String(name||"").trim();if(!q)throw new Error("請輸入站名");
- const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x+", "+t.city,x])],seen=new Set();
+ const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x,x+", "+t.city])],seen=new Set();
  for(const term of variants){
  if(seen.has(term))continue;seen.add(term);
  const p=new URLSearchParams({text:term,type:"STOP",place:cfg.origin.lat+","+cfg.origin.lon,numResults:"10",language:cfg.language});
@@ -80,13 +85,13 @@ async function geocode(name,t,{fetcher=fetch,signal}={}){
  const best=suggestStation(found,q,t);
  if(best)return{...best.c,id:best.id,name:best.label,source:"Transitous / OpenStreetMap",country:cfg.country};
  }
- throw new Error("公開站名資料沒有查到「"+q+"」附近的可靠車站");
+ throw new Error("無法確認「"+q+"」的精確車站名稱；相似站名不會自動選取，以免搭錯方向。可改輸入完整官方英文／當地站名後在 VOYAGE 重新查詢");
 }
 function parseStop(raw){
  if(!raw)return null;
  const p=raw.place||raw,c=safeCoords(p);
  const name=String(p.name||p.stopName||"").trim();
- if(!name)return null;
+ if(!name||isVirtualStop(name))return null;
  const translations=p.translations||p.names||{};
  return{zh:String(translations.zh||translations["zh-TW"]||"").trim(),local:String(translations.local||translations.native||"").trim(),en:String(translations.en||"").trim(),name,id:String(p.id||""),lat:c?.lat,lon:c?.lon};
 }
@@ -106,16 +111,24 @@ function normalizePlan(data,{origin,destination,country}){
  return{mode:l.mode,line:l.displayName||l.routeShortName||l.routeLongName||(isWalk?"步行":"大眾運輸"),headsign:headsign||"方向未提供，請以月台或官方資訊核對",directionVerified:!!headsign,stations:list,sequenceComplete,stationCount:sequenceComplete&&!isWalk?list.length-1:null,duration:Number(l.duration)||0,realtime:l.realTime===true,departure:l.startTime||null,arrival:l.endTime||null,routeId:l.routeId||null};
  });
  const transitLegs=legs.filter(l=>!["WALK","BIKE","CAR"].includes(l.mode));
+ const seenStops=new Set();let previousStop="",loopDetected=false;
+ for(const l of transitLegs)for(const point of l.stations||[]){
+  const stop=normName(point.name||point.zh||point.en||point.local||"");
+  if(!stop||stop===previousStop)continue; // A shared transfer station occurs twice in adjacent legs.
+  if(seenStops.has(stop))loopDetected=true; // Source itinerary revisits an earlier station.
+  seenStops.add(stop);previousStop=stop;
+ }
  const transfers=Math.max(0,transitLegs.length-1);
  const duration=Number(it.duration)||0;
- return{kind:"transitous",country,origin,destination,label:"Transitous 公開交通路線 · 按取得資料顯示站名、線路、方向及班表；只有明確標示的路段使用即時資料",minutes:duration>0?Math.ceil(duration/60):null,transfers,legs,source:ATTRIBUTION,requestedAt:new Date().toISOString(),hasRealtime:transitLegs.some(l=>l.realtime)};
- });
+ return{kind:"transitous",country,origin,destination,label:"Transitous 公開交通路線 · 按取得資料顯示站名、線路、方向及班表；只有明確標示的路段使用即時資料",minutes:duration>0?Math.ceil(duration/60):null,transfers,legs,source:ATTRIBUTION,requestedAt:new Date().toISOString(),hasRealtime:transitLegs.some(l=>l.realtime),loopDetected};
+ }).filter(route=>!route.loopDetected);
 }
-async function plan(from,to,t,{fetcher=fetch,signal}={}){
+async function plan(from,to,t,{fetcher=fetch,signal,time}={}){
  const c=context(t);
  const a=await geocode(from,t,{fetcher,signal}),b=await geocode(to,t,{fetcher,signal});
  if(distance(a,b)<.15)throw new Error("起點和終點距離太近，請確認站名");
  const query=new URLSearchParams({fromPlace:a.id||a.lat+","+a.lon,toPlace:b.id||b.lat+","+b.lon,numItineraries:"8",detailedLegs:"true",language:c.language});
+ if(time){if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(time))throw new Error("搭車日期或時區不完整");query.set("time",time)}
  const result=normalizePlan(await json(SERVICE+"/api/v6/plan?"+query,signal,fetcher),{origin:a,destination:b,country:c.country});
  if(!result.length)throw new Error("此城市的公開交通資料目前沒有可驗證的乘車路線");
  return result;
