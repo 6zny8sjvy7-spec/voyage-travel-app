@@ -485,7 +485,7 @@ field("vEvURL","地點網址（HTTPS）","url",e.mapUrl||e.url||"",{full:true}),
 ],()=>{const name=get("vEvName"),time=get("vEvTime"),duration=Number(get("vEvDuration")),url=get("vEvURL");if(!name||!D.validTime(time)||!Number.isFinite(duration)||duration<0||duration>2880)throw Error("請填名稱、有效時間及合理分鐘數");if(url&&!/^https:\/\//i.test(url))throw Error("連結必須是 HTTPS");const x={...e,name,time,duration,type:get("vEvType"),notes:get("vEvNotes"),cost:D.amount(get("vEvCost"))||0,from:get("vEvFrom"),to:get("vEvTo"),line:get("vEvLine")};if(url){x.url=url;if(/(google|naver|goo\.gl|naver\.me)/i.test(url))x.mapUrl=url}else{delete x.url;delete x.mapUrl}const photo=get("vEvPhoto");if(photo&&!/^https:\/\//i.test(photo))throw Error("照片必須使用 HTTPS 網址");if(photo)x.photoUrl=photo;else delete x.photoUrl;if(!isNew&&e.name!==name){delete x.lat;delete x.lon}const all=events.filter((_,i)=>isNew||i!==index),conflicts=D.conflicts([...all,x]);if(conflicts.length&&!confirm("時間與既有行程重疊。保留原有時間並儲存嗎？"))return false;if(isNew)events.push(x);else events[index]=x;return true})}
 function metric(value,label){const n=E("div",{class:"v1-metric"});n.append(E("strong",{text:String(value)}),E("small",{text:label}));return n}
 function summaryRender(){const t=current(),total=t.days.flat().length,done=t.days.flat().filter(x=>x.done).length;let countdown="未設定出發日期";if(t.startDate&&D.dayISO(t.startDate,0)){const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:t.tz||"UTC",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(p=>[p.type,p.value]));const today=parts.year+"-"+parts.month+"-"+parts.day,diff=Math.round((Date.parse(t.startDate+"T12:00:00Z")-Date.parse(today+"T12:00:00Z"))/86400000);countdown=diff>0?"倒數 "+diff+" 天":diff===0?"今天出發":"已開始 "+(-diff)+" 天"}const spent=t.expenses.reduce((a,e)=>a+(Number(e.twd)||0),0);summary.replaceChildren(E("div",{class:"eyebrow",text:"旅行概況"}),E("h2",{text:t.city+" · "+countdown}),E("div",{class:"v1-metrics"},[metric(t.days.length,"旅行天數"),metric(total,"已安排活動"),metric(D.money(spent,"TWD"),"已記帳（台幣）"),metric(t.people.length,"旅伴人數")]),E("div",{class:"v1-actions"},[button("✎ 旅行設定",tripEditor),button("＋ 完整行程",()=>{setTab("itinerary");eventEditor(0,true)}),button("費用",()=>showPage("expenses")),button("行李",()=>showPage("packing"))]));if(t.notes)summary.append(E("p",{class:"v1-sub",text:t.notes}))}
-function renderMore(){const tabs=[["overview","我的工具"],["expenses","費用分帳"],["foods","美食清單"],["packing","行李清單"],["wishlist","購物願望"],["translation","翻譯"],["documents","機票住宿"],["history","旅行紀錄"],["diary","旅行回憶"],["import","匯入／備份"],["collab","好友共編"]],menu=$v("v1Menu");menu.replaceChildren();tabs.forEach(([id,label])=>menu.append(button(label,()=>{page=id;renderMore()},page===id?"active":"")));const box=$v("v1Content");box.replaceChildren();if(pages[page])pages[page](box);else box.append(E("p",{text:"功能模組載入中或尚未連接"}))}
+function renderMore(){const tabs=[["overview","我的工具"],["foods","美食清單"],["packing","行李清單"],["wishlist","購物願望"],["translation","翻譯"],["documents","機票住宿"],["history","旅行紀錄"],["import","匯入／備份"],["collab","好友共編"]],menu=$v("v1Menu");menu.replaceChildren();tabs.forEach(([id,label])=>menu.append(button(label,()=>{page=id;renderMore()},page===id?"active":"")));const box=$v("v1Content");box.replaceChildren();if(pages[page])pages[page](box);else box.append(E("p",{text:"功能模組載入中或尚未連接"}))}
 function showPage(which){page=which;setTab(which==="expenses"?"expenses":"more");renderMore();root.scrollIntoView({block:"start"})}
 function backup(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),trips},null,2)],{type:"application/json"}),href=URL.createObjectURL(blob),a=E("a",{href,download:"voyage-backup-"+new Date().toISOString().slice(0,10)+".json"});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),3000)}
 function eventExtras(){const a=current().days[day];$v("events").querySelectorAll(".event").forEach((node,i)=>{const e=a[i];if(!e)return;const info=node.querySelector(".event-detail");if(info){const details=[e.type&&e.type!=="place"?"類別："+e.type:"",Number(e.duration)>0?"預估 "+e.duration+" 分鐘":"",e.notes||"",e.cost?"預估 "+D.money(e.cost,current().currency):""].filter(Boolean).join(" · ");if(details)info.after(E("div",{class:"v1-extra",text:details}))}const edit=[...node.querySelectorAll(".event-actions button")].find(x=>x.textContent==="編輯");if(edit)edit.onclick=()=>eventEditor(i,false)});const conflicts=D.conflicts(a);if(conflicts.length)$v("events").prepend(E("div",{class:"v1-warning",text:"⚠ "+conflicts.length+" 組行程時間重疊；不會自動改動行程時間。"}))}
@@ -740,7 +740,7 @@ const nav=[
 ["🏨","機票住宿","預約與地址",()=>U.showPage("documents")],
 
 ["👥","多人協作","邀請好友同行",()=>U.showPage("collab")],
-["📥","匯入行程","備份與追加匯入",()=>U.showPage("import")],["📚","旅行紀錄","歷史旅行和封存",()=>U.showPage("history")],["📖","旅行回憶","旅程後寫下日記",()=>U.showPage("diary")]
+["📥","匯入行程","備份與追加匯入",()=>U.showPage("import")],["📚","旅行紀錄","歷史旅行和封存",()=>U.showPage("history")]
 ];
 const grid=el("div",{class:"v2-quick-grid"});for(const [emoji,label,sub,fn] of nav){const b=el("button",{class:"v2-link"});b.append(el("span",{class:"v2-icon",text:emoji}),el("span",{text:label}),el("small",{text:sub}));b.onclick=fn;grid.append(b)}home.append(grid);
 home.append(el("div",{class:"v2-section-label"},[el("h2",{text:"旅程小提醒"}),el("span",{text:"旅行資料會自動儲存在裝置上"})]));
@@ -759,96 +759,7 @@ render();
 })();
 
 </script>
-<script>
-/* VOYAGE V2 route search: verified Seoul corridor plus best-effort public routing.
- Never display guessed live vehicle positions or departures. */
-(function(){
-"use strict";
-const D=window.VoyageDomain,U=window.VoyageUI;if(!U)return;
-const $=id=>document.getElementById(id);
-const E=(tag,attrs={},children=[])=>{const el=document.createElement(tag);for(const [k,v] of Object.entries(attrs)){if(k==="text")el.textContent=String(v);else if(k==="class")el.className=v;else el.setAttribute(k,String(v))}for(const c of children)el.append(c);return el};
-const button=(label,onClick,cls="secondary")=>{const b=E("button",{text:label,class:cls});b.type="button";b.onclick=onClick;return b};
-const labels={
-myeongdong:["明洞","myeongdong","명동"],hongdae:["弘大","hongdae","hongik","hongik university","hongik univ","홍대","홍대입구"],
-seoul:["首爾站","seoul station","서울역"],gongdeok:["孔德","gongdeok","공덕"]
-};
-const stations={
-myeongdong:{zh:"明洞",local:"명동",en:"Myeongdong",lat:37.5609,lon:126.9865},
-hoehyeon:{zh:"會賢",local:"회현",en:"Hoehyeon",lat:37.5585,lon:126.9781},
-seoul:{zh:"首爾站",local:"서울역",en:"Seoul Station",lat:37.5546,lon:126.9724},
-gongdeok:{zh:"孔德",local:"공덕",en:"Gongdeok",lat:37.5440,lon:126.9513},
-hongdae:{zh:"弘大入口",local:"홍대입구",en:"Hongik Univ.",lat:37.5572,lon:126.9254}
-};
-const key=s=>{const n=String(s||"").trim().toLowerCase().replace(/[（(][^)）]*[)）]/g,"").replace(/站|station/ig,"").trim();for(const [k,names] of Object.entries(labels))if(names.some(x=>x.toLowerCase()===n||n.includes(x.toLowerCase())&&n.length<24))return k;return null};
-const result=E("section",{id:"v2RouteResults",class:"v1-box"});
-const panel=$("transportSection");
-panel.insertBefore(result,panel.querySelector(".transport-panel"));
-const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
-toolbar.append(searchBtn,button("🗺 Google Maps 動態規劃",openProvider),button("🌐 NAVER 路線",()=>{const t=trip();window.open("https://map.naver.com/p/search/"+encodeURIComponent($("transitTo").value+", "+t.city),"_blank","noopener")}));
-const form=$("transportSection").querySelector(".transport-panel");
-const toLabel=$("transitTo").closest("label");
-toLabel.after(toolbar);
-const advanced=E("details"),advancedTitle=E("summary",{text:"進階：自行輸入或修改線路方向（只有已查到的路線才會自動填入）"});
-const lineLabel=$("transitLine").closest("label");
-advanced.append(advancedTitle,lineLabel);
-form.append(advanced);
-const routeStyle=E("style",{text:".v2-route-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0}.v2-route-card h3{font-size:16px;margin:0 0 7px}.v2-route-leg{border-left:3px solid #f0ab72;margin:12px 0 0 9px;padding:2px 0 4px 18px}.v2-route-leg strong{font-size:14px}.v2-route-station{position:relative;padding:8px 2px;font-size:13px;border-bottom:1px solid var(--line)}.v2-route-station:before{content:'';position:absolute;left:-27px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid #de9c77}.v2-route-station:last-child:before{background:#d48563}.v2-route-source{font-size:11px;color:var(--muted);line-height:1.65}.v2-route-source a{color:var(--blue)}.v2-route-status{background:var(--soft);border-radius:12px;padding:10px;font-size:12px;margin:8px 0}"});
-document.head.append(routeStyle);
-let selectedRoute=null;
-function routeSEO(toKey,fromKey){const forward=fromKey==="myeongdong"&&toKey==="hongdae",reverse=fromKey==="hongdae"&&toKey==="myeongdong";if(!forward&&!reverse)return null;
-const steps=forward?[
-{line:"首爾地鐵 4 號線",headsign:"南下往首爾站／烏耳島方向（請以當日月台顯示為準）",stations:["myeongdong","hoehyeon","seoul"],mode:"SUBWAY"},
-{line:"機場鐵道 AREX 普通列車",headsign:"往仁川國際機場方向（請搭普通列車，勿搭直達快車）",stations:["seoul","gongdeok","hongdae"],mode:"SUBURBAN"}
-]:[
-{line:"機場鐵道 AREX 普通列車",headsign:"往首爾站方向（普通列車）",stations:["hongdae","gongdeok","seoul"],mode:"SUBURBAN"},
-{line:"首爾地鐵 4 號線",headsign:"往明洞、榛接方向（請核對月台終點）",stations:["seoul","hoehyeon","myeongdong"],mode:"SUBWAY"}
-];
-return {kind:"verified-reference",label:"公開交通路線參考（不是即時班次）",minutes:12,transfers:1,legs:steps.map(x=>({...x,stations:x.stations.map(id=>stations[id])})),source:"https://koreafare.com/subway/myeongdong-to-hongdae",sourceAlt:"https://kmetro.app/en/station/myeongdong"}
-}
-function openProvider(){const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),t=trip();if(!from||!to){U.toast("請輸入出發及抵達站");return}const url="https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(from+", "+t.city+", "+t.country)+"&destination="+encodeURIComponent(to+", "+t.city+", "+t.country)+"&travelmode=transit";window.open(url,"_blank","noopener")}
-function status(text){result.replaceChildren(E("p",{class:"v2-route-status",text}))}
-async function apiSearch(from,to){
- const engine=window.VoyageTransitV5;
- if(!engine)throw Error("公開交通路線引擎尚未載入");
- return engine.plan(from,to,trip());
-}
-async function search(){const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim();if(!from||!to){status("先輸入出發站與抵達站，再按『查詢實際交通路線』。");return}if(from===to){status("起終站相同，請確認目的地");return}// No partial static Seoul network presented as a verified A to B itinerary.
-status("正在查詢公開交通路線…資料依城市可用程度而不同。");
-searchBtn.disabled=true;
-try{const rows=await apiSearch(from,to);draw(rows);window.VoyageTransitUIV5?.lookupForRoute?.(from,trip(),rows[0])}catch(err){selectedRoute=null;status("此起終站尚無可驗證的內建站序："+err.message+"。上方「Google Maps 動態規劃」或「NAVER 路線」能帶入這組起終站查詢；請以外部服務提供的當日班次與方向為準，無須自己填寫終點方向。")}finally{searchBtn.disabled=false}}
-function stationText(s){const name=(s.zh||s.en||s.local||"未命名站");const alias=[s.local,s.en].filter(Boolean).filter(x=>x!==name);return name+(alias.length?" · "+alias.join(" / "):"")}
-function draw(routes){
- result.replaceChildren(E("h3",{text:"A→B 乘車路線 · 依完整站序核算"}));
- for(const [i,route] of routes.entries()){
-  const card=E("article",{class:"v2-route-card"}),transit=route.legs.filter(l=>!["WALK","BIKE","CAR"].includes(l.mode));
-  const counts=transit.map(l=>route.kind==="transitous"?l.stationCount:((l.stations||[]).length>=2?l.stations.length-1:null));
-  const exact=counts.length>0&&counts.every(Number.isInteger),total=exact?counts.reduce((a,b)=>a+b,0):null;
-  card.append(E("h3",{text:"路線 "+(i+1)+" · "+(exact?"共 "+total+" 站":"站數待核對")+" · "+route.transfers+" 次轉乘"}));
-  card.append(E("p",{class:"v1-sub",text:route.label||"公共運輸資料"}));
-  if(!exact)card.append(E("p",{class:"v2-route-status",text:"資料來源未完整提供中間站。不能把只有 A、B 兩站當作搭乘一站，請確認官方路線圖。"}));
-  for(const [j,leg] of route.legs.entries()){
-   const row=E("div",{class:"v2-route-leg"}),walking=["WALK","BIKE","CAR"].includes(leg.mode);
-   row.append(E("strong",{text:(j+1)+". "+(walking?"🚶 步行":leg.mode==="BUS"?"🚌 "+leg.line:"🚇 "+leg.line)}));
-   if(!walking)row.append(E("div",{class:"v1-sub",text:"搭乘方向："+(leg.directionVerified===false?"未取得可驗證方向":leg.headsign||"方向尚未確認")}),
-    E("div",{class:"v1-sub",text:Number.isInteger(leg.stationCount)?"搭乘 "+leg.stationCount+" 站":"本段站數尚未核實"}));
-   for(const [k,stop] of (leg.stations||[]).entries()){
-    row.append(E("div",{class:"v2-route-station",text:(k===0?"上車：":k===leg.stations.length-1?"下車：":"第 "+k+" 站：")+stationText(stop)}));
-   }
-   card.append(row);
-  }
-  const row=E("div",{class:"v2-route-source",text:"資料來源："}),a=E("a",{href:route.source||"https://transitous.org/sources/",target:"_blank",rel:"noopener noreferrer",text:"Transitous 開放資料"});
-  row.append(a,E("span",{text:" · 時刻表不等於即時列車；月台資訊以現場為準。"}));
-  card.append(row,E("div",{class:"v1-actions"},[button("加入我的行程",()=>saveRoute(route),"primary")]));
-  result.append(card);
- }
-}
-function routeStops(route){return route.legs.flatMap((leg,i)=>{const arr=leg.stations||[];return i>0&&arr.length?arr.slice(1):arr})}
-function saveRoute(route){const t=trip(),stops=routeStops(route),from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),time=$("transitTime").value||"11:00";if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("把查詢到的 "+route.legs.length+" 段交通路線加入 DAY "+(day+1)+"？不會改動其他行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en).join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[day].push({id:D.uid(),type:"transport",name:"🚆 "+from+" → "+to,from,to,time,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});save();render();setTab("itinerary");U.toast("交通路線已加入這一天的時間軸")}
-window.VoyageRouteV2={search,routeSEO,routeStops,saveRoute};
-status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
-})();
-
-</script>
+<script src="./voyage-transit-v2.js"></script>
 
 <script>
 /* VOYAGE V2 useful packing presets, visible live-fetch FX reference and friend-first collaboration. */
@@ -985,7 +896,7 @@ const $=id=>document.getElementById(id);
 const E=(tag,attrs={},children=[])=>{const n=document.createElement(tag);for(const [k,v] of Object.entries(attrs)){if(k==="text")n.textContent=String(v);else if(k==="class")n.className=v;else n.setAttribute(k,String(v))}for(const c of children)n.append(c);return n};
 const button=(label,fn,cls="secondary")=>{const b=E("button",{text:label,class:cls});b.type="button";b.onclick=fn;return b};
 const typeNames={place:"景點",food:"餐飲",transport:"交通／航班",shop:"購物",hotel:"住宿",flight:"航班",other:"其他"};
-const types=[["place","景點"],["food","餐飲"],["transport","交通"],["shop","購物"],["hotel","住宿"],["flight","航班"],["other","其他"]];
+const types=[["place","景點"],["food","餐飲"],["transport","交通"],["shop","購物"],["hotel","住宿"],["other","其他"]];
 const pxPerMin=.93,selected={event:null,day:0},cache=new WeakMap();let movingDate=false,inlineMap=null,inlineLayers=null,lastMapTrip="",overview=false;
 const wrap=E("div",{class:"v3-date-wrap"}),marker=E("span",{id:"v3MovingDateIcon",role:"img","aria-label":"日期選取標記",text:"✈"});
 const dateRow=$("dates");dateRow.parentNode.insertBefore(wrap,dateRow);wrap.append(dateRow,marker);
@@ -993,22 +904,23 @@ const preview=E("section",{id:"v3InlineMap",class:"v3-inline-map"}),mapHead=E("d
 preview.append(mapHead,mapDiv,mapSummary);
 $("events").after(preview);
 const form=$("itinerary").querySelector(".formrow"),composer=E("section",{id:"v3Composer",class:"v3-composer"}),composerDetails=E("details",{id:"v3ComposerDetails",class:"v3-compose-shell"}),composerToggle=E("summary",{class:"v3-compose-toggle",text:"＋ 安排活動 · 景點／餐飲／交通／購物"});composerDetails.append(composerToggle,composer);
-if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.after(composerDetails);else form.before(composerDetails)}
+if(form){const switcher=$("itinerary").querySelector(".view-switch");if(switcher)switcher.before(composerDetails);else form.before(composerDetails)}
 function timeInfo(x){const original=Number(x.duration),has=Number.isFinite(original)&&original>0&&original<=2880;const mins=has?Math.round(original):35;const start=D.minutes(x.time);return{start:start===null?9*60:start,duration:mins,actual:has,hasStart:start!==null};}
 function formatMinutes(min){const n=((min%1440)+1440)%1440;return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")+(min>=1440?"（隔日）":"")}
-function category(x){return types.some(a=>a[0]===x.type)?x.type:"place"}
-function routeText(x){if(x.type!=="transport")return"";const parts=x.routeInfo?.legs||[];if(parts.length)return parts.map(l=>{const mode=l.mode==="WALK"?"步行":l.line||"搭乘";return mode+(l.duration?(" "+Math.ceil(l.duration/60)+" 分"):"")}).join(" → ");return (x.from||"起點")+" → "+(x.to||"終點")+(x.line?" · "+x.line:"");}
+function category(x){return x.type==="flight"?"transport":types.some(a=>a[0]===x.type)?x.type:"place"}
+function routeText(x){if(x.type==="flight")return [x.ticketFromPlace||x.from||"出發機場",x.ticketToPlace||x.to||"抵達機場"].join(" → ");if(x.type!=="transport")return"";const parts=x.routeInfo?.legs||[];if(parts.length)return parts.map(l=>{const mode=l.mode==="WALK"?"步行":l.line||"搭乘";return mode+(l.duration?(" "+Math.ceil(l.duration/60)+" 分"):"")}).join(" → ");return (x.from||"起點")+" → "+(x.to||"終點")+(x.line?" · "+x.line:"");}
 function visibleDays(){const total=trip().days.length,start=Math.floor(day/7)*7;return Array.from({length:Math.min(7,total-start)},(_,i)=>start+i)}
 function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)for(const x of trip().days[i]||[]){const time=timeInfo(x);earliest=Math.min(earliest,time.start);latest=Math.max(latest,time.start+time.duration)}earliest=Math.max(0,Math.floor((earliest-30)/60)*60);latest=Math.min(2880,Math.ceil((latest+40)/60)*60);return{first:earliest,last:Math.max(latest,earliest+360),height:(Math.max(latest,earliest+360)-earliest)*pxPerMin}}
 function makeRuler(b){const r=E("div",{class:"v3-ruler"});for(let t=b.first;t<=b.last;t+=60){r.append(E("span",{class:"v3-hour",text:formatMinutes(t).replace("（隔日）","")}));}return r}
 function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(28,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
 card.style.top=y+"px";card.style.height=h+"px";
-const time=E("div",{class:"v3-event-time",text:(t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定")});
+const ticketText=x.type==="flight"&&x.ticketDepartTime&&x.ticketArriveTime?((x.ticketDepartDate||"")+" "+x.ticketDepartTime+"（出發地） → "+(x.ticketArriveDate||"")+" "+x.ticketArriveTime+"（抵達地） · "+(x.flightMinutes||t.duration)+" 分鐘"):"";
+const time=E("div",{class:"v3-event-time",text:ticketText||((t.hasStart?formatMinutes(t.start):"開始時間未設定")+"–"+(t.actual&&t.hasStart?formatMinutes(t.start+t.duration):"結束時間未定")+" · "+(t.actual?t.duration+" 分":"停留分鐘未設定"))});
 card.append(time,E("strong",{class:"v3-event-name",text:x.name}));
 if(kind==="transport"){card.append(E("small",{class:"v3-event-detail",text:routeText(x)||"交通時間"}));}
 else if(x.notes&&h>80){card.append(E("small",{class:"v3-event-detail",text:x.notes.slice(0,90)}))}
 if(!t.actual)card.append(E("small",{class:"v3-duration-warning",text:"請設定停留分鐘（目前僅為排版占位）"}));
-let timer=null;const locate=()=>{selected.event=x;selected.day=dayIndex;if(day!==dayIndex){day=dayIndex;render()}focusPlace(x,{scroll:true})};const edit=()=>{if(timer){clearTimeout(timer);timer=null}day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0)U.eventEditor(index,false)};card.onclick=ev=>{if(ev.detail>1)return;if(timer)clearTimeout(timer);timer=setTimeout(()=>{timer=null;locate()},260)};card.ondblclick=ev=>{ev.preventDefault();ev.stopPropagation();edit()};card.onkeydown=ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();if(ev.shiftKey)edit();else locate()}};card.title="點一下定位下方地圖，點兩下編輯";return card}
+let timer=null;const locate=()=>{selected.event=x;selected.day=dayIndex;if(day!==dayIndex){day=dayIndex;render()}focusPlace(x,{scroll:true})};const edit=()=>{if(timer){clearTimeout(timer);timer=null}day=dayIndex;const index=trip().days[dayIndex].indexOf(x);if(index>=0){const flight=x.type==="flight"&&x.linkedDocumentId?trip().documents?.find(d=>d.id===x.linkedDocumentId):null;if(flight&&window.VoyageBookingV4?.editFlight)window.VoyageBookingV4.editFlight(flight);else U.eventEditor(index,false)}};card.onclick=ev=>{if(ev.detail>1)return;if(timer)clearTimeout(timer);timer=setTimeout(()=>{timer=null;locate()},260)};card.ondblclick=ev=>{ev.preventDefault();ev.stopPropagation();edit()};card.onkeydown=ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();if(ev.shiftKey)edit();else locate()}};card.title="點一下定位下方地圖，點兩下編輯";return card}
 function drawGrid(indices,single){const b=bounds(indices),container=E("div",{class:"v3-grid-viewport"}),inner=E("div",{class:"v3-calendar-grid"}),ruler=makeRuler(b);
 container.append(ruler,inner);
 for(const i of indices){const col=E("section",{class:"v3-time-column"+(i===day?" active-day":""),"data-day":String(i)}),header=E("button",{class:"v3-column-heading",text:"第 "+(i+1)+" 天"+(trip().startDate?" · "+D.dayISO(trip().startDate,i).slice(5)+" "+new Intl.DateTimeFormat("zh-TW",{weekday:"short",timeZone:"UTC"}).format(new Date(D.dayISO(trip().startDate,i)+"T12:00:00Z")):"")});header.onclick=()=>{day=i;selected.day=i;render();syncView()};col.append(header);
@@ -1030,7 +942,7 @@ if(single){let prev=null;for(const e of scheduled){if(prev){const gap=gapRender(
 
 col.append(track);inner.append(col)}
 return container}
-function gapMinutes(a,b){const x=timeInfo(a),y=timeInfo(b);if(!x.hasStart||!x.actual||!y.hasStart)return 0;return Math.max(0,y.start-x.start-x.duration)}
+function gapMinutes(a,b){if(a.type==="flight"||b.type==="flight")return 0;const x=timeInfo(a),y=timeInfo(b);if(!x.hasStart||!x.actual||!y.hasStart)return 0;return Math.max(0,y.start-x.start-x.duration)}
 function addGapTravel(a,b){const before=timeInfo(a),mins=gapMinutes(a,b);if(mins<10)return;composerDetails.open=true;
  $("v3NewType").value="transport";$("v3NewTime").value=formatMinutes(before.start+before.duration).slice(0,5);
  $("v3NewDuration").value="";$("v3NewDuration").placeholder="請核對實際交通分鐘";
@@ -1223,4 +1135,6 @@ window.VoyageWeatherV3={classify,draw};
 <script src="./voyage-transit-v5.js"></script>
 <script src="./voyage-transit-ui-v5.js"></script>
 <script src="./voyage-forward-ui.js"></script>
+<script src="./voyage-import-v6.js"></script>
+<script src="./voyage-trip-v6.js"></script>
 </body></html>
