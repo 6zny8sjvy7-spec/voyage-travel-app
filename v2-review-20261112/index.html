@@ -911,7 +911,7 @@ function formatMinutes(min){const n=((min%1440)+1440)%1440;return String(Math.fl
 function category(x){return x.type==="flight"?"transport":types.some(a=>a[0]===x.type)?x.type:"place"}
 function routeText(x){if(x.type==="flight")return [x.ticketFromPlace||x.from||"出發機場",x.ticketToPlace||x.to||"抵達機場"].join(" → ");if(x.type!=="transport")return"";const parts=x.routeInfo?.legs||[];if(parts.length)return parts.map(l=>{const mode=l.mode==="WALK"?"步行":l.line||"搭乘";return mode+(l.duration?(" "+Math.ceil(l.duration/60)+" 分"):"")}).join(" → ");return (x.from||"起點")+" → "+(x.to||"終點")+(x.line?" · "+x.line:"");}
 function visibleDays(){const total=trip().days.length,start=Math.floor(day/7)*7;return Array.from({length:Math.min(7,total-start)},(_,i)=>start+i)}
-function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)for(const x of sortedEvents){const time=timeInfo(x);earliest=Math.min(earliest,time.start);latest=Math.max(latest,time.start+time.duration)}earliest=Math.max(0,Math.floor((earliest-30)/60)*60);latest=Math.min(2880,Math.ceil((latest+40)/60)*60);return{first:earliest,last:Math.max(latest,earliest+360),height:(Math.max(latest,earliest+360)-earliest)*pxPerMin}}
+function bounds(indices){let earliest=7*60,latest=21*60;for(const i of indices)for(const x of trip().days[i]||[]){const time=timeInfo(x);earliest=Math.min(earliest,time.start);latest=Math.max(latest,time.start+time.duration)}earliest=Math.max(0,Math.floor((earliest-30)/60)*60);latest=Math.min(2880,Math.ceil((latest+40)/60)*60);return{first:earliest,last:Math.max(latest,earliest+360),height:(Math.max(latest,earliest+360)-earliest)*pxPerMin}}
 function makeRuler(b){const r=E("div",{class:"v3-ruler"});for(let t=b.first;t<=b.last;t+=60){r.append(E("span",{class:"v3-hour",text:formatMinutes(t).replace("（隔日）","")}));}return r}
 function createEvent(x,dayIndex,b,single=false){const t=timeInfo(x),kind=category(x),y=Math.max(0,(t.start-b.first)*pxPerMin),h=Math.max(28,t.duration*pxPerMin-3),card=E("article",{class:"v3-schedule-event v3-kind-"+kind+(selected.event===x&&selected.day===dayIndex?" is-selected":""),tabindex:"0",role:"button","aria-label":x.name+"，"+formatMinutes(t.start)+" 至 "+(t.actual?formatMinutes(t.start+t.duration):"未設定結束時間")+"，點選在下方地圖顯示"});
 card.style.top=y+"px";card.style.height=h+"px";
@@ -928,7 +928,7 @@ for(const i of indices){const col=E("section",{class:"v3-time-column"+(i===day?"
 const track=E("div",{class:"v3-time-track"});track.style.height=b.height+"px";for(let tick=b.first;tick<=b.last;tick+=60){const line=E("div",{class:"v3-grid-line"});line.style.top=(tick-b.first)*pxPerMin+"px";track.append(line)}
 const sortedEvents=(trip().days[i]||[]).slice().sort((a,c)=>(timeInfo(a).start-timeInfo(c).start)||String(a.name).localeCompare(String(c.name)));const scheduled=sortedEvents.filter(x=>timeInfo(x).hasStart);
 const lanes=[], cards=[];
-for(const x of trip().days[i]||[]){
+for(const x of sortedEvents){
  const info=timeInfo(x);let lane=0;while(lane<3&&(lanes[lane]??-1)>info.start)lane++;
  lane=Math.min(lane,2);lanes[lane]=info.start+info.duration;
  const eventCard=createEvent(x,i,b,single);eventCard.dataset.lane=String(lane);
