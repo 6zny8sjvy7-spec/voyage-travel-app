@@ -29,6 +29,9 @@ function clearAll(){if(!t.packing.length){toast("清單目前是空的");return}
 function erase(){const count=now.size;if(!count)return;if(!confirm("確定刪除勾選的 "+count+" 件物品？這些項目的所有旅伴打包勾選也會一併刪除。"))return;t.packing=t.packing.filter(x=>!now.has(x.id));now.clear();save();render();toast("已刪除 "+count+" 件物品")}
 
 const removing=deleteModes.has(t.id);
+// Do not mix library "add" checkboxes with delete-selection checkboxes.
+detail.hidden=removing;
+if(oldButton)oldButton.hidden=removing;
 const toggleDelete=button(removing?"取消刪除模式":"勾選要刪的物品",()=>{
  if(removing){deleteModes.delete(t.id);now.clear()}else deleteModes.add(t.id);
  U.renderMore();
