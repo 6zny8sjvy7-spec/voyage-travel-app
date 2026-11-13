@@ -21,6 +21,26 @@ const key=s=>{const n=String(s||"").trim().toLowerCase().replace(/[（(][^)）]*
 const result=E("section",{id:"v2RouteResults",class:"v1-box"});
 const panel=$("transportSection");
 panel.insertBefore(result,panel.querySelector(".transport-panel"));
+const regionInfo=E("div",{id:"v4TransitRegion",class:"v1-box"});
+result.before(regionInfo);
+const navButtons=toolbar.querySelectorAll("button");
+let lastDestination="";
+function refreshRegion(){
+ const t=trip(),reg=window.VoyageRegionV4?.get(t),name=(t.country||"未設定國家")+" · "+(t.city||"未設定城市"),identifier=[t.id,reg?.code,t.city].join("|");
+ if(!regionInfo.firstChild||lastDestination!==identifier){
+  regionInfo.replaceChildren();
+  const heading=E("strong",{text:"📍 目前查詢地區："+name});
+  const description=E("p",{class:"v1-sub",text:(reg?.rail||"依城市查詢")+"／"+(reg?.bus||"公車")+"。車站查詢、資料來源與可用服務會依目前旅行目的地切換；沒有授權的即時到站資訊不顯示倒數。"});
+  regionInfo.append(heading,description);
+  const more=E("div",{class:"v1-actions"});
+  for(const item of reg?.sources||[])more.append(E("a",{href:item.url,target:"_blank",rel:"noopener noreferrer",text:item.name+" · "+(item.type==="official-keyed"?"需要申請金鑰":item.type==="schedule-data"?"時刻表資料":item.type==="navigation"?"外部地圖":"參考服務")}));
+  regionInfo.append(more);
+  if(lastDestination&&lastDestination!==identifier){selectedRoute=null;status("目的地已切換為 "+name+"，請重新輸入起終站並查詢；不會沿用其他國家的地鐵站序。");$("transitFrom").value="";$("transitTo").value=""}
+  lastDestination=identifier;
+ }
+ if(navButtons[2])navButtons[2].hidden=reg?.code!=="KR";
+}
+
 const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
 toolbar.append(searchBtn,button("🗺 Google Maps 動態規劃",openProvider),button("🌐 NAVER 路線",()=>{const t=trip();window.open("https://map.naver.com/p/search/"+encodeURIComponent($("transitTo").value+", "+t.city),"_blank","noopener")}));
 const form=$("transportSection").querySelector(".transport-panel");
@@ -45,13 +65,13 @@ return {kind:"verified-reference",label:"公開交通路線參考（不是即時
 }
 function openProvider(){const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),t=trip();if(!from||!to){U.toast("請輸入出發及抵達站");return}const url="https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(from+", "+t.city+", "+t.country)+"&destination="+encodeURIComponent(to+", "+t.city+", "+t.country)+"&travelmode=transit";window.open(url,"_blank","noopener")}
 function status(text){result.replaceChildren(E("p",{class:"v2-route-status",text}))}
-async function apiSearch(from,to){const geocode=async name=>{const url="https://api.transitous.org/api/v1/geocode?text="+encodeURIComponent(name+", "+trip().city)+"&type=STOP";const res=await fetch(url,{credentials:"omit"});if(!res.ok)throw Error("站名查詢服務 HTTP "+res.status);const data=await res.json();let list=Array.isArray(data)?data:data.results||data.features||data.places||[];const entry=list.find(x=>x&&((x.lat!==undefined&&x.lon!==undefined)||x.location||x.geometry));if(!entry)throw Error("交通服務找不到站名："+name);const p=entry.location||entry;const lat=Number(p.lat??p.latitude??entry.geometry?.coordinates?.[1]),lon=Number(p.lon??p.lng??p.longitude??entry.geometry?.coordinates?.[0]);if(!Number.isFinite(lat)||!Number.isFinite(lon))throw Error("車站座標資料無效");return lat+","+lon};
+async function apiSearch(from,to){const geocode=async name=>{const url="https://api.transitous.org/api/v1/geocode?text="+encodeURIComponent(name+", "+trip().city+", "+trip().country)+"&type=STOP";const res=await fetch(url,{credentials:"omit"});if(!res.ok)throw Error("站名查詢服務 HTTP "+res.status);const data=await res.json();let list=Array.isArray(data)?data:data.results||data.features||data.places||[];const entry=list.find(x=>x&&((x.lat!==undefined&&x.lon!==undefined)||x.location||x.geometry));if(!entry)throw Error("交通服務找不到站名："+name);const p=entry.location||entry;const lat=Number(p.lat??p.latitude??entry.geometry?.coordinates?.[1]),lon=Number(p.lon??p.lng??p.longitude??entry.geometry?.coordinates?.[0]);if(!Number.isFinite(lat)||!Number.isFinite(lon))throw Error("車站座標資料無效");const origin=window.VoyageRegionV4?.trustedCoords(trip());if(origin){const rd=Math.PI/180,p1=origin.latitude*rd,p2=lat*rd,dl=(lon-origin.longitude)*rd,da=(lat-origin.latitude)*rd,dh=Math.sin(da/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;if(6371*2*Math.asin(Math.sqrt(Math.min(1,dh)))>130)throw Error("服務搜尋到的站點離目的地城市太遠，為避免搭錯車不採用該站名");}return lat+","+lon};
 const a=await geocode(from),b=await geocode(to);
 const url="https://api.transitous.org/api/v6/plan?fromPlace="+encodeURIComponent(a)+"&toPlace="+encodeURIComponent(b)+"&numItineraries=3&detailedLegs=true";
 const res=await fetch(url,{credentials:"omit"});if(!res.ok)throw Error("路線服務 HTTP "+res.status);const data=await res.json();if(!Array.isArray(data.itineraries)||!data.itineraries.length)throw Error("沒有可用路線，可能該城市尚無公開交通資料");
 const choices=data.itineraries.filter(x=>Array.isArray(x.legs)&&x.legs.some(l=>l.mode&&l.mode!=="WALK")).slice(0,3).map(x=>({kind:"transitous",label:"公開交通時刻參考（部分城市可能有即時資料）",minutes:Math.ceil(x.duration/60),transfers:x.transfers,legs:x.legs.map(l=>({mode:l.mode,line:l.displayName||l.routeShortName||l.routeLongName||l.mode,headsign:l.headsign||"請依車站月台資訊確認方向",stations:[l.from,...(l.intermediateStops||[]),l.to].filter(Boolean).map(p=>({zh:p.name||p.stopName||"未命名站",local:p.name||"",en:p.name||"",lat:p.lat,lon:p.lon})),duration:Number(l.duration)||0,realtime:!!l.realTime})),source:"https://transitous.org/sources/"}));if(!choices.length)throw Error("沒有包含大眾運輸的可用路線");
 return choices}
-async function search(){const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim();if(!from||!to){status("先輸入出發站與抵達站，再按『查詢實際交通路線』。");return}if(from===to){status("起終站相同，請確認目的地");return}const network=window.VoyageSeoulNetwork;const inSeoul=/韓國|Korea|South Korea|首爾|Seoul/i.test(trip().country+" "+trip().city);if(network&&inSeoul){const route=network.route(from,to);if(route){draw([route]);return}}const known=routeSEO(key(to),key(from));if(known){draw([known]);return}
+async function search(){const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim();if(!from||!to){status("先輸入出發站與抵達站，再按『查詢實際交通路線』。");return}if(from===to){status("起終站相同，請確認目的地");return}const network=window.VoyageSeoulNetwork;const inSeoul=!!window.VoyageRegionV4?.isSeoul(trip());if(network&&inSeoul){const route=network.route(from,to);if(route){draw([route]);return}}const known=inSeoul?routeSEO(key(to),key(from)):null;if(known){draw([known]);return}
 status("正在查詢公開交通路線…資料依城市可用程度而不同。");
 searchBtn.disabled=true;
 try{const rows=await apiSearch(from,to);draw(rows)}catch(err){selectedRoute=null;status("此起終站尚無可驗證的內建站序："+err.message+"。上方「Google Maps 動態規劃」或「NAVER 路線」能帶入這組起終站查詢；請以外部服務提供的當日班次與方向為準，無須自己填寫終點方向。")}finally{searchBtn.disabled=false}}
@@ -63,4 +83,8 @@ function saveRoute(route){const t=trip(),stops=routeStops(route),from=$("transit
 function startRide(route){selectedRoute=route;setTransitMode("ride");$("transitStops").value=routeStops(route).map(x=>stationText(x)).join("\n");if(route.legs[0]?.line)$("transitLine").value=route.legs[0].line+" · "+route.legs[0].headsign;drawRide();result.scrollIntoView({behavior:"smooth",block:"start"});U.toast("已帶入查到的路線；搭乘進度仍需手動或 GPS 輔助確認")}
 window.VoyageRouteV2={search,routeSEO,routeStops,startRide,saveRoute,getActiveRoute:()=>selectedRoute};
 status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
+const oldRender=render;
+render=function(){oldRender();refreshRegion()};
+refreshRegion();
+
 })();
