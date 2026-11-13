@@ -1116,7 +1116,7 @@ render();syncView();
 "use strict";
 const U=window.VoyageUI,D=window.VoyageDomain;if(!U||!D)return;
 const {E,button,field,get,openDialog,toast,current,pages}=U;
-const selected=new Map();
+const selected=new Map(),deleteModes=new Set();
 function owned(){const t=current();return selected.get(t.id)||new Set()}
 function cleanSelected(t){const valid=new Set(t.packing.map(x=>x.id)),now=owned();for(const x of now)if(!valid.has(x))now.delete(x);selected.set(t.id,now);return now}
 const basePacking=pages.packing;
@@ -1136,15 +1136,25 @@ lib.insertBefore(E("div",{class:"v1-actions"},[button("縮小清單",()=>{detail
 const oldButton=[...box.querySelectorAll("button")].find(b=>b.textContent.includes("加入出國通用清單"));
 if(oldButton){oldButton.textContent="從分類清單加入物品";oldButton.onclick=()=>{detail.open=true;lib.scrollIntoView({behavior:"smooth",block:"start"})}}
 const rows=[...box.children].filter(c=>c.classList?.contains("v1-item"));
+const removing=deleteModes.has(t.id);detail.classList.toggle("hidden",removing);oldButton?.classList.toggle("hidden",removing);
 const toolbar=E("div",{class:"v3-pack-bulk",id:"v3PackBulk"}),count=E("span",{class:"v1-sub",id:"v3PackSelectedCount",text:"尚未選取刪除項目"}),now=cleanSelected(t);
 function countUp(){count.textContent="已選取 "+now.size+" / "+t.packing.length+" 件（不影響已打包勾選）";toolbar.querySelector("[data-action=delete]").disabled=now.size===0}
 function clearAll(){if(!t.packing.length){toast("清單目前是空的");return}if(!confirm("確定清空目前旅行所有 "+t.packing.length+" 件行李嗎？這個操作無法撤銷，其他行程不會受影響。"))return;t.packing=[];now.clear();save();render()}
 function erase(){const count=now.size;if(!count)return;if(!confirm("確定刪除勾選的 "+count+" 件物品？這些項目的所有旅伴打包勾選也會一併刪除。"))return;t.packing=t.packing.filter(x=>!now.has(x.id));now.clear();save();render();toast("已刪除 "+count+" 件物品")}
 const selectAll=button("全選要刪的物品",()=>{now.clear();t.packing.forEach(x=>now.add(x.id));rows.forEach(r=>{const x=r.querySelector(".v3-remove-check");if(x)x.checked=true});countUp()}),clear=button("取消選取",()=>{now.clear();rows.forEach(r=>{const x=r.querySelector(".v3-remove-check");if(x)x.checked=false});countUp()}),remove=button("刪除勾選",erase),eraseAll=button("清空全部行李",clearAll);
 remove.dataset.action="delete";eraseAll.className="v3-danger";
-toolbar.append(E("strong",{text:"整理我的清單"}),count,E("div",{class:"v1-actions"},[selectAll,clear,remove,eraseAll]));
+const deletionActions=E("div",{class:"v1-actions"},[selectAll,clear,remove,eraseAll]);
+const toggleMode=button(removing?"退出刪除模式":"選取物品刪除",()=>{
+ if(deleteModes.has(t.id))deleteModes.delete(t.id);else deleteModes.add(t.id);
+ now.clear();U.renderMore();
+ },"secondary");
+if(!removing){count.classList.add("hidden");deletionActions.classList.add("hidden");}
+toolbar.append(toggleMode,count,deletionActions);
 const place=rows[0]||[...box.children].find(x=>x.classList?.contains("v1-notice"));if(place)box.insertBefore(toolbar,place);else box.append(toolbar);
-rows.forEach((row,i)=>{const pack=t.packing[i];if(!pack)return;const input=E("input",{type:"checkbox",class:"v3-remove-check","aria-label":"選取刪除 "+pack.name});input.checked=now.has(pack.id);input.onchange=()=>{if(input.checked)now.add(pack.id);else now.delete(pack.id);countUp()};row.prepend(input);row.dataset.packId=String(pack.id)});
+rows.forEach((row,i)=>{const pack=t.packing[i];if(!pack)return;const input=E("input",{type:"checkbox",class:"v3-remove-check","aria-label":"選取刪除 "+pack.name});input.checked=now.has(pack.id);input.onchange=()=>{if(input.checked)now.add(pack.id);else now.delete(pack.id);countUp()};row.prepend(input);input.classList.toggle("hidden",!removing);
+ const packCheck=row.querySelector("input.v1-check");if(packCheck)packCheck.classList.toggle("hidden",removing);
+ for(const btn of row.querySelectorAll("button"))if(btn.textContent.trim()==="移除")btn.classList.toggle("hidden",removing);
+ row.dataset.packId=String(pack.id)});
 countUp();
 };
 pages.foods=box=>{
