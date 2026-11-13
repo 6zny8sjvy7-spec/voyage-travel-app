@@ -29,8 +29,29 @@ const regionInfo=E("div",{id:"v4TransitRegion",class:"v1-box"});
 panel.insertBefore(regionInfo,result);
 const navButtons=toolbar.querySelectorAll("button");
 let lastDestination="";
+let seededDateKey="";
+function destinationToday(t){
+ const code=window.VoyageRegionV4?.countryCode(t)||"";
+ const zone=({"KR":"Asia/Seoul","JP":"Asia/Tokyo","TH":"Asia/Bangkok","VN":"Asia/Ho_Chi_Minh"})[code]||t.tz||"Asia/Taipei";
+ try{
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return parts.year+"-"+parts.month+"-"+parts.day;
+ }catch{return new Date().toISOString().slice(0,10)}
+}
+function ensurePlanDate(t){
+ const input=$("transitPlanDate");if(!input)return "";
+ const key=t.id+"|"+day;
+ if(seededDateKey!==key){
+  seededDateKey=key;
+  const today=destinationToday(t);
+  const target=t.startDate?D.dayISO(t.startDate,day):"";
+  input.value=target&&target>=today?target:today;
+ }
+ return input.value;
+}
 function refreshRegion(){
  const t=trip(),reg=window.VoyageRegionV4?.get(t),name=(t.country||"未設定國家")+" · "+(t.city||"未設定城市"),identifier=[t.id,reg?.code,t.city].join("|");
+ ensurePlanDate(t);
  if(!regionInfo.firstChild||lastDestination!==identifier){
   regionInfo.replaceChildren();
   const heading=E("strong",{text:"📍 目前查詢地區："+name});
@@ -65,7 +86,13 @@ function status(text){result.replaceChildren(E("p",{class:"v2-route-status",text
 async function apiSearch(from,to){
  const adapter=window.VoyageTransitV5;
  if(!adapter)throw Error("四國公開交通資料引擎尚未載入");
- return adapter.plan(from,to,trip());
+ const t=trip(),date=ensurePlanDate(t),clock=$("transitTime")?.value||"";
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||D.dayISO(date,0)!==date)throw Error("請選擇有效的搭車日期");
+ if(!D.validTime(clock))throw Error("請選擇有效的當地出發時間");
+ const code=window.VoyageRegionV4?.countryCode(t)||"";
+ const offset=code==="KR"||code==="JP"?"+09:00":code==="TH"||code==="VN"?"+07:00":null;
+ if(!offset)throw Error("此國家的交通時區尚未建立");
+ return adapter.plan(from,to,t,{time:date+"T"+clock+":00"+offset});
 }
 let searchVersion=0;
 function countryRouteFallback(from,to){
@@ -86,7 +113,7 @@ async function search(){
  if(!from||!to){status("請先填出發站及抵達站");return}
  if(from===to){status("起點和終點相同，請確認站名");return}
  const generation=++searchVersion,country=window.VoyageRegionV4?.countryCode(t),tripId=t.id;
- status("正在查詢「"+t.city+"」的公開交通資料。來源查不到時不會編造站序與即時到站。");
+ status("正在查詢「"+t.city+"」"+ensurePlanDate(t)+" "+($("transitTime")?.value||"") +"（當地時間）的公開交通資料。來源查不到時不會編造站序與即時到站。");
  searchBtn.disabled=true;
  try{
   const routes=filterMode(await apiSearch(from,to));
