@@ -1,0 +1,30 @@
+name: VOYAGE Thailand official free GTFS source audit
+on:
+  push:
+    branches:
+      - work/voyage-v2-forward
+    paths:
+      - 'tests/thai-gtfs-source-audit.py'
+      - '.github/workflows/qa-thai-gtfs-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect official Thai OTP static GTFS without API key or billing
+        run: python3 tests/thai-gtfs-source-audit.py
+      - name: Upload full origin, destination, station sequence and data-period evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: th-otp-gtfs-source-audit
+          path: coverage-evidence/thailand-otp-gtfs-source.json
+          retention-days: 7
+          if-no-files-found: warn
