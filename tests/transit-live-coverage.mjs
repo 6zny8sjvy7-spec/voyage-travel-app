@@ -57,12 +57,12 @@ async function probe(c){
   const data=await fetchJSON("/api/v6/plan",{fromPlace:from.id||(from.lat+","+from.lon),toPlace:to.id||(to.lat+","+to.lon),numItineraries:3,detailedLegs:true,language:c.language});
   const options=Array.isArray(data?.itineraries)?data.itineraries.map(auditRoute).filter(Boolean):[];
   entry.routes=options.slice(0,3);
-  entry.result=options.some(x=>x.segments.every(l=>l.complete&&Number.isInteger(l.stopCount)&&l.headsign))?"verified_stop_sequences":"route_present_but_incomplete_stop_data";
+  entry.result=!options.length?"no_route_found":options.some(x=>x.segments.every(l=>l.complete&&Number.isInteger(l.stopCount)&&l.headsign))?"verified_stop_sequences":"route_present_but_incomplete_stop_data";
   entry.realTime=options.some(x=>x.segments.some(l=>l.realtime))?"provider_marks_some_leg_realtime":"no_confirmed_realtime";
  }catch(err){entry.errors.push(safe(err?.message||err).slice(0,260))}
  return entry;
 }
-const report={purpose:"Temporary four-country real public transit coverage audit; not an ETA or production guarantee",sourcePolicy:"https://transitous.org/api/",time:new Date().toISOString(),cases:[]};
+const report={purpose:"Temporary four-country real public transit coverage audit; not an ETA or production guarantee",sourcePolicy:"https://transitous.org/api/",time:new Date().toISOString(),cases:[],fullyVerified:false};
 for(const c of examples){
  const result=await probe(c);
  report.cases.push(result);
@@ -70,5 +70,7 @@ for(const c of examples){
  await wait(300);
 }
 mkdirSync("coverage-evidence",{recursive:true});
+report.fullyVerified=report.cases.every(c=>c.result==="verified_stop_sequences");
+if(!report.fullyVerified)console.warn("COVERAGE BLOCKER: Four-country live transit routing NOT verified; green CI means audit execution only.");
 writeFileSync("coverage-evidence/transitous-4countries.json",JSON.stringify(report,null,2));
 console.log("VERDICT "+JSON.stringify(report.cases.map(x=>({country:x.country,result:x.result,routeCount:x.routes.length,realtime:x.realTime,errors:x.errors}))));
