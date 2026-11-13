@@ -23,19 +23,50 @@ async function fetchJSON(path,query){
   return await response.json();
  }finally{clearTimeout(t)}
 }
+// Exact identity only. Never treat similar strings as stations (Myeongbong !== Myeongdong;
+// ASOKHAR !== Asok). This test uses real, free data and is not mock-backed.
+const aliases={
+ "KR:Myeongdong":["Myeongdong","명동","명동역","Myeong-dong"],
+ "KR:Hongik Univ.":["Hongik Univ.","홍대입구","홍대입구역","Hongik University"],
+ "TH:Siam":["Siam","สยาม","Siam BTS"],
+ "TH:Asok":["Asok","อโศก","Asoke","Asok BTS"],
+ "JP:Shinjuku":["Shinjuku","新宿"],
+ "JP:Shibuya":["Shibuya","渋谷"],
+ "VN:Bến Thành":["Bến Thành","Ben Thanh","Ga Bến Thành"],
+ "VN:Thảo Điền":["Thảo Điền","Thao Dien"]
+};
+function canonicalName(value){
+ return safe(value).normalize("NFKC").toLocaleLowerCase()
+  .replace(/[（(][^（）)]*[）)]/g,"")
+  .replace(/(?:station|stn|stop|bts|mrt)$/ig,"")
+  .replace(/[\s._·・-]/g,"")
+  .replace(/(?:站|역|駅)$/u,"");
+}
 async function stop(city,searchTerm){
- const data=flatten(await fetchJSON("/api/v1/geocode",{text:searchTerm,type:"STOP",place:city.center,numResults:10,language:city.language}));
- const norm=s=>safe(s).normalize("NFKD").toLowerCase().replace(/[\s.駅站]/g,"");
- const match=data.filter(x=>{
-  const name=safe(x.name||x.place?.name||x.stopName);
-  return name&&norm(name).includes(norm(searchTerm).slice(0,4));
- });
- const s=match[0];
- if(!s)throw Error("No clearly matching station among "+data.length+" geocode candidates for "+searchTerm);
- const lat=Number(s.lat??s.latitude??s.place?.lat),lon=Number(s.lon??s.longitude??s.place?.lon);
- const id=safe(s.id||s.place?.id);
- if(!id&&!(Number.isFinite(lat)&&Number.isFinite(lon)))throw Error("Match lacks stop ID/coordinates");
- return {id,name:safe(s.name||s.place?.name||searchTerm),lat,lon,query:searchTerm};
+ const options=[...new Set(aliases[city.country+":"+searchTerm]||[searchTerm])].slice(0,4);
+ const expected=new Set(options.map(canonicalName));
+ const rejected=new Set(); let attempts=0;
+ for(const query of options){
+  const data=flatten(await fetchJSON("/api/v1/geocode",{text:query,type:"STOP",place:city.center,numResults:10,language:city.language}));
+  attempts++;
+  const good=data.filter(x=>{
+   const name=safe(x.name||x.place?.name||x.stopName);
+   if(name&&!expected.has(canonicalName(name)))rejected.add(name);
+   return name&&expected.has(canonicalName(name));
+  });
+  if(!good.length)continue;
+  const center=city.center.split(",").map(Number);
+  const distance=x=>{
+   const lat=Number(x.lat??x.latitude??x.place?.lat),lon=Number(x.lon??x.longitude??x.place?.lon);
+   return Number.isFinite(lat)&&Number.isFinite(lon)?Math.abs(lat-center[0])+Math.abs(lon-center[1]):Infinity;
+  };
+  good.sort((a,b)=>distance(a)-distance(b));
+  const s=good[0],lat=Number(s.lat??s.latitude??s.place?.lat),lon=Number(s.lon??s.longitude??s.place?.lon);
+  const id=safe(s.id||s.place?.id);
+  if(!id&&!(Number.isFinite(lat)&&Number.isFinite(lon)))continue;
+  return {id,name:safe(s.name||s.place?.name||searchTerm),lat,lon,query:searchTerm,sourceSearch:query,attempts,rejectedSimilar:[...rejected].slice(0,7)};
+ }
+ throw Error("No EXACT matching station after "+attempts+" free queries for "+searchTerm+"; rejected lookalikes: "+[...rejected].slice(0,5).join(", "));
 }
 function auditRoute(r){
  if(!Array.isArray(r?.legs))return null;
