@@ -10,6 +10,9 @@ on:
       - 'playwright.v2-forward.config.mjs'
       - '.github/workflows/qa-v2-forward.yml'
   workflow_dispatch:
+concurrency:
+  group: voyage-v2-forward-qa
+  cancel-in-progress: true
 jobs:
   functional:
     runs-on: ubuntu-24.04
