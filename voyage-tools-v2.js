@@ -35,7 +35,7 @@ pages.expenses=box=>{
 const t=current();oldExpenses(box);
 const area=E("section",{class:"v1-box",id:"v2FXConverter"});area.append(E("h3",{text:"💱 最新公開參考匯率／換算"}),E("p",{class:"v1-sub",text:"打開功能時向 Frankfurter 查詢最新已公布的參考匯率（非即時外匯成交價，刷卡匯率及手續費可能不同）。"}));
 const row=E("div",{class:"v1-fields"}),amount=E("input",{type:"number",min:"0",step:"0.01",value:"1000",id:"v2FXAmount"}),cur=E("select",{id:"v2FXCurrency"}),out=E("div",{class:"v1-notice",id:"v2FXResult",text:"尚未取得匯率"});
-for(const id of ["KRW","JPY","TWD","USD","EUR","THB","SGD","HKD","GBP","VND"])cur.append(E("option",{value:id,text:id}));
+for(const id of ["KRW","JPY","TWD","USD","EUR","THB","SGD","HKD","GBP","VND"])cur.append(E("option",{value:id,text:window.VoyageCurrencyV5.label(id)}));
 cur.value=t.currency||"TWD";if(cur.value!==t.currency)cur.value="TWD";
 row.append(E("label",{},[E("span",{text:"金額"}),amount]),E("label",{},[E("span",{text:"原始幣別"}),cur]));
 area.append(row,out);
