@@ -16,12 +16,12 @@ else if(kind==="cloud"){main.append(E("span",{class:"v3-cloud-main",text:"☁"})
 else if(kind==="rain"||kind==="storm"){main.append(E("span",{class:"v3-cloud-main",text:"☁"}));for(let i=0;i<5;i++)main.append(E("span",{class:"v3-rain-drop",text:"·","data-i":i}));if(kind==="storm")main.append(E("span",{class:"v3-lightning",text:"ϟ"}))}
 else if(kind==="snow"){main.append(E("span",{class:"v3-cloud-main",text:"☁"}));for(let i=0;i<6;i++)main.append(E("span",{class:"v3-snow-flake",text:"❄","data-i":i}))}
 else if(kind==="fog"){main.append(E("span",{class:"v3-fog",text:"☁ ≋ ≋"}))}
-else main.append(E("span",{class:"v3-weather-unknown",text:"◌"}));
+else main.append(E("span",{class:"v3-weather-unknown",text:"☁"}));
 weather.append(main);
 const label={sun:"晴朗",moon:"晴朗夜晚",cloud:"多雲",rain:"有雨",storm:"雷雨",snow:"降雪",fog:"有霧",unknown:"天氣資料暫時無法取得"}[kind];
 weather.setAttribute("aria-label","目的地目前天氣："+label);
 source.textContent=w?"依 "+w.city+" 當地現在天氣（"+label+"）變化":"尚無目的地即時天氣資料";
-if(badge)badge.textContent={sun:"☀️",moon:"🌙",cloud:"☁️",rain:"🌧️",storm:"⛈️",snow:"❄️",fog:"🌫️",unknown:"◌"}[kind];
+if(badge)badge.textContent={sun:"☀️",moon:"🌙",cloud:"☁️",rain:"🌧️",storm:"⛈️",snow:"❄️",fog:"🌫️",unknown:"☁️"}[kind];
 const homeIcon=$("v2Home")?.querySelector(".v2-big-icon"),homeSmall=$("v2Home")?.querySelector(".v2-small-icon");
 if(homeIcon){homeIcon.textContent=badge?.textContent||"◌";homeIcon.setAttribute("aria-label","目前天氣 "+label)}
 if(homeSmall)homeSmall.textContent="";
