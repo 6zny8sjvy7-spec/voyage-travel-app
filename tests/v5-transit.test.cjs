@@ -112,3 +112,15 @@ test('resolved station IDs are passed to trip planning instead of coordinate gue
  assert.equal(u.searchParams.get('fromPlace'),'aKR');
  assert.equal(u.searchParams.get('toPlace'),'bKR');
 });
+
+test('strict station matching refuses an unrelated nearby station and accepts localized names',()=>{
+ const A=init(async()=>response([]));
+ assert.equal(A.stationMatches('Seoul Station','明洞','KR'),false);
+ assert.equal(A.stationMatches('명동역','明洞','KR'),true);
+ assert.equal(A.stationMatches('홍대입구','弘大','KR'),true);
+ assert.equal(A.stationMatches('สยาม','Siam','TH'),true);
+ assert.equal(A.stationMatches('新宿','Shinjuku','JP'),true);
+ assert.equal(A.matchesCountry({country:'Republic of Korea'},'KR'),true);
+ assert.equal(A.matchesCountry({country:'JPN'},'KR'),false);
+ assert.equal(A.suggestStation([{name:'Unrelated Station',country:'KR',lat:37.56,lon:126.98}],'明洞',cities.KR),null);
+});
