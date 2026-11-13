@@ -1,0 +1,27 @@
+name: VOYAGE Real Transit Coverage (4 Countries)
+on:
+  push:
+    branches: [work/voyage-v2-forward]
+    paths:
+      - 'tests/transit-live-coverage.mjs'
+      - '.github/workflows/v7-transit-live-coverage.yml'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe real, free public data (NOT mocked)
+        run: node tests/transit-live-coverage.mjs
+      - name: Preserve case-by-case coverage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-transit-coverage-four-countries
+          path: coverage-evidence/transitous-4countries.json
+          if-no-files-found: warn
+          retention-days: 14
