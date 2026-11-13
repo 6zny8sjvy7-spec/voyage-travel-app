@@ -62,9 +62,15 @@ function normalizePlan(data,{origin,destination,country}){
  return data.itineraries.filter(it=>Array.isArray(it.legs)&&it.legs.some(l=>l.mode!=="WALK"&&l.mode!=="BIKE"&&l.mode!=="CAR"))
  .slice(0,3).map(it=>{
  const legs=it.legs.map(l=>{
- const list=[l.from,...(Array.isArray(l.intermediateStops)?l.intermediateStops:[]),l.to].map(parseStop).filter(Boolean);
+ const intermediate=Array.isArray(l.intermediateStops)?l.intermediateStops:null;
+ const rawStops=[l.from,...(intermediate||[]),l.to];
+ const list=rawStops.map(parseStop).filter(Boolean);
  const isWalk=["WALK","BIKE"].includes(l.mode);
- return{mode:l.mode,line:l.displayName||l.routeShortName||l.routeLongName||(isWalk?"步行":"大眾運輸"),headsign:l.headsign||l.tripTo?.name||"方向未提供，請查看月台或車頭顯示",stations:list,duration:Number(l.duration)||0,realtime:l.realTime===true,departure:l.startTime||null,arrival:l.endTime||null,routeId:l.routeId||null};
+ // Endpoint-only itineraries MUST NOT be counted as one station: an omitted
+ // intermediateStops field is not evidence of adjacent stops.
+ const sequenceComplete=isWalk||intermediate!==null&&list.length===rawStops.length&&list.length>=2;
+ const headsign=String(l.headsign||l.tripTo?.name||"").trim();
+ return{mode:l.mode,line:l.displayName||l.routeShortName||l.routeLongName||(isWalk?"步行":"大眾運輸"),headsign:headsign||"方向未提供，請以月台或官方資訊核對",directionVerified:!!headsign,stations:list,sequenceComplete,stationCount:sequenceComplete&&!isWalk?list.length-1:null,duration:Number(l.duration)||0,realtime:l.realTime===true,departure:l.startTime||null,arrival:l.endTime||null,routeId:l.routeId||null};
  });
  const transitLegs=legs.filter(l=>!["WALK","BIKE","CAR"].includes(l.mode));
  const transfers=Math.max(0,transitLegs.length-1);
@@ -76,7 +82,7 @@ async function plan(from,to,t,{fetcher=fetch,signal}={}){
  const c=context(t);
  const a=await geocode(from,t,{fetcher,signal}),b=await geocode(to,t,{fetcher,signal});
  if(distance(a,b)<.15)throw new Error("起點和終點距離太近，請確認站名");
- const query=new URLSearchParams({fromPlace:a.lat+","+a.lon,toPlace:b.lat+","+b.lon,numItineraries:"3",detailedLegs:"true",language:c.language});
+ const query=new URLSearchParams({fromPlace:a.id||a.lat+","+a.lon,toPlace:b.id||b.lat+","+b.lon,numItineraries:"3",detailedLegs:"true",language:c.language});
  const result=normalizePlan(await json(SERVICE+"/api/v6/plan?"+query,signal,fetcher),{origin:a,destination:b,country:c.country});
  if(!result.length)throw new Error("此城市的公開交通資料目前沒有可驗證的乘車路線");
  return result;
