@@ -9,7 +9,7 @@ const C=env.window.VoyageCurrencyV5;
 test('localized expense currency shows country, name, original ISO key',()=>{
  for(const [code,scope]of Object.entries({KRW:'韓國・韓元',TWD:'台灣・新臺幣',JPY:'日本・日圓',THB:'泰國・泰銖',VND:'越南・越南盾'})){
   assert.match(C.label(code),new RegExp(scope));
-  assert.match(C.label(code),new RegExp('\\('+code+'\\)'));
+  assert.ok(C.label(code).includes('（'+code+'）'));
  }
 });
 test('all existing currencies retain exact legacy codes, ordering, and zero conversion mutation',()=>{
