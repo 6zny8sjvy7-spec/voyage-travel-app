@@ -229,3 +229,6 @@ body.dark #v2Home .v2-home-hero{background:linear-gradient(110deg,#ecf0fa,#e8e5f
  #v2Home .v2-home-hero .tripbar .ghost{justify-self:end}
  #v2Home .v2-home-hero .v2-hero-copy .v2-toolbar{gap:6px}
 }
+
+/* Packing removal mode must hide the add-to-list catalogue in both Chromium and Safari. */
+#v3PackLibrary[hidden]{display:none!important}
