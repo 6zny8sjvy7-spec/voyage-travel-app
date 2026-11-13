@@ -42,19 +42,21 @@ jobs:
           node --check voyage-transit-v5.js
           node --check voyage-transit-ui-v5.js
           node --check voyage-visual-v5.js
+          node --check voyage-trip-v5.js
+          node --check voyage-currency-v5.js
       - name: Domain and integrated UI tests
-        run: node --test tests/voyage.test.cjs tests/v4-region.test.cjs tests/v5-transit.test.cjs
+        run: node --test tests/voyage.test.cjs tests/v4-region.test.cjs tests/v5-transit.test.cjs tests/v5-currency.test.cjs
       - name: Confirm all feature scripts wired
         run: |
           python3 - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text()
-          scripts=['voyage-domain.js','voyage-region-v4.js','voyage-transit-v5.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-transit-ui-v5.js','voyage-gps-v2.js','voyage-tools-v2.js','voyage-seoul-v3.js','voyage-calendar-v3.js','voyage-planning-v3.js','voyage-weather-v3.js','voyage-weather-v4.js','voyage-bookings-v4.js','voyage-home-v4.js','voyage-visual-v5.js']
+          scripts=['voyage-domain.js','voyage-region-v4.js','voyage-transit-v5.js','voyage-currency-v5.js','voyage-ui-base.js','voyage-tools.js','voyage-import-translate.js','voyage-cloud.js','voyage-discover.js','voyage-map.js','voyage-journal.js','voyage-ux-v2.js','voyage-transit-v2.js','voyage-transit-ui-v5.js','voyage-gps-v2.js','voyage-tools-v2.js','voyage-seoul-v3.js','voyage-calendar-v3.js','voyage-planning-v3.js','voyage-weather-v3.js','voyage-weather-v4.js','voyage-bookings-v4.js','voyage-home-v4.js','voyage-visual-v5.js','voyage-trip-v5.js']
           for name in scripts:
               assert ('src="./'+name+'"') in html, name+' not loaded'
               assert Path(name).is_file(), name+' missing'
           assert all(('href="./'+name+'"') in html and Path(name).is_file() for name in ['voyage-v2.css','voyage-v3.css','voyage-v5.css'])
-          print('23 scripts and V2+V3+V5 stylesheets are wired and present')
+          print('25 scripts and V2+V3+V5 stylesheets are wired and present')
           PY
   browser:
     runs-on: ubuntu-latest
