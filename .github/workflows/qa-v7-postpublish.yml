@@ -1,0 +1,31 @@
+name: VOYAGE V7 Public URL Post-Deploy QA
+on:
+  push:
+    branches:
+      - work/voyage-v2-forward
+    paths:
+      - 'tests/v2-postpublish.spec.mjs'
+      - 'playwright.postpublish.config.mjs'
+      - '.github/workflows/qa-v7-postpublish.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify_public_url:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock --no-audit --no-fund @playwright/test@1.55.0
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Test the REAL GitHub Pages URL on desktop and iPhone WebKit (not local server)
+        run: npx playwright test --config playwright.postpublish.config.mjs
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-v7-real-public-url-errors
+          path: test-results/
+          retention-days: 7
