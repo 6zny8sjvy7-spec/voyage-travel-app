@@ -210,3 +210,30 @@ test("V2 forward desktop/iPhone visual screenshots: home, night, itinerary, coll
  await expect(page.locator("body.dark")).toBeVisible();
  await page.screenshot({path:"visual-evidence/"+id+"-home-night.png",fullPage:true});
 });
+
+test("published URL overhaul smoke: one composer, touch edit, flight entry, currency labels, translation country",async({page})=>{
+ await page.goto("https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/",{waitUntil:"domcontentloaded"});
+ await expect(page.locator("#v2Home")).toBeVisible();
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await expect(page.locator("#v3ComposerDetails")).toHaveCount(1);
+ await expect(page.locator(".v3-category-shortcuts")).toHaveCount(0);
+ await expect(page.locator("#events .v3-edit-mini")).toHaveCount(0);
+ const item=page.locator("#events .v3-schedule-event").filter({hasText:"景福宮"}).first();
+ await item.dblclick();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+ await page.locator("#v1Cancel").click();
+ await page.locator("#v3ComposerDetails summary").click();
+ await page.locator("#v3NewType").selectOption("flight");
+ await expect(page.getByRole("button",{name:/輸入航班號/})).toBeVisible();
+ await page.getByRole("button",{name:/輸入航班號/}).click();
+ await expect(page.locator("#vBDepartDate")).toBeVisible();
+ await expect(page.locator("#vBArriveDate")).toBeVisible();
+ await page.locator("#v1Cancel").click();
+ await page.locator('.footnav [data-tablink="expenses"]').click();
+ await page.locator("#v1Content").getByRole("button",{name:/新增費用/}).click();
+ await expect(page.locator("#vExCurrency option[value=KRW]")).toContainText("韓國");
+ await page.locator("#v1Cancel").click();
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:"翻譯"}).click();
+ await expect(page.locator("#vLanguage")).toHaveValue("ko");
+});
