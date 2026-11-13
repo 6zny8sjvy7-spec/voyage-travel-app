@@ -31,7 +31,8 @@ function erase(){const count=now.size;if(!count)return;if(!confirm("確定刪除
 const removing=deleteModes.has(t.id);
 // Do not mix library "add" checkboxes with delete-selection checkboxes.
 detail.hidden=removing;
-if(oldButton)oldButton.hidden=removing;
+detail.style.display=removing?"none":"";
+if(oldButton){oldButton.hidden=removing;oldButton.style.display=removing?"none":"";}
 const toggleDelete=button(removing?"取消刪除模式":"勾選要刪的物品",()=>{
  if(removing){deleteModes.delete(t.id);now.clear()}else deleteModes.add(t.id);
  U.renderMore();
