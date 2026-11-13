@@ -188,6 +188,7 @@ try:
                 "sample_date_service_active": is_active(trip_metadata[tid]["service_id"],"20261119"),
                 "verified_service_date": is_active(trip_metadata[tid]["service_id"],"20261119")
             })
+        RESULT["service_calendars"] = {sid:calendar.get(sid,{}) for sid in sorted({x["trip_metadata"]["service_id"] for x in RESULT["cases"]})}
         RESULT["status"] = "sample_static_sequences_found" if RESULT["cases"] else "no_exact_Siam_Asok_sequence"
         RESULT["warning"] = (
           "Static feed does not prove service runs on the requested date; "
@@ -202,4 +203,7 @@ finally:
     print(json.dumps({k:RESULT.get(k) for k in ["status","error","size_bytes","feed_start_date","feed_end_date","route_count","stop_count","matching_forward_trips"]},ensure_ascii=False))
     for item in RESULT["cases"][:3]:
         print("SAMPLE",item["trip_metadata"]["line"],item["trip_metadata"]["headsign"],"SERVICE",item["trip_metadata"]["service_id"],"2026-11-19 ACTIVE",item["sample_date_service_active"],"STOPS",item["stop_count"],"NAMES",[s["name"] for s in item["stops"]])
+    print("BTS service calendars:",json.dumps(RESULT.get("service_calendars",{}),ensure_ascii=False))
+    if RESULT["cases"]:
+        print("BTS verified IDs:",[(s["id"],s["name"]) for s in RESULT["cases"][0]["stops"]])
     print("AUDIT OUTPUT:",OUT, "-- result is NOT a live-arrival guarantee")
