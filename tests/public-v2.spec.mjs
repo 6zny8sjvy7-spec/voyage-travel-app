@@ -72,3 +72,27 @@ test('live Chinese review demonstrates date feedback, food shortcut, inline pin 
  expect(meal).toMatchObject({type:'food',time:'18:10',duration:75,cost:18000});
  expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
 });
+
+
+test('fixed review URL actually serves integrated modules and still isolates old travel records',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('script[src="./voyage-transit-v5.js"]')).toHaveCount(1);
+ await expect(page.locator('script[src="./voyage-planning-v3.js"]')).toHaveCount(1);
+ await expect(page.locator('script[src="./voyage-currency-v5.js"]')).toHaveCount(1);
+ await expect(page.locator('#v2ReviewTop')).toContainText('VOYAGE 新版');
+ await expect(page.locator('#rideMode,#boardTrain,#v2GpsAssist,#recommend')).toHaveCount(0);
+ await expect(page.locator('#v2Home')).toBeVisible();
+ expect(await page.evaluate(()=>window.VoyageCurrencyV5?.label('KRW'))).toBe('韓國・韓元（KRW）');
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await page.locator('#v2AddDay').click();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v2-review-20261112'))[0].days.length)).toBe(4);
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+ await page.evaluate(()=>localStorage.setItem('voyage-theme-v2-review-20261112','dark'));
+ await page.reload();
+ await expect(page.locator('body.dark')).toBeVisible();
+ const nightBg=await page.evaluate(()=>getComputedStyle(document.body).backgroundColor.match(/[0-9.]+/g).slice(0,3).map(Number));
+ expect(nightBg.every(v=>v<70)).toBe(true);
+});
