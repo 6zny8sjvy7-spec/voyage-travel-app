@@ -50,6 +50,10 @@ test('all four pilot countries resolve routes against their OWN city and data',a
   assert.equal(routes[0].transfers,1);
   assert.equal(routes[0].legs.length,2);
   assert.equal(routes[0].legs[0].stations[1].zh,'Middle Stop');
+  assert.equal(routes[0].legs[0].sequenceComplete,true);
+  assert.equal(routes[0].legs[0].stationCount,2);
+  assert.equal(routes[0].legs[1].stationCount,2);
+  assert.equal(routes[0].legs[0].directionVerified,true);
   assert.equal(routes[0].legs[1].headsign,'Toward Destination');
   assert.equal(routes[0].hasRealtime,false);
   assert.ok(requests.every(x=>x.startsWith('https://api.transitous.org/')));
@@ -87,4 +91,24 @@ test('API budget is keyless and provider list is limited to legitimate public so
  assert.equal(A.context(cities.KR).country,'KR');
  assert.throws(()=>A.context({countryCode:'US',city:'NYC',lat:40,lon:-73}),/四國/);
  assert.doesNotMatch(source,/maps\.googleapis\.com|service_role|apiKey=|AIza/);
+});
+
+test('missing intermediate stops cannot be mislabeled as a one-station journey',()=>{
+ const A=init(async()=>response([]));
+ const base={origin:{name:'A'},destination:{name:'B'},country:'KR'};
+ const incomplete=A.normalizePlan({itineraries:[{legs:[{mode:'SUBWAY',displayName:'M',headsign:'Toward B',from:{name:'A'},to:{name:'B'}}]}]},base);
+ assert.equal(incomplete[0].legs[0].sequenceComplete,false);
+ assert.equal(incomplete[0].legs[0].stationCount,null);
+ const adjacent=A.normalizePlan({itineraries:[{legs:[{mode:'SUBWAY',displayName:'M',headsign:'Toward B',from:{name:'A'},intermediateStops:[],to:{name:'B'}}]}]},base);
+ assert.equal(adjacent[0].legs[0].sequenceComplete,true);
+ assert.equal(adjacent[0].legs[0].stationCount,1);
+ const missingDirection=A.normalizePlan({itineraries:[{legs:[{mode:'SUBWAY',displayName:'M',from:{name:'A'},intermediateStops:[],to:{name:'B'}}]}]},base);
+ assert.equal(missingDirection[0].legs[0].directionVerified,false);
+});
+test('resolved station IDs are passed to trip planning instead of coordinate guesses',async()=>{
+ const {fetcher,requests}=fakeProvider('KR'),A=init(fetcher);
+ await A.plan('Origin','Destination',cities.KR,{fetcher});
+ const u=new URL(requests.find(x=>x.includes('/plan')));
+ assert.equal(u.searchParams.get('fromPlace'),'aKR');
+ assert.equal(u.searchParams.get('toPlace'),'bKR');
 });
