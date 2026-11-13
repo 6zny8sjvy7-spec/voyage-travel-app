@@ -74,8 +74,9 @@ async function apiSearch(from,to){
 let searchVersion=0;
 function countryRouteFallback(from,to){
  if(!window.VoyageRegionV4?.isSeoul(trip()))return null;
- const network=window.VoyageSeoulNetwork,graph=network?.route(from,to);
- return graph||routeSEO(key(to),key(from));
+ // Deliberately limit offline fallback to the explicitly documented corridor.
+ // The partial Seoul graph is NOT a complete route planner for arbitrary stations.
+ return routeSEO(key(to),key(from));
 }
 function filterMode(routes){
  const mode=window.VoyageTransitUIV5?.mode||"mixed";
