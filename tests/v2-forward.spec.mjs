@@ -722,3 +722,45 @@ test("dark mode has a genuinely dark body and card palette, not an unchanged pas
  expect(night.hero).not.toBe(day.hero);
  expect(night.nav).not.toBe(day.nav);
 });
+
+test("official Thailand OTP static BTS Siam to Asok: 4 real stations in-app without a paid API, fake minutes or external lookup",async({page})=>{
+ const thai={id:"thai-audit",country:"泰國",countryCode:"TH",city:"曼谷",tz:"Asia/Bangkok",lat:13.7563,lon:100.5018};
+ const verified=await page.evaluate(async t=>{
+  const matched=await window.VoyageTransitV5.plan("暹羅","อโศก",t,{time:"2026-11-19T09:20:00+07:00"});
+  const c=window.VoyageThaiOTP;
+  return {kind:matched[0].kind,ids:matched[0].legs[0].stations.map(x=>x.id),line:matched[0].legs[0].line,
+    headsign:matched[0].legs[0].headsign,stopCount:matched[0].legs[0].stationCount,
+    source:matched[0].source,minutes:matched[0].minutes,realtime:matched[0].hasRealtime,
+    badAlias:c.stationIndex("ASOKHAR"),outOfDate:c.fromStatic("暹羅","Asok",t,{time:"2027-01-19T09:20:00+07:00"})};
+ },thai);
+ expect(verified.kind).toBe("otp-th-static");
+ expect(verified.ids).toEqual(["12","28","27","26","25"]);
+ expect(verified.line).toBe("BTS Sukhumvit");
+ expect(verified.headsign).toMatch(/Samrong|Kheha/);
+ expect(verified.stopCount).toBe(4);
+ expect(verified.source).toContain("Thailand OTP");
+ expect(verified.minutes).toBeNull();
+ expect(verified.realtime).toBe(false);
+ expect(verified.badAlias).toBe(-1);
+ expect(verified.outOfDate).toBeNull();
+});
+test("Bangkok traveler sees verified four-stop BTS route in VOYAGE even if Transitous geocoder fails",async({page})=>{
+ const prompts=["免費泰國交通路線驗收","曼谷","泰國","3","2026-11-19"];
+ page.on("dialog",d=>{if(d.type()==="prompt")void d.accept(prompts.shift()||"");else void d.accept()});
+ await page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/}).click();
+ await expect(page.locator("#v2Home")).toContainText("泰國");
+ await page.route("**/api/v1/geocode**",r=>r.abort());
+ await page.route("**/api/v6/plan**",r=>r.abort());
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await page.locator("#transitFrom").fill("Siam");
+ await page.locator("#transitTo").fill("Asok");
+ await page.locator("#transitPlanDate").fill("2026-11-19");
+ await page.locator("#transitTime").fill("09:20");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect(page.locator("#v6SelectedRoute")).toContainText("共 4 站");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("BTS Sukhumvit");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("BTS ชิดลม");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("BTS อโศก");
+ await expect(page.locator("#v6SelectedRoute").getByRole("button",{name:"將這條路線加入行程"})).toBeEnabled();
+ await expect(page.locator("#v6SelectedRoute")).not.toContainText("即時預計 4 分鐘");
+});
