@@ -36,3 +36,11 @@
 6. 使用者最在意不再突然斷掉：持續更新本文件最新提交、CI run、已部署 SHA 和明確未完成阻擋項，回答需直接指出工程狀態。
 
 _本檔是實際 GitHub 工程接續紀錄，不是宣稱所有項目已完工。_
+
+## 2026-11-14 實際發布更新
+- 最新**61 項**桌面 Chromium + 模擬 iPhone WebKit 完整回歸通過，GitHub Actions run `43465841072`，SHA `c1cdc347589f678f8154173bed7a34c0f1a031bb`。
+- 這次驗證包含四國別名安全匹配（含泰國 Asok BTS 但不誤認 ASOKHAR）、不完整站數不可儲存、轉乘不同站牌不合併、交通以明確選擇的日期存入行事曆。
+- 增量正式部署到**原有固定 V2 網址**：`49a33ae37bfca5d493ded5fe612b497d4d5cf0da`。GitHub Pages build / report / deploy 全部 success，run `43466622130`。
+- 只更新測試頁 `v2-review-20261112/index.html`、`voyage-transit-v2.js`、`voyage-transit-v5.js`；正式首頁 `/index.html` 的 blob SHA `acefa83e8eddfb950e22f0d6766fc626ad5da9d7` 仍一致，既有兩個 localStorage keys 不變。
+- 新增直接對**公開網址**驗收站序、站牌識別和搭車日期的測試，run `43466853907`；此檔更新時該項尚未得到最終 conclusion，須看最新 GitHub Actions，不可冒稱通過。
+- 尚未完工：韓國／泰國／越南的真實交通 A→B 來源覆蓋、四國即時進站資料（免費且合法可介接的 API 不保證完整）、真正雙帳號免費雲端共編未設定。不能把模擬瀏覽器 61 項通過當這三件事驗收成功。
