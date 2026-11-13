@@ -1,0 +1,35 @@
+name: VOYAGE V2 Forward Regression
+on:
+  push:
+    branches:
+      - work/voyage-v2-forward
+    paths:
+      - 'v2-review-20261112/index.html'
+      - 'tests/v2-forward.spec.mjs'
+      - 'tests/leaflet-stub.js'
+      - 'playwright.v2-forward.config.mjs'
+      - '.github/workflows/qa-v2-forward.yml'
+  workflow_dispatch:
+jobs:
+  functional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser-test tools
+        run: npm install --no-save --no-package-lock --no-audit --no-fund @playwright/test@1.55.0
+      - name: Install actual Chromium and iPhone WebKit engines
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run source-of-truth V2 fee-navigation and no-map-regression tests
+        run: npx playwright test --config playwright.v2-forward.config.mjs
+      - name: Save failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-v2-forward-failure-evidence
+          path: |
+            test-results/
+          retention-days: 7
