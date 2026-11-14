@@ -64,7 +64,7 @@ _本檔是實際 GitHub 工程接續紀錄，不是宣稱所有項目已完工�
 - 最新整套跑完 **79 passed、1 skipped、0 failed**：run `43553752238`；經 `work/voyage-v2-forward` commit `7c1187565ce5ee3679e04b81dec0b909e80adf8e`。
 - **已部署**固定 V2 測試網址，main commit `84e78cdbfac369603da83ddd3f53c295f3f95610`。這次 main 僅增量新增 `voyage-rail-reference-v1.js`、更新 `voyage-transit-v2.js` 與原本的 `v2-review-20261112/index.html`。GitHub Pages run `43554173814` 的 build/deploy/report-build-status 三 job 全部 success。
 - 正式根頁 `main/index.html` SHA **`acefa83e8eddfb950e22f0d6766fc626ad5da9d7` 未動**，localStorage `voyage-v2-review-20261112` 仍保持原名。不會另開網址，不會把 V1 蓋回 V2。
-- 已在 `tests/v2-postpublish.spec.mjs` 新增**公開原網址** JP Ginza→Asakusa（G09→G19，10 站）和 VN Bến Thành→Bến xe Suối Tiên（13 站）測試，包含無虛構 ETA；workflow `VOYAGE V7 Public URL Post-Deploy QA` run `43554269382` 已啟動，**若沒有 final success，不能宣稱公開網址測試已過**。
+- 已在 `tests/v2-postpublish.spec.mjs` 新增**公開原網址** JP Ginza→Asakusa（G09→G19，10 站）和 VN Bến Thành→Bến xe Suối Tiên（13 站）測試，包含無虛構 ETA；workflow `VOYAGE V7 Public URL Post-Deploy QA` run `43554269382` **8 passed、0 failed**，已在桌面 Chromium 與模擬 iPhone WebKit 直接通過公開固定 URL 驗收。
 
 ### 視覺與仍未驗收
 - 下載並目視 GitHub Actions `43553206403` 產生的 8 張 Chromium／iPhone WebKit day/night/home/itinerary/transport screenshot：iPhone 行程文字不像原圖壓縮截斷、白天夜晚色調可分辨；但**手機行程採完整高度清單式卡片，原始的等比例小時格呈現已改動**，仍須對照使用者核准的時間軸視覺與實機 Safari 觸控／長內容驗收。不得只用 WebKit pass 當使用者已接受。
