@@ -806,3 +806,73 @@ test("V7 follow-up: unsupported photo input removed without erasing legacy event
  },original.id);
  expect(value).toBe(original.url);
 });
+
+test("official JP Ginza and VN HCMC static 19/14 stop routes calculate both directions without fake ETA",async({page})=>{
+ const result=await page.evaluate(async()=>{
+  const jp={id:"jp-verified",country:"日本",countryCode:"JP",city:"東京",tz:"Asia/Tokyo",lat:35.681,lon:139.767};
+  const vn={id:"vn-verified",country:"越南",countryCode:"VN",city:"胡志明市",tz:"Asia/Ho_Chi_Minh",lat:10.823,lon:106.630};
+  const q=async(a,b,t,time)=>(await window.VoyageTransitV5.plan(a,b,t,{time}))[0];
+  const jap=await q("銀座","浅草",jp,"2026-11-19T11:00:00+09:00");
+  const jrev=await q("Asakusa","Ginza",jp,"2026-11-19T11:00:00+09:00");
+  const vie=await q("Bến Thành","Suoi Tien Terminal",vn,"2026-11-19T11:00:00+07:00");
+  const vrev=await q("Bến xe Suối Tiên","Bến Thành",vn,"2026-11-19T11:00:00+07:00");
+  const bad=window.VoyageRailReferenceV1.staticPlan("Ben Tam","Bến xe Suối Tiên",vn);
+  return {jp:{ids:jap.legs[0].stations.map(x=>x.id),count:jap.legs[0].stationCount,
+             direction:jap.legs[0].headsign,minute:jap.minutes,realtime:jap.hasRealtime,source:jap.source},
+          jrev:{count:jrev.legs[0].stationCount,direction:jrev.legs[0].headsign},
+          vn:{ids:vie.legs[0].stations.map(x=>x.id),count:vie.legs[0].stationCount,
+              direction:vie.legs[0].headsign,minute:vie.minutes,realtime:vie.hasRealtime,source:vie.source},
+          vrev:{count:vrev.legs[0].stationCount,direction:vrev.legs[0].headsign},
+          bad};
+ });
+ expect(result.jp.count).toBe(10);
+ expect(result.jp.ids).toEqual(["G09","G10","G11","G12","G13","G14","G15","G16","G17","G18","G19"]);
+ expect(result.jp.direction).toContain("Asakusa");
+ expect(result.jp.source).toContain("Tokyo Metro");
+ expect(result.jrev.count).toBe(10);
+ expect(result.jrev.direction).toContain("Shibuya");
+ expect(result.vn.count).toBe(13);
+ expect(result.vn.ids).toEqual(Array.from({length:14},(_,i)=>"M1-"+String(i+1).padStart(2,"0")));
+ expect(result.vn.direction).toContain("Suoi Tien");
+ expect(result.vn.source).toContain("胡志明市政府");
+ expect(result.vrev.count).toBe(13);
+ expect(result.vrev.direction).toContain("Bến Thành");
+ expect(result.jp.minute).toBeNull();expect(result.vn.minute).toBeNull();
+ expect(result.jp.realtime).toBe(false);expect(result.vn.realtime).toBe(false);
+ expect(result.bad).toBeNull();
+});
+test("in-app Japan Ginza to Asakusa shows verified ten stops with transit network unavailable",async({page})=>{
+ const prompts=["日本東京驗收","東京","日本","3","2026-11-19"];
+ page.on("dialog",d=>{if(d.type()==="prompt")void d.accept(prompts.shift()||"");else void d.accept()});
+ await page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/}).click();
+ await page.route("**/api/v1/geocode**",r=>r.abort());
+ await page.route("**/api/v6/plan**",r=>r.abort());
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await page.locator("#transitFrom").fill("銀座");
+ await page.locator("#transitTo").fill("浅草");
+ await page.locator("#transitPlanDate").fill("2026-11-19");
+ await page.locator("#transitTime").fill("11:00");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect(page.locator("#v6SelectedRoute")).toContainText("共 10 站");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("Tokyo Metro Ginza Line");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("G19");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("浅草");
+ await expect(page.locator("#v6SelectedRoute")).not.toContainText("即時預計");
+});
+test("in-app Vietnam Ben Thanh to Suoi Tien shows thirteen stops with network unavailable",async({page})=>{
+ const prompts=["越南胡志明市驗收","胡志明市","越南","3","2026-11-19"];
+ page.on("dialog",d=>{if(d.type()==="prompt")void d.accept(prompts.shift()||"");else void d.accept()});
+ await page.locator("#v2Home").getByRole("button",{name:/規劃新旅行/}).click();
+ await page.route("**/api/v1/geocode**",r=>r.abort());
+ await page.route("**/api/v6/plan**",r=>r.abort());
+ await page.locator('.footnav [data-tablink="transport"]').click();
+ await page.locator("#transitFrom").fill("Bến Thành");
+ await page.locator("#transitTo").fill("Bến xe Suối Tiên");
+ await page.locator("#transitPlanDate").fill("2026-11-19");
+ await page.locator("#transitTime").fill("11:00");
+ await page.getByRole("button",{name:/查詢實際交通路線/}).click();
+ await expect(page.locator("#v6SelectedRoute")).toContainText("共 13 站");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("HCMC Metro Line 1");
+ await expect(page.locator("#v6SelectedRoute")).toContainText("Đại học Quốc gia");
+ await expect(page.locator("#v6SelectedRoute")).not.toContainText("即時預計");
+});
