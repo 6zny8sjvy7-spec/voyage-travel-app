@@ -71,3 +71,16 @@ _本檔是實際 GitHub 工程接續紀錄，不是宣稱所有項目已完工�
 - **硬阻擋項未完成**：四國所有營運商／公車完整實際路線、即時到站每站可核實資料，以及需要免費雲端專案的真人雙方同步（圖 16）。不能以已驗證的 4 個示範走廊冒充四國全面覆蓋。
 - 免費資料服務與授權必須核對，不能添加付費 API、要求綁卡，不能外部導航替代 APP 內 A→B 的路線與停靠站。
 - 16 圖完整需求、備忘錄直接貼全文／日期後填、航班依機票原始時間且不拆段、不清除行李與歷史資料，詳見本檔與 `docs/OVERHAUL-V7-AUDIT-20261113.md`。**任何新分支工作必須先讀這個檢查點**。
+
+## 2026-11-14 完成公開 V7 增量發布與雙層驗收（最新）
+
+- **唯一使用網址維持原 V2**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/ 。正式根首頁 `index.html` 的 Git blob SHA `acefa83e8eddfb950e22f0d6766fc626ad5da9d7` 保持不變。
+- 上一個穩定版本已獨立備份在 `backup/v7-69pass-before-20261114-transit-extension`，基底 `a59d523260ff19ec4dc15809f1abd184bd75e581`。
+- **全域回歸已過**：桌面 Chromium + iPhone WebKit `79 passed`，run https://github.com/6zny8sjvy7-spec/voyage-travel-app/actions/runs/43553752238 ，tested work SHA `7c1187565ce5ee3679e04b81dec0b909e80adf8e`。先前首次 77/79 並非完成；根因為 UI 未顯示官方東京 G19 站碼，已修正且重新整套測試。
+- **GitHub Pages 正式部署已過**：main `84e78cdbfac369603da83ddd3f53c295f3f95610`，run https://github.com/6zny8sjvy7-spec/voyage-travel-app/actions/runs/43554173814 ，build／deploy／report 全部 success。main 的三個本輪增量文件：`v2-review-20261112/index.html`、`voyage-transit-v2.js`、新增 `voyage-rail-reference-v1.js`，都與已測試工作分支完全相同，原儲存鍵 `voyage-v2-review-20261112` 保留。
+- **公開網址再驗收通過**：`12 passed`，run https://github.com/6zny8sjvy7-spec/voyage-travel-app/actions/runs/43554318548 ，真正開啟 Github Pages 固定 URL，在 Chromium / iPhone WebKit 驗證舊有 V7、三國已審路線、日本銀座線官方 19 站／G01-G19、越南胡志明市捷運 1 號線 14 站、沒有假即時分鐘、沒有重複的行程／費用入口及假的 JSON 好友共編。
+- **2026-11-14 本輪 UX 精修**：旅行概況去掉多餘「＋完整行程」及「費用」捷徑；好友共編未設定服務時不再提供假 JSON 傳檔邀請；刪除只支援 HTTPS 的假照片上傳輸入、保留已有 `photoUrl` 資料。
+- **真實免費站序已核實**：泰國 BTS Siam → Asok 4 站（官方 OTP GTFS，僅已稽核的方向／有效日期）；東京 Metro Ginza G09 銀座 → G19 浅草 10 站、反方向 10 站（全線共 19 站）；越南胡志明市捷運 1 號線 Bến Thành → Bến xe Suối Tiên 13 站、反方向 13 站（全線共 14 站）。APP 內顯示來源和當地站名；可輸入「銀座站」「浅草駅」「Dai hoc Quoc gia」等常見寫法，錯站不模糊亂配；越南內部 `M1-14` ID 不顯示為官方乘客站碼。
+- 來源官方網址：日本 https://www.tokyometro.jp/en/route_station/index.html ；越南 https://ttbc-hcm.gov.vn/thanh-pho-ho-chi-minh-lay-y-kien-nguoi-dan-ve-ten-tuyen-va-nha-ga-metro-1021719.html ；泰國 https://namtang-api.otp.go.th/opendata 。**靜態站序≠某天有開車／可即時進站**，不得誤稱完整四國覆蓋。
+- **硬性未完成**：韓國／泰國／日本／越南所有城市、鐵路、BTS/MRT/公車的完整免費站序與方向覆蓋；不同班次／快慢車、公車轉乘各方案的真實資料；四國免費可合法介接的動態到站時間；真正雙帳號免費雲端共編實測。也尚未取得使用者 iPhone Safari 實機視覺驗收。不可用 79 / 12 項自動測試數字宣稱這些外部資料與實機項目已完成。
+- **下一步請繼續從這裡**：對照 `docs/OVERHAUL-V7-AUDIT-20261113.md` 的 16 項要求，保留整體 UI 與資料；先審四國各地合法免費 GTFS/GTFS-RT/官方 API 能否真正到站數與即時倒數，再逐城市擴充，不能加入付費方案、不能靠外部地圖 URL 替代 A→B 交通查詢。接觸多人同步前須先取得使用者願意啟用的實際免費雲端專案，不能偷用憑證或聲稱已同步。
