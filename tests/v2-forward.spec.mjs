@@ -878,5 +878,6 @@ test("in-app Vietnam Ben Thanh to Suoi Tien shows thirteen stops with network un
  await expect(page.locator("#v6SelectedRoute")).toContainText("共 13 站");
  await expect(page.locator("#v6SelectedRoute")).toContainText("HCMC Metro Line 1");
  await expect(page.locator("#v6SelectedRoute")).toContainText("Đại học Quốc gia");
+ await expect(page.locator("#v6SelectedRoute")).not.toContainText("M1-14"); // internal index, not an official passenger station code
  await expect(page.locator("#v6SelectedRoute")).not.toContainText("即時預計");
 });
