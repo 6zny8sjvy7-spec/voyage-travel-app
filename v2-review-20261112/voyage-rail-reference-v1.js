@@ -60,7 +60,7 @@ const routes={
    ["M1-13","National University","Đại học Quốc gia",""],
    ["M1-14","Suoi Tien Terminal","Bến xe Suối Tiên",""]
   ],
-  aliases:{"Ben Thanh":["Bến Thành Station","Ben Thanh Station","BenThanh","檳城","濱城市場"],"Opera House":["Opera House Station"],"Thao Dien":["Thảo Điền Station"],"Suoi Tien Terminal":["Bến xe Suối Tiên Terminal","Suoi Tien Bus Station"]}
+  aliases:{"Ben Thanh":["Bến Thành Station","Ben Thanh Station","BenThanh","濱城市場"],"Opera House":["Opera House Station"],"Thao Dien":["Thảo Điền Station"],"Suoi Tien Terminal":["Bến xe Suối Tiên Terminal","Suoi Tien Bus Station"]}
  }
 };
 function normalize(v){
