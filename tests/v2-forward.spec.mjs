@@ -817,13 +817,15 @@ test("official JP Ginza and VN HCMC static 19/14 stop routes calculate both dire
   const vie=await q("Bến Thành","Suoi Tien Terminal",vn,"2026-11-19T11:00:00+07:00");
   const vrev=await q("Bến xe Suối Tiên","Bến Thành",vn,"2026-11-19T11:00:00+07:00");
   const bad=window.VoyageRailReferenceV1.staticPlan("Ben Tam","Bến xe Suối Tiên",vn);
+  const chineseSuffix=window.VoyageRailReferenceV1.staticPlan("銀座站","浅草駅",jp);
+  const vietnameseUnaccented=window.VoyageRailReferenceV1.staticPlan("Dai hoc Quoc gia","Suoi Tien Terminal",vn);
   return {jp:{ids:jap.legs[0].stations.map(x=>x.id),count:jap.legs[0].stationCount,
              direction:jap.legs[0].headsign,minute:jap.minutes,realtime:jap.hasRealtime,source:jap.source},
           jrev:{count:jrev.legs[0].stationCount,direction:jrev.legs[0].headsign},
           vn:{ids:vie.legs[0].stations.map(x=>x.id),count:vie.legs[0].stationCount,
               direction:vie.legs[0].headsign,minute:vie.minutes,realtime:vie.hasRealtime,source:vie.source},
           vrev:{count:vrev.legs[0].stationCount,direction:vrev.legs[0].headsign},
-          bad};
+          bad,aliases:{jp:chineseSuffix?.[0]?.legs[0]?.stationCount,vn:vietnameseUnaccented?.[0]?.legs[0]?.stationCount}};
  });
  expect(result.jp.count).toBe(10);
  expect(result.jp.ids).toEqual(["G09","G10","G11","G12","G13","G14","G15","G16","G17","G18","G19"]);
@@ -840,6 +842,8 @@ test("official JP Ginza and VN HCMC static 19/14 stop routes calculate both dire
  expect(result.jp.minute).toBeNull();expect(result.vn.minute).toBeNull();
  expect(result.jp.realtime).toBe(false);expect(result.vn.realtime).toBe(false);
  expect(result.bad).toBeNull();
+ expect(result.aliases.jp).toBe(10);
+ expect(result.aliases.vn).toBe(1);
 });
 test("in-app Japan Ginza to Asakusa shows verified ten stops with transit network unavailable",async({page})=>{
  const prompts=["日本東京驗收","東京","日本","3","2026-11-19"];
