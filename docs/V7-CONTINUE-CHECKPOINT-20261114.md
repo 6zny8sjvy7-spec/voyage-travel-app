@@ -54,3 +54,20 @@ _本檔是實際 GitHub 工程接續紀錄，不是宣稱所有項目已完工�
 - **日夜模式驗收**：`voyage-overhaul-v7.css` 的真正深藍夜間樣式已寫入分支；回歸有一項在背景 transition 尚未結束就取色而失敗，已改為等待 300ms CSS 過渡完成再檢查色彩對比，仍需重新跑整套驗收。
 - **未完成阻擋項不可隱藏**：韓／日其他路線和公車覆蓋、越南城市公車及 Metro 免費有效資料、四國各方向/營運商實際班次與即時進站、無付費服務之真人雙帳號同步，都還沒被真實驗證。不能用自動測試或目前這一條曼谷路線冒充四國全面完成。
 - **絕不清除** localStorage `voyage-v2-review-20261112`，不覆蓋正式首頁 `/index.html`，不另開網址。下一步：查最新 `VOYAGE V2 Forward Regression` run 是否全過；過了才對照 main/工作分支差異、只發布已測試的預覽檔案，確認 Pages deploy；若失敗讀 job logs 修正本質原因，不要只改假測試。
+
+## 2026-11-14 上午 GitHub 接續（最新已發布 84e78cdb）
+
+### 這次聊天的完整實際成果
+- 從 `work/voyage-v2-forward` 最新可用提交接續；原始 `main` 是 `a59d523260ff19ec4dc15809f1abd184bd75e581`，其 GitHub Pages 及 69 個桌面／WebKit 測試已通過。
+- 新 JP/VN 雙方向官方站序由 `v2-review-20261112/voyage-rail-reference-v1.js` 提供。JP 東京 Metro 銀座線 G01–G19；VN 胡志明捷運 1 號線 14 站，`M1-xx` 只是模組識別用**內部 ID**，不是官方乘客站碼，UI **不可顯示作官方車站編號**。
+- GitHub Actions `43553206403` 先前執行 **77 passed、2 failed、1 skipped**，失敗是日本銀座→淺草明明正確 10 站，UI 沒顯示官方站碼 G19；已修正 UI，嚴格只顯示東京 Metro 可核對之 G01–G19。
+- 最新整套跑完 **79 passed、1 skipped、0 failed**：run `43553752238`；經 `work/voyage-v2-forward` commit `7c1187565ce5ee3679e04b81dec0b909e80adf8e`。
+- **已部署**固定 V2 測試網址，main commit `84e78cdbfac369603da83ddd3f53c295f3f95610`。這次 main 僅增量新增 `voyage-rail-reference-v1.js`、更新 `voyage-transit-v2.js` 與原本的 `v2-review-20261112/index.html`。GitHub Pages run `43554173814` 的 build/deploy/report-build-status 三 job 全部 success。
+- 正式根頁 `main/index.html` SHA **`acefa83e8eddfb950e22f0d6766fc626ad5da9d7` 未動**，localStorage `voyage-v2-review-20261112` 仍保持原名。不會另開網址，不會把 V1 蓋回 V2。
+- 已在 `tests/v2-postpublish.spec.mjs` 新增**公開原網址** JP Ginza→Asakusa（G09→G19，10 站）和 VN Bến Thành→Bến xe Suối Tiên（13 站）測試，包含無虛構 ETA；workflow `VOYAGE V7 Public URL Post-Deploy QA` run `43554269382` 已啟動，**若沒有 final success，不能宣稱公開網址測試已過**。
+
+### 視覺與仍未驗收
+- 下載並目視 GitHub Actions `43553206403` 產生的 8 張 Chromium／iPhone WebKit day/night/home/itinerary/transport screenshot：iPhone 行程文字不像原圖壓縮截斷、白天夜晚色調可分辨；但**手機行程採完整高度清單式卡片，原始的等比例小時格呈現已改動**，仍須對照使用者核准的時間軸視覺與實機 Safari 觸控／長內容驗收。不得只用 WebKit pass 當使用者已接受。
+- **硬阻擋項未完成**：四國所有營運商／公車完整實際路線、即時到站每站可核實資料，以及需要免費雲端專案的真人雙方同步（圖 16）。不能以已驗證的 4 個示範走廊冒充四國全面覆蓋。
+- 免費資料服務與授權必須核對，不能添加付費 API、要求綁卡，不能外部導航替代 APP 內 A→B 的路線與停靠站。
+- 16 圖完整需求、備忘錄直接貼全文／日期後填、航班依機票原始時間且不拆段、不清除行李與歷史資料，詳見本檔與 `docs/OVERHAUL-V7-AUDIT-20261113.md`。**任何新分支工作必須先讀這個檢查點**。
