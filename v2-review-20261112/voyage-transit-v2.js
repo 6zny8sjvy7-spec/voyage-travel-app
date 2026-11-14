@@ -126,7 +126,7 @@ async function search(){
   status("查無能在 VOYAGE 內核實的「"+t.country+" · "+t.city+"」路線："+error.message+"。請檢查站名或嘗試當地文字；免費資料無法查到時不猜測站數或跳轉外站。");
  }finally{if(generation===searchVersion)searchBtn.disabled=false}
 }
-function stationText(s){const names=[s.zh,s.en,s.local,s.name].filter(Boolean);return [...new Set(names)].join(" · ")||"站名資料不足"}
+function stationText(s){const names=[s.zh,s.en,s.local,s.name].filter(Boolean);const id=String(s.id||"").trim();const passengerCode=/^(?:[A-Z]{1,3}\d{2}|M1-\d{2})$/.test(id)?id:"";return [...new Set([...names,...(passengerCode?[passengerCode]:[])])].join(" · ")||"站名資料不足"}
 function knownCount(leg,route){
  if(["WALK","BIKE","CAR"].includes(leg.mode))return null;
  if(leg.sequenceComplete===false)return null;
