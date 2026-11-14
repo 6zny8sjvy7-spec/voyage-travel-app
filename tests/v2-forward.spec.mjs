@@ -787,16 +787,17 @@ test("V7 follow-up: unsupported photo input removed without erasing legacy event
   if(!e)throw new Error("missing seeded itinerary event");
   e.photoUrl="https://example.org/previously-added-reference.jpg";
   localStorage.setItem(key,JSON.stringify(trips));
-  return {id:e.id,url:e.photoUrl};
+  return {id:e.id,url:e.photoUrl,name:e.name};
  });
  await page.reload();
  await page.locator('.footnav [data-tablink="itinerary"]').click();
- const first=page.locator("#events .v3-schedule-event").first();
+ const first=page.locator("#events .v3-schedule-event").filter({hasText:original.name}).first();
  await expect(first).toBeVisible();
  await first.dblclick();
  await expect(page.locator("#v1Dialog")).toBeVisible();
  await expect(page.locator("#vEvPhoto")).toHaveCount(0);
- page.once("dialog",d=>d.accept());
+ await page.locator("#vEvNotes").fill("保留舊照片資料驗收");
+ page.on("dialog",d=>d.accept());
  await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
  await expect(page.locator("#v1Dialog")).toBeHidden();
  const value=await page.evaluate(id=>{
