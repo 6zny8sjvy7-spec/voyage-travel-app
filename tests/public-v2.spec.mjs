@@ -1,0 +1,98 @@
+import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+const leaflet=readFileSync(new URL('./leaflet-stub.js',import.meta.url),'utf8');
+const url='https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/';
+test('published V2 actually loads quick actions, extends trip and routes Myeongdong to Hongdae',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#v2ReviewTop')).toContainText('VOYAGE 新版');
+ await expect(page.locator('#v2Home')).toBeVisible();
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await expect(page.locator('#itinerary')).toBeVisible();
+ await page.locator('#v2AddDay').click();
+ await expect(page.locator('#dates .date')).toHaveCount(4);
+ await page.reload();
+ await expect(page.locator('#v2Home')).toBeVisible();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v2-review-20261112'))[0].days.length)).toBe(4);
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+ await page.locator('#v2Home').getByRole('button',{name:/交通導航/}).click();
+ await page.locator('#transitFrom').fill('明洞');await page.locator('#transitTo').fill('弘大');
+ await page.getByRole('button',{name:/查詢實際交通路線/}).click();
+ await expect(page.locator('#v2RouteResults')).toContainText('會賢');
+ await expect(page.locator('#v2RouteResults')).toContainText('孔德');
+ await expect(page.locator('#v2RouteResults')).toContainText('弘大入口');
+});
+
+test('published review page now includes actual time blocks, in-page map and live weather art',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:20,weather_code:61,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#v3WeatherArt')).toHaveClass(/v3-weather-rain/);
+ await expect(page.locator('.hero .glass #v3WeatherArt, #v4WeatherGlass #v3WeatherArt')).toBeVisible();
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await expect(page.locator('#v3InlineMap')).toBeVisible();
+ await expect(page.locator('#v3ComposerDetails')).toBeVisible();
+ await page.locator('#v3ComposerDetails summary').click();
+ await expect(page.locator('#v3Composer')).toBeVisible();
+ await page.locator('#weeklyView').click();
+ await expect(page.locator('#week .v3-schedule-event').first()).toBeVisible();
+ const key=await page.evaluate(()=>{const t=localStorage.getItem('voyage-v2-review-20261112');return t&&Array.isArray(JSON.parse(t))});
+ expect(key).toBe(true);
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+});
+
+test('live Chinese review demonstrates date feedback, food shortcut, inline pin selection and independent saved data',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:19,weather_code:61,is_day:1,time:'2026-11-12T15:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url+'?qa=linked-calendar',{waitUntil:'domcontentloaded'});
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ const marker=page.locator('#v3MovingDateIcon');
+ await expect(marker).toBeAttached();
+ const before=await marker.evaluate(el=>el.style.left);
+ await page.locator('#dates .date').nth(1).click();
+ await expect.poll(()=>marker.evaluate(el=>el.style.left)).not.toBe(before);
+ await page.locator('#dates .date').first().click();
+ const where=page.locator('#events .v3-schedule-event').filter({hasText:'景福宮'});
+ await where.click();
+ await expect(page.locator('#v3MapSummary')).toContainText('景福宮');
+ expect(await page.evaluate(()=>document.body.dataset.tab)).toBe('itinerary');
+ await expect(page.locator('#v3InlineMap')).toBeVisible();
+ await page.locator('.v3-category-shortcuts').getByRole('button',{name:/餐飲/}).click();
+ await expect(page.locator('#v3NewType')).toHaveValue('food');
+ await page.locator('#v3NewName').fill('測試餐廳');
+ await page.locator('#v3NewTime').fill('18:10');
+ await page.locator('#v3NewDuration').fill('75');
+ await page.locator('#v3NewCost').fill('18000');
+ await page.locator('#v3Composer').getByRole('button',{name:/加入當天時間軸/}).click();
+ const meal=await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v2-review-20261112'))[0].days[0].find(x=>x.name==='測試餐廳'));
+ expect(meal).toMatchObject({type:'food',time:'18:10',duration:75,cost:18000});
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+});
+
+
+test('fixed review URL actually serves integrated modules and still isolates old travel records',async({page})=>{
+ await page.route('**/leaflet.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:leaflet}));
+ await page.route('**/leaflet.css',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+ await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({current:{temperature_2m:22,weather_code:1,is_day:1,time:'2026-11-12T10:00'},daily:{sunrise:['2026-11-12T06:00'],sunset:['2026-11-12T18:00']}})}));
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await expect(page.locator('script[src="./voyage-transit-v5.js"]')).toHaveCount(1);
+ await expect(page.locator('script[src="./voyage-planning-v3.js"]')).toHaveCount(1);
+ await expect(page.locator('script[src="./voyage-currency-v5.js"]')).toHaveCount(1);
+ await expect(page.locator('#v2ReviewTop')).toContainText('VOYAGE 新版');
+ await expect(page.locator('#rideMode,#boardTrain,#v2GpsAssist,#recommend')).toHaveCount(0);
+ await expect(page.locator('#v2Home')).toBeVisible();
+ expect(await page.evaluate(()=>window.VoyageCurrencyV5?.label('KRW'))).toBe('韓國・韓元（KRW）');
+ await page.locator('#v2Home').getByRole('button',{name:/我的行程/}).click();
+ await page.locator('#v2AddDay').click();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v2-review-20261112'))[0].days.length)).toBe(4);
+ expect(await page.evaluate(()=>localStorage.getItem('voyage-v02'))).toBeNull();
+ await page.evaluate(()=>localStorage.setItem('voyage-theme-v2-review-20261112','dark'));
+ await page.reload();
+ await expect(page.locator('body.dark')).toBeVisible();
+ const nightBg=await page.evaluate(()=>getComputedStyle(document.body).backgroundColor.match(/[0-9.]+/g).slice(0,3).map(Number));
+ expect(nightBg.every(v=>v<70)).toBe(true);
+});
