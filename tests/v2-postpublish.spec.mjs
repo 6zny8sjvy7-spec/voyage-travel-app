@@ -76,3 +76,38 @@ test("actual public URL serves officially verified Japanese and Vietnamese stati
  expect(results.vn.realtime).toBe(false);
  expect(results.vn.minutes).toBeNull();
 });
+
+test("actual public URL has Japanese G19 and Vietnam Metro Line 1 13-stop direction verified routes",async({page})=>{
+ const routes=await page.evaluate(async()=>{
+  const jp={country:"日本",countryCode:"JP",city:"東京",tz:"Asia/Tokyo",lat:35.681,lon:139.767},
+        vn={country:"越南",countryCode:"VN",city:"胡志明市",tz:"Asia/Ho_Chi_Minh",lat:10.823,lon:106.63};
+  const j=(await window.VoyageTransitV5.plan("銀座站","浅草駅",jp,{time:"2026-11-19T10:00:00+09:00"}))[0],
+        v=(await window.VoyageTransitV5.plan("Bến Thành","Bến xe Suối Tiên",vn,{time:"2026-11-19T10:00:00+07:00"}))[0];
+  return{staticPresent:!!window.VoyageRailReferenceV1,
+    j:{kind:j.kind,stations:j.legs[0].stations.map(x=>x.id),count:j.legs[0].stationCount,headsign:j.legs[0].headsign,minutes:j.minutes,realtime:j.hasRealtime},
+    v:{kind:v.kind,stations:v.legs[0].stations.map(x=>x.name),count:v.legs[0].stationCount,headsign:v.legs[0].headsign,minutes:v.minutes,realtime:v.hasRealtime}};
+ });
+ expect(routes.staticPresent).toBe(true);
+ expect(routes.j.kind).toBe("official-static-reference");
+ expect(routes.j.stations).toEqual(["G09","G10","G11","G12","G13","G14","G15","G16","G17","G18","G19"]);
+ expect(routes.j.count).toBe(10);expect(routes.j.headsign).toContain("Asakusa");
+ expect(routes.v.kind).toBe("official-static-reference");
+ expect(routes.v.count).toBe(13);
+ expect(routes.v.stations[0]).toBe("Bến Thành");
+ expect(routes.v.stations.at(-1)).toBe("Bến xe Suối Tiên");
+ expect(routes.j.minutes).toBeNull();expect(routes.v.minutes).toBeNull();
+ expect(routes.j.realtime).toBe(false);expect(routes.v.realtime).toBe(false);
+});
+test("actual public URL has no duplicate itinerary or expense shortcut, no fake JSON invite, and photo data input retired",async({page})=>{
+ await expect(page.locator('.footnav [data-tablink="expenses"]')).toHaveCount(1);
+ const summaryText=await page.locator("#v1Summary").textContent();
+ expect(summaryText).not.toContain("＋ 完整行程");
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await page.locator("#v1Menu").getByRole("button",{name:"好友共編"}).click();
+ await expect(page.locator("#v1Content")).toContainText("未連線前不顯示假邀請");
+ await expect(page.locator("#v1Content").getByRole("button",{name:"先分享旅行備份"})).toHaveCount(0);
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ await page.locator("#events .v3-schedule-event").first().dblclick();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+ await expect(page.locator("#vEvPhoto")).toHaveCount(0);
+});
