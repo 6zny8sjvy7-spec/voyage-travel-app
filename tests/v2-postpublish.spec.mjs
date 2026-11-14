@@ -50,3 +50,29 @@ test("actual public URL has a genuinely dark mobile and desktop night palette af
  await expect.poll(async()=>lum((await read()).body),{timeout:4000}).toBeLessThan(65);
  const v=await read();expect(v.hero).toMatch(/gradient/);
 });
+
+test("actual public URL serves officially verified Japanese and Vietnamese station sequences without false realtime",async({page})=>{
+ const results=await page.evaluate(async()=>{
+  const api=window.VoyageTransitV5;
+  if(!api||!window.VoyageRailReferenceV1)return null;
+  const jp=await api.plan("銀座駅","浅草駅",{id:"qa-jp",country:"日本",countryCode:"JP",city:"東京",tz:"Asia/Tokyo"},{time:"2026-11-19T10:00:00+09:00"});
+  const vn=await api.plan("Bến Thành","Bến xe Suối Tiên",{id:"qa-vn",country:"越南",countryCode:"VN",city:"胡志明市",tz:"Asia/Ho_Chi_Minh"},{time:"2026-11-19T10:00:00+07:00"});
+  const sample=v=>({kind:v[0].kind,count:v[0].legs[0].stationCount,ids:v[0].legs[0].stations.map(s=>s.id),local:v[0].legs[0].stations.map(s=>s.local),headsign:v[0].legs[0].headsign,minutes:v[0].minutes,realtime:v[0].hasRealtime});
+  return{jp:sample(jp),vn:sample(vn)};
+ });
+ expect(results).not.toBeNull();
+ expect(results.jp.kind).toBe("official-static-reference");
+ expect(results.jp.count).toBe(10);
+ expect(results.jp.ids[0]).toBe("G09");
+ expect(results.jp.ids.at(-1)).toBe("G19");
+ expect(results.jp.headsign).toContain("浅草");
+ expect(results.jp.realtime).toBe(false);
+ expect(results.jp.minutes).toBeNull();
+ expect(results.vn.kind).toBe("official-static-reference");
+ expect(results.vn.count).toBe(13);
+ expect(results.vn.ids).toHaveLength(14);
+ expect(results.vn.local[0]).toBe("Bến Thành");
+ expect(results.vn.local.at(-1)).toBe("Bến xe Suối Tiên");
+ expect(results.vn.realtime).toBe(false);
+ expect(results.vn.minutes).toBeNull();
+});
