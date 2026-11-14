@@ -65,7 +65,7 @@ const routes={
 };
 function normalize(v){
  return String(v||"").normalize("NFKD").toLocaleLowerCase()
-  .replace(/\p{M}/gu,"").replace(/(?:\s+(?:station|stop|駅|站))$/iu,"")
+  .replace(/\p{M}/gu,"").replace(/đ/g,"d").replace(/(?:\s*(?:station|stop|駅|站))$/iu,"")
   .replace(/[\s_.\-·・／\\/]/g,"").trim();
 }
 function countryCode(t){
