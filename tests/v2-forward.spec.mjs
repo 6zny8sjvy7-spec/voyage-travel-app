@@ -768,3 +768,40 @@ test("Bangkok traveler sees verified four-stop BTS route in VOYAGE even if Trans
  await expect(page.locator("#v6SelectedRoute").getByRole("button",{name:"將這條路線加入行程"})).toBeEnabled();
  await expect(page.locator("#v6SelectedRoute")).not.toContainText("即時預計 4 分鐘");
 });
+
+test("V7 follow-up: no duplicate overview entry or fake collaboration invite",async({page})=>{
+ await page.locator('.footnav [data-tablink="more"]').click();
+ await expect(page.locator("#v1Summary").getByRole("button",{name:"＋ 完整行程"})).toHaveCount(0);
+ await expect(page.locator("#v1Summary").getByRole("button",{name:"費用",exact:true})).toHaveCount(0);
+ await page.locator("#v1Menu").getByRole("button",{name:"好友共編"}).click();
+ await expect(page.locator("#v1Content")).toContainText("未連線前不顯示假邀請");
+ await expect(page.locator("#v1Content").getByRole("button",{name:"先分享旅行備份"})).toHaveCount(0);
+ await expect(page.locator("#v1Content").getByRole("button",{name:"查看目前可用的分享方式"})).toHaveCount(0);
+ await expect(page.locator('.footnav [data-tablink="expenses"]')).toHaveCount(1);
+});
+test("V7 follow-up: unsupported photo input removed without erasing legacy event photo",async({page})=>{
+ const original=await page.evaluate(()=>{
+  const key="voyage-v2-review-20261112";
+  const trips=JSON.parse(localStorage.getItem(key));
+  const e=trips[0].days.flat()[0];
+  if(!e)throw new Error("missing seeded itinerary event");
+  e.photoUrl="https://example.org/previously-added-reference.jpg";
+  localStorage.setItem(key,JSON.stringify(trips));
+  return {id:e.id,url:e.photoUrl};
+ });
+ await page.reload();
+ await page.locator('.footnav [data-tablink="itinerary"]').click();
+ const first=page.locator("#events .v3-schedule-event").first();
+ await expect(first).toBeVisible();
+ await first.dblclick();
+ await expect(page.locator("#v1Dialog")).toBeVisible();
+ await expect(page.locator("#vEvPhoto")).toHaveCount(0);
+ page.once("dialog",d=>d.accept());
+ await page.locator("#v1Dialog").getByRole("button",{name:"儲存"}).click();
+ await expect(page.locator("#v1Dialog")).toBeHidden();
+ const value=await page.evaluate(id=>{
+  const t=JSON.parse(localStorage.getItem("voyage-v2-review-20261112"));
+  return t[0].days.flat().find(e=>e.id===id)?.photoUrl;
+ },original.id);
+ expect(value).toBe(original.url);
+});
