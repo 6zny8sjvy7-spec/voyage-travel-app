@@ -3,9 +3,9 @@
 /* Independent visual prototype: sample content, no live weather, routes or translation services. */
 const tabs=[["home","🏠","首頁","為旅行，留一點期待 ✨"],["itinerary","🗓️","行程","今天的旅行故事 ✨"],["transport","🚇","交通","搭對車，玩得更安心"],["translate","🗣️","翻譯","旅行溝通小幫手"],["expenses","💳","費用","旅途的小小錢包"],["more","🧳","更多","旅行工具箱"]];
 const countries={
- kr:{name:"首爾",lang:"韓文",caption:"從漢江到首爾塔，每一站都有小驚喜",sticker:["💌","🧳"],mode:"🚇 首爾地鐵 4 號線",direction:"往首爾站方向（示意）",greeting:"首爾交通卡｜搭車之前，先對照韓文站牌",stops:[["明洞","명동","424"],["會賢","회현","425"],["首爾站","서울역","426"]]},
+ kr:{name:"首爾",lang:"韓文",caption:"從漢江到首爾塔，每一站都有小驚喜",sticker:["💌","🧳"],mode:"🚇 首爾地鐵 4 號線",direction:"往舍堂（사당）／烏耳島（오이도）方向（示意，實際需核對列車終點）",greeting:"首爾交通卡｜搭車之前，先對照韓文站牌",stops:[["明洞","명동","424"],["會賢","회현","425"],["首爾站","서울역","426"]]},
  jp:{name:"東京",lang:"日文",caption:"街角櫻花和小電車，一起收藏東京日常",sticker:["🌸","🍡"],mode:"🚇 東京 Metro 銀座線 G",direction:"往淺草方向（靜態站序示例）",greeting:"東京交通卡｜繁中加日文，現場對照更容易",stops:[["銀座","銀座","G09"],["京橋","京橋","G10"],["日本橋","日本橋","G11"],["三越前","三越前","G12"],["神田","神田","G13"],["末廣町","末広町","G14"],["上野廣小路","上野広小路","G15"],["上野","上野","G16"],["稻荷町","稲荷町","G17"],["田原町","田原町","G18"],["淺草","浅草","G19"]]},
- th:{name:"曼谷",lang:"泰文",caption:"搭上 BTS，遇見閃閃發光的曼谷午後",sticker:["🥥","🌺"],mode:"🚝 BTS Sukhumvit 線",direction:"往 Asok 方向（靜態站序示例）",greeting:"曼谷交通卡｜泰文＋繁中，對照站名與站序",stops:[["暹羅","สยาม","Siam"],["奇隆","ชิดลม","Chit Lom"],["奔集","เพลินจิต","Phloen Chit"],["娜娜","นานา","Nana"],["阿索克","อโศก","Asok"]]},
+ th:{name:"曼谷",lang:"泰文",caption:"搭上 BTS，遇見閃閃發光的曼谷午後",sticker:["🥥","🌺"],mode:"🚝 BTS Sukhumvit 線",direction:"往凱哈（เคหะฯ／Kheha）方向（靜態站序示例）",greeting:"曼谷交通卡｜泰文＋繁中，對照站名與站序",stops:[["暹羅","สยาม","Siam"],["奇隆","ชิดลม","Chit Lom"],["奔集","เพลินจิต","Phloen Chit"],["娜娜","นานา","Nana"],["阿索克","อโศก","Asok"]]},
  vn:{name:"胡志明市",lang:"越南文",caption:"小摩托、熱帶街景，城市裡的慢慢旅行",sticker:["🛵","🍜"],mode:"🚇 胡志明市 Metro 1 號線",direction:"往仙泉巴士總站方向（站序示例）",greeting:"越南交通卡｜中文為參考譯名，現場以越文原名為準",stops:[["濱城","Bến Thành",""],["市立劇院","Nhà hát Thành phố",""],["巴山","Ba Son",""],["文聖","Văn Thánh",""],["新港","Tân Cảng",""],["草田","Thảo Điền",""],["安富","An Phú",""],["瀝隻","Rạch Chiếc",""],["福隆","Phước Long",""],["平泰","Bình Thái",""],["守德","Thủ Đức",""],["高科技園區","Khu Công nghệ cao",""],["國家大學","Đại học Quốc gia",""],["仙泉巴士總站","Bến xe Suối Tiên",""]]}
 };
 const $=id=>document.getElementById(id);
