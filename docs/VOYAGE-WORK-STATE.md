@@ -1,5 +1,14 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## 2026-11-16 首爾 Hero V3 真實公開樣稿（**最新部署**）
+- **已將單一原創首爾 Hero V3 手機設計審查稿做成可直接開啟的獨立 GitHub Pages 預覽**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SEOUL-HERO-03.html
+- 源文件已 commit 至設計分支 `design-previews/VOYAGE-SEOUL-HERO-03.html` commit `49a295054de2617d144942efa19c01c4c071eb1c`，獨立預覽文件已複製進 main 的**新增單一路徑** commit `6ee0821c945ba10298e8a1a5b888872e5a4622d0`；此檔為**自含 WebP 插畫的靜態 HTML**，不用外部圖片服務。
+- GitHub Pages `pages build and deployment` run `43902442124`，新聊天務必查最終結論，不能只依檔案存在就稱可正常開啟。
+- 已用 Chromium 模擬 390px 手機，產生樣稿截圖且 img 解碼成功；真實 iPhone Safari 尚待使用者核准。
+- 產品本體 `v2-review-20261112/index.html` blob `0027652b222854d9bc78d4f21940b2196e1cce20`、正式根頁 `index.html` blob `acefa83e8eddfb950e22f0d6766fc626ad5da9d7` **沒有改動**。
+- **這是美術方向，沒有動畫分層或實際天氣接入**。目前第一關尚未通過。
+- 下一步：使用者驗收這一張首爾 Hero 與手機排版；畫面方向獲接受後再實作真正自然動畫、天氣差異、四國延伸，最後才進下一整合分支。
+
 ## 2026-11-16 首頁 V3 真實美術樣稿與行動版截圖（**最新**）
 - **目前階段：第一關全站視覺確認，首爾首頁 Hero 美術方向正在審核。禁止開始第 2 關功能整合。**
 - 已從 GitHub Issue #2 查 V2 不通過記錄，從最新分支接續。已產出**原創首爾插畫**與 390px 手機首頁分區樣稿；不是粗糙 SVG/Emoji。
