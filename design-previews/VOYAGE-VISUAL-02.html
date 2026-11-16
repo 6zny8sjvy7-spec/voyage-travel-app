@@ -28,6 +28,140 @@ button:focus-visible,select:focus-visible{outline:3px solid #91aff9;outline-offs
 @media(max-width:1050px){.rail{width:180px}.main{padding:24px}.dashboard,.itinerary-layout{grid-template-columns:minmax(0,1fr)}.side-summary{grid-template-columns:1fr 1fr;grid-template-rows:auto}.quickgrid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:720px){body{padding-bottom:env(safe-area-inset-bottom,0)}.wrap{display:block}.rail{display:none}.main{padding:18px 15px 99px}.topbar{align-items:flex-start}.topbar h1{font-size:18px}.top-actions .smalltag{display:none}.dashboard{display:block}.hero{min-height:300px}.hero-copy{padding:21px;max-width:100%}.hero-copy h2{font-size:26px}.hero .city{right:0;width:58%;height:51%;opacity:.62}.hero .sun{right:35px;top:37px;width:52px;height:52px}.hero .cloud{width:70px}.weather{top:16px;right:12px;font-size:10px}.side-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.softcard{padding:14px}.softcard h3{font-size:13px}.quickgrid{grid-template-columns:repeat(4,1fr);gap:9px}.quick{min-height:97px;padding:12px 4px;border-radius:15px}.quick .qico{font-size:24px}.quick strong{font-size:11px}.quick small{font-size:10px}.labelrow h2{font-size:16px}.timeline,.weekly,.travel-tools,.panel{padding:15px}.event{grid-template-columns:48px 14px minmax(0,1fr);gap:7px}.clock{font-size:11px}.event-card{padding:11px;min-height:96px}.event-card h3{font-size:13px}.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));left:0;right:0;bottom:0;background:#ffffffef;backdrop-filter:blur(16px);border-top:1px solid #dfebfa;z-index:25;padding:8px 5px calc(9px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 22px #3c59801a}.mobile-nav .tab{padding:6px 0;text-align:center;display:grid;gap:1px;justify-items:center;border-radius:11px;font-size:10px}.mobile-nav .tab .ico{font-size:20px}.inputpair{grid-template-columns:1fr}.topbar .sub{font-size:11px}.toolgrid{grid-template-columns:1fr 1fr}.panel h2{font-size:16px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* V2 playful travel-postcard visual direction, isolated visual prototype */
+:root{--bg:#fffaf6;--white:#fffefa;--ink:#334259;--muted:#7c8ba1;--line:#e9e5e6;--blue:#527db7;--shadow:0 13px 30px #695b7812}
+body{background:radial-gradient(circle at 0 4%,#fff0dd 0,transparent 34%),radial-gradient(circle at 96% 26%,#ebecff 0,transparent 38%),#fffaf6}
+.rail{background:#fffdf9;border-color:#f1e7df}
+.brand{color:#5477a2}.rail-foot{background:#fff0e4;color:#917e73}
+.tab{color:#737f98}.tab.active{background:#e4effe;color:#466ba5;border:1px solid #cad9f0}
+.main .topbar h1{color:#3b4c66}
+.hero{min-height:405px;border:2px solid #ffffffcf;background:linear-gradient(155deg,#a5d5ff 0%,#e2efff 53%,#ffe9d1 100%);box-shadow:0 15px 35px #7194b821}
+.hero[data-country="kr"]{background:linear-gradient(153deg,#b0d7fd 0%,#eaf2ff 47%,#fff0de 100%)}
+.hero[data-country="jp"]{background:linear-gradient(153deg,#bee2ff 0%,#f5eafb 52%,#ffe8df 100%)}
+.hero[data-country="th"]{background:linear-gradient(155deg,#9cdef0 0%,#fff0c9 56%,#ffdbbe 100%)}
+.hero[data-country="vn"]{background:linear-gradient(153deg,#bbebd9 0%,#e6f8e7 46%,#ffe6c4 100%)}
+.hero[data-weather="night"]{background:linear-gradient(155deg,#273f76 0%,#6b5f92 56%,#b285a3 100%)}
+.hero[data-weather="rain"]{filter:none}
+.hero[data-weather="rain"]:before{background:linear-gradient(0deg,#7c99b733,transparent 65%)}
+.hero[data-weather="snow"]{background:linear-gradient(150deg,#bddcf5,#eff8ff 62%,#ffffff)}
+.hero-copy{z-index:7;padding:26px 30px;max-width:82%}
+.hero-copy h2{margin:10px 0 5px;font-size:30px;color:#3b6b9d;letter-spacing:.3px;line-height:1.32;text-shadow:0 2px #ffffff99}
+.hero .topline{font-size:10px;color:#4f80b9;letter-spacing:1.2px;font-weight:900;background:#fff9;border-radius:99px;display:inline-block;padding:6px 11px}
+.little-heart{color:#e9a0a6;font-size:14px}
+.scene-subtitle{font-size:12px!important;color:#68809b!important;max-width:320px}
+.hero[data-weather="night"] .hero-copy h2{color:#fff;text-shadow:0 1px 3px #2b3c7a80}
+.hero[data-weather="night"] .hero-copy .scene-subtitle{color:#e8eaff!important}
+.hero[data-weather="night"] .hero .topline{color:#fff}
+.hero .weather{z-index:9;top:20px;right:22px;background:#fffffff0;border:1px solid #fffffffa;box-shadow:0 4px 12px #54778f17;font-size:11px}
+.countdown{padding:9px 14px;border-radius:18px;margin-top:13px;background:#fff9;box-shadow:0 5px 16px #89add027;gap:6px;border:1px solid #fff}
+.countdown strong{color:#5276b1;font-size:30px}
+.countdown-plane{font-size:19px;display:inline-block;animation:countdownHop 4s ease-in-out infinite}
+.weather-toggle{position:relative;z-index:12;margin-top:13px;flex-wrap:wrap}
+.weather-toggle button{background:#ffffffc7;border:1px solid #ffffffcf;color:#536f93;padding:5px 10px;min-height:30px;box-shadow:0 3px 9px #7b8e9b18}
+.weather-toggle button.active{background:#fff3d2;color:#8b6782;border-color:#fce5b2}
+.demo-caption{font-size:10px;color:#6f88a6;background:#ffffff86;border-radius:99px;padding:3px 9px;display:inline-block;margin-top:10px}
+.hero[data-weather="night"] .demo-caption{color:#f4f0ff;background:#4b548988}
+.scene-svg{position:absolute;inset:auto 0 -2px 0;height:76%;z-index:3;pointer-events:none}
+.scene-svg svg{width:100%;height:100%;overflow:visible}
+.scene-svg .soft-cloud{animation:cloud 9s ease-in-out infinite;transform-origin:center}
+.scene-svg .city-train{animation:cityRide 10s linear infinite}
+.scene-svg .city-flight{animation:planeTravel 11s ease-in-out infinite}
+.scene-svg .city-bird{animation:birdHop 4s ease-in-out infinite}
+.scene-svg .city-light{animation:cityLights 2.6s ease-in-out infinite}
+.hero[data-weather="night"] .scene-svg .city-light{animation-duration:1.8s}
+.scene-stars{position:absolute;inset:0;z-index:1;display:none;opacity:.9;background-image:radial-gradient(circle,#fffbce 1.5px,transparent 2px),radial-gradient(circle,#fff 1px,transparent 2px);background-size:67px 65px,105px 82px;background-position:5px 11px,47px 24px}
+.hero[data-weather="night"] .scene-stars{display:block;animation:cityLights 3.5s infinite}
+.scene-sky.sun{position:absolute;right:100px;top:52px;width:75px;height:75px;z-index:2;background:#ffde7d;box-shadow:0 0 0 13px #fff1a174,0 0 28px #ffefae9a;opacity:.93}
+.hero[data-weather="night"] .scene-sky.sun{background:#fff5c4;box-shadow:0 0 0 12px #ffffff24,0 0 27px #fff4bb6a}
+.hero[data-weather="rain"] .scene-sky.sun{opacity:.2}
+.rain-layer,.snow-layer{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;border-radius:inherit}
+.hero[data-weather="rain"] .rain-layer{display:block;background:repeating-linear-gradient(112deg,transparent 0 33px,#86b4e686 34px 35px,transparent 36px 65px);background-size:175px 110px;animation:rainDrift .72s linear infinite;opacity:.7}
+.hero[data-weather="snow"] .snow-layer{display:block;background-image:radial-gradient(circle,#fff 3px,transparent 4px),radial-gradient(circle,#ffffffc0 2px,transparent 3px);background-size:61px 65px,83px 87px;animation:snowDrift 7s linear infinite}
+.tiny-sticker{position:absolute;z-index:6;border-radius:15px;display:grid;place-items:center;font-size:24px;width:43px;height:43px;background:#ffffffbf;border:1.5px solid #fff;box-shadow:0 6px 15px #486b9027;animation:stickerWiggle 4s ease-in-out infinite;pointer-events:none}
+.sticker-a{right:32%;bottom:34%;transform:rotate(-8deg)}.sticker-b{right:5%;bottom:24%;transform:rotate(9deg);animation-delay:-2.2s}
+.hero[data-weather="night"] .tiny-sticker{background:#f7e8fbdd}
+.softcard{border:1.5px solid #ffffffea;box-shadow:0 6px 25px #79617f0f}
+.softcard.blue{background:linear-gradient(135deg,#eaf3ff,#f5f7ff)}
+.softcard.lav{background:linear-gradient(140deg,#fff0f2,#f2eaff)}
+.softcard .iconcircle{transform:rotate(-7deg);box-shadow:0 3px 8px #77618214}
+.quick{background:linear-gradient(180deg,#ffffff,#fffcf8);border-color:#efe7e4;transition:transform .2s ease}
+.quick:nth-child(2){background:#f0f7ff}.quick:nth-child(3){background:#fff1e9}.quick:nth-child(4){background:#f3efff}
+.quick .qico{filter:drop-shadow(0 4px 3px #aa8c8225)}
+.smalltag,.country{background:#fffaf4;border-color:#efdfdd}
+.panel,.timeline,.weekly,.travel-tools{border:1px solid #eee5e7;box-shadow:0 10px 25px #786b8210}
+.date-stage{position:relative;padding-top:29px}
+.date-scroll{padding-top:6px}
+.date-flight{position:absolute;z-index:6;top:-3px;left:0;font-size:25px;filter:drop-shadow(0 4px 3px #a1abc362);transition:left .42s cubic-bezier(.22,.8,.25,1);pointer-events:none;transform-origin:center}
+.daychip{border-color:#e8e0e9;background:#fffefa;min-height:79px;transition:transform .2s,background .2s}
+.daychip.active{background:#fff1cc;border-color:#f2ce91;color:#906c50;box-shadow:0 6px 12px #d0a36e2b}
+.daychip:active{transform:scale(.93)}
+.day-mascot{display:inline-block;margin-left:8px;animation:stickerWiggle 4s ease-in-out infinite}
+.event-card{background:#fffdf9;border-color:#f1e7df}.event:nth-child(2n) .event-card{background:#f3f7ff}
+.event.ride .event-card{background:#fff2f0;border-color:#f7e1df}
+.event .line:before{background:#f0c09f}
+.event .dot{background:#f1b88b;box-shadow:0 0 0 1.5px #f5cfb0}
+.weekcard{background:#fffaf5;border-color:#ece3e3;min-width:205px}
+.weekcard.active{background:#fff0d3;border-color:#e5c595}
+.weekcard .we{background:#fffdfc}
+.eyebrow{font-size:10px;letter-spacing:1.2px;color:#c28c87;font-weight:900}
+.transport-heading{margin-bottom:18px;align-items:start}
+.postcard-badge{white-space:nowrap;background:#fff3d8;border:1px solid #f1dfbd;border-radius:99px;padding:7px 11px;color:#a87e67;font-size:11px;font-weight:850}
+.route-greeting{background:#ffeff0;border:1px solid #ffe1e6;border-radius:16px;color:#816a7b;padding:10px 14px;display:flex;align-items:center;gap:13px;margin:6px 0 14px;font-size:12px;font-weight:750}
+.route-buddy{font-size:27px;display:inline-block;animation:stickerWiggle 3s infinite}
+.transport-panel .field{background:#fffdfa;border-color:#f0e6e5;font-weight:700}
+.transport-panel .source{background:#fff7e6;color:#9a8065}
+.route-illustrated{background:#f5f8ff;border:1px solid #e4eafb;padding:18px}
+.route-top,.route-title,.ride-destinations{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.route-top{margin-bottom:12px}
+.mini-route-label{font-size:11px;background:#fff;border-radius:99px;padding:6px 11px;color:#7889a1;font-weight:750}
+.mini-route-stops{font-size:11px;background:#fff0d6;border:1px solid #f6dfbb;border-radius:99px;padding:6px 12px;color:#9e795c;font-weight:850}
+.route-title strong{font-size:21px}.route-title small{display:block;margin-top:3px;font-weight:750;color:#537faf}
+.line-sticker{background:#fff;border-radius:19px;padding:10px 13px;font-size:30px;box-shadow:0 5px 16px #7f8ca421;transform:rotate(-8deg)}
+.ride-destinations{margin:15px 0;padding:18px 0;border-top:1px dashed #cddcee;border-bottom:1px dashed #cddcee}
+.ride-destinations>div{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.ride-destinations>div:last-child{text-align:right}
+.ride-destinations small{font-size:11px;color:#879bb1}
+.ride-destinations b{font-size:13px;word-break:break-word}
+.ride-arrow{color:#9cafc4;font-size:21px}
+.stops-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid #dbe7fa;border-radius:13px;padding:12px 14px;color:#5076b0;font-weight:850;text-align:left}
+.stops-toggle:active{transform:scale(.98)}#stopArrow{font-size:23px;line-height:.7;transition:transform .2s}.stops-toggle[aria-expanded="true"] #stopArrow{transform:rotate(180deg)}
+.stop-list{list-style:none;counter-reset:stop;display:grid;gap:0;margin:13px 1px 0;padding:0 0 0 8px}
+.stop-list[hidden]{display:none}
+.stop-list li{position:relative;padding:0 0 15px 28px;border-left:3px solid #c4d8f5;margin-left:9px;min-height:33px;font-size:13px}
+.stop-list li:last-child{border-left-color:transparent;padding-bottom:0}
+.stop-list li:before{content:"";position:absolute;left:-9px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid #8bb0df}
+.stop-list li:first-child:before,.stop-list li:last-child:before{border-color:#edb580}
+.stop-list small{display:block;color:#8796af;font-size:11px;margin-top:2px}
+.stop-list li .stop-index{font-size:10px;color:#9babc1;float:right}
+.safety-note{margin-top:15px;font-size:11px;color:#8a95a8;background:#ffffffaf;border-radius:10px;padding:10px}
+@keyframes cityRide{0%{transform:translateX(-400px)}100%{transform:translateX(800px)}}
+@keyframes planeTravel{0%,100%{transform:translate(0,0) rotate(-2deg)}50%{transform:translate(14px,-10px) rotate(3deg)}}
+@keyframes birdHop{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes cityLights{0%,100%{opacity:.58}50%{opacity:1}}
+@keyframes rainDrift{0%{background-position:0 -140px}100%{background-position:45px 80px}}
+@keyframes snowDrift{0%{background-position:0 -160px,0 -190px}100%{background-position:12px 90px,-20px 80px}}
+@keyframes stickerWiggle{0%,100%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(5deg) translateY(-6px)}}
+@keyframes countdownHop{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-5px) rotate(6deg)}}
+@media(max-width:720px){
+.hero{min-height:440px;border-radius:26px}
+.hero-copy{padding:18px 20px;max-width:100%}
+.hero-copy h2{font-size:27px;max-width:275px}
+.hero .topline{font-size:9px;padding:5px 8px}
+.scene-subtitle{font-size:11px!important}
+.hero .weather{right:11px;top:11px;font-size:10px;padding:6px 10px}
+.hero-copy .topline{max-width:240px}
+.scene-svg{height:69%;bottom:-1px}
+.scene-sky.sun{right:58px;top:102px;width:54px;height:54px}
+.countdown{margin-top:13px;padding:8px 12px}.countdown strong{font-size:25px}
+.weather-toggle{margin-top:9px}.weather-toggle button{font-size:10px;padding:4px 9px}
+.demo-caption{font-size:9px}
+.tiny-sticker{width:36px;height:36px;font-size:21px}.sticker-a{right:32%;bottom:28%}.sticker-b{right:4%;bottom:14%}
+.transport-heading .postcard-badge{display:none}
+.transport-panel .route-title strong{font-size:18px}.ride-destinations b{font-size:12px}
+}
+@media(max-width:375px){.hero-copy h2{font-size:24px}.weather-toggle button{padding:4px 7px}.tiny-sticker{opacity:.9}.hero .weather{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.date-flight{transition:none}.scene-svg *{animation:none!important}}
 </style></head>
 <body><div class="wrap">
 <aside class="rail"><div class="brand">VOYAGE<span>.</span><small>YOUR LITTLE TRAVEL COMPANION</small></div>
