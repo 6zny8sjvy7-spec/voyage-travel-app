@@ -215,18 +215,5 @@ body{background:radial-gradient(circle at 0 4%,#fff0dd 0,transparent 34%),radial
 <section class="view" id="view-expenses"><div class="panel"><h2>💳 旅行錢包</h2><p>改版視覺，但既有匯率換算、記帳、多人分帳及歷史資料一項都不能少。</p><div class="toolgrid" style="margin-top:15px"><div class="tooltile"><b>🧾 旅行預算</b><p>目前預算／已花／剩餘分層呈現</p></div><div class="tooltile"><b>💱 幣別與匯率</b><p>保留原換匯功能與匯率更新時間</p></div><div class="tooltile"><b>🍽️ 支出分類</b><p>交通、餐食、住宿、購物、門票</p></div><div class="tooltile"><b>👫 旅伴分帳</b><p>付款人、分攤與結算狀態</p></div></div></div></section>
 <section class="view" id="view-more"><div class="panel"><h2>🧳 我的旅行工具箱</h2><p>功能入口調整，不代表任何既有工具被移除。</p><div class="toolgrid" style="margin-top:15px"><div class="tooltile"><b>🍜 美食口袋名單</b><p>喜歡的餐廳和料理</p></div><div class="tooltile"><b>🛍️ 購物願望</b><p>想買的東西與紀念品</p></div><div class="tooltile"><b>🧳 行李清單</b><p>分類勾選、刪除與保存</p></div><div class="tooltile"><b>✈️ 機票住宿</b><p>原始時間與預約資訊</p></div><div class="tooltile"><b>📥 匯入／備份</b><p>備忘錄、旅行備份與資料保護</p></div><div class="tooltile"><b>📚 旅行紀錄</b><p>跨國家保留歷史行程</p></div><div class="tooltile"><b>👥 好友共編</b><p>未啟用雲端前不得假稱同步</p></div><div class="tooltile"><b>⚙️ 旅程設定</b><p>閱讀主題、目的地、偏好</p></div></div></div></section>
 </main></div><nav class="mobile-nav" id="mobileNav" aria-label="主要分頁"></nav>
-<script>
-const tabs=[["home","⌂","首頁","為旅行，留一點期待 ✨"],["itinerary","🗓️","行程","今天的旅行故事 ✨"],["transport","🚇","交通","搭對車，玩得更安心"],["translate","🗣️","翻譯","旅行溝通小幫手"],["expenses","💳","費用","旅途的小小錢包"],["more","🧳","更多","旅行工具箱"]];
-let current="home";
-function drawNav(){for(const id of ["sideNav","mobileNav"]){const el=document.getElementById(id);el.innerHTML="";for(const [key,emoji,label] of tabs){const b=document.createElement("button");b.className="tab"+(key===current?" active":"");b.type="button";b.innerHTML='<span class="ico">'+emoji+'</span><span>'+label+'</span>';b.onclick=()=>go(key);el.append(b)}}}
-function go(name){current=name;document.querySelectorAll(".view").forEach(e=>e.classList.toggle("active",e.id==="view-"+name));document.getElementById("pagetitle").textContent=tabs.find(t=>t[0]===name)[3];drawNav();window.scrollTo({top:0,behavior:"smooth"})}
-document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
-document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("active",x===b));const week=b.dataset.mode==="week";document.getElementById("daypanel").style.display=week?"none":"block";document.getElementById("weekpanel").style.display=week?"block":"none"});
-document.querySelectorAll(".daychip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".daychip").forEach(x=>x.classList.toggle("active",x===b));b.animate([{transform:"translateY(0)"},{transform:"translateY(-7px)"},{transform:"translateY(0)"}],{duration:350})});
-document.querySelectorAll(".weekcard").forEach(b=>b.onclick=()=>{document.querySelectorAll(".daychip")[Math.max(0,[...document.querySelectorAll(".weekcard")].indexOf(b))].click();document.querySelector('[data-mode="day"]').click()});
-document.querySelectorAll("[data-weather]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-weather]").forEach(x=>x.classList.toggle("active",x===b));const w=b.dataset.weather;document.getElementById("hero").classList.toggle("night",w==="night");document.getElementById("weatherLabel").textContent={sun:"☀️ 晴天 · 僅示意",night:"🌙 夜景 · 僅示意",rain:"🌧️ 下雨 · 僅示意"}[w]});
-const countries={kr:["首爾","韓文"],jp:["東京","日文"],th:["曼谷","泰文"],vn:["胡志明市","越南文"]};
-document.getElementById("tripSelect").onchange=e=>{let c=countries[e.target.value];document.getElementById("cityTitle").textContent="下一站，"+c[0]+" ♡";document.getElementById("locale").textContent=c[1];document.getElementById("weatherLabel").textContent="☀️ 天氣 · 僅示意"};
-drawNav();
-</script>
+<script defer src="./voyage-v2-interactions.js"></script>
 </body></html>
