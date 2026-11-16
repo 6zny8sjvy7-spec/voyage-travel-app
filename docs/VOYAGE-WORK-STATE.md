@@ -2,6 +2,13 @@
 
 **唯一入口：** https://github.com/6zny8sjvy7-spec/voyage-travel-app/issues/2
 
+## 2026-11-16 V2 發布增量更正
+- 真實網頁的 `main` 視覺原型：`design-previews/VOYAGE-VISUAL-02.html` + `design-previews/voyage-v2-interactions.js`。
+- 預覽頁主頁部署成功 run `43887049103`（commit `5a80698320893e4f2d0b53440718f27d2eea295a`）。
+- 後續查核日本/韓國/泰國方向時發現示例將「目的站」寫成「車輛終點方向」，已修正：韓國 4 號線示例呈現舍堂／烏耳島方向；泰國 BTS Siam→Asok 示意車次方向呈現 Kheha 凱哈。設計分支 commit `911da6410b901eb5cd77818611db60fbaf5d5f40`、main `dc6956def43a3a6e84e6d87449545c6734c1f287`，第二次 Pages run `43887403174` 須檢查最終 conclusion。
+- **尚未完成瀏覽器與實體 iPhone Safari 可視化 QA，不得自稱已經驗收。**
+- 下一步：使用者開啟 V2 新預覽，回傳頁面視覺與互動問題；依照使用者核准內容修下一版。原 V7 App 未接入任何原型功能。
+
 ## 2026-11-16 第二版原型（本次最新成果）
 - 使用者 21:36 iPhone Safari 回報 V1「簡潔分卡可保留、但整體不夠可愛」、「四國 Hero 沒有分別的可愛動畫」、「日期上方原飛機消失」、「切曼谷仍是日本站名」、「站數不能點開」。V1 **未通過視覺驗收**。
 - V2 獨立設計原型：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-VISUAL-02.html
