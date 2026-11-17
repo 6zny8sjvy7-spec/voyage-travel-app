@@ -1,5 +1,16 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## ✅ 2026-11-17 Scene07｜指定三項插畫整改（目前最新進度）
+- **使用者本輪只要求** (1) 首頁會動飛機造型改可愛、(2) 左卡改完整機場／飛機小場景、(3) 右卡改完整韓屋／植物小場景。其它原本已認可設計不得修改，**首爾驗收無誤才接日本、泰國、越南**。
+- **獨立 Scene07 可操作預覽**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-07-INTERACTIVE.html
+- 新版沿用 Scene06 除三處 SVG 及對應卡片高度/插畫定位 CSS 外的原功能：更圓潤的奶油白/珊瑚粉/深藍描邊飛機 SVG；左卡底部全幅機場+同款飛機+草地；右卡底部全幅韓屋+植物草地，不再右下角獨立貼圖。
+- **GitHub Pages run `44042830975` 已確認 completed/success**，main commit `eb9b2f386500c95f43c7f5b82e954b5a72d8c6d2`；設計分支 HTML commit `51c3df25fec0e899ec185904a7069fa2ad72660f`。原產品 V7、正式首頁、Scene06 預覽 HTML 檔案 blob 都不變。
+- QA：Chromium 390/360/1440：**65/65 功能與版面檢查通過、0 JS errors**；確認移動飛機方向仍朝右、左/右卡插圖全幅不越界、天氣與日期／交通互動未被刪除。**真實 iPhone Safari 與使用者美術核准尚未通過**，不得當正式版。
+- 永久細節與跨聊天來源：[docs/VOYAGE-SCENE-07-20261117.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-SCENE-07-20261117.md)；原型 Library ID `libfile_7d3d682fed4c8191bf26611ddcf68f4b`，手機截圖 ID `libfile_8c34bbfb2f448191b1be15ffaa2ecce6`。
+- **下一步**：使用者先點開 Scene07 驗收**只這三項**；獲同意後繼續其它三國依國家象徵建築/天氣的插畫動畫；尚不能直接改原 V7。
+
+
+
 ## ✅ 2026-11-17 Scene06｜四種天氣與真正移動中的飛機、列車（**最新進度**）
 - 使用者看 Fidelity05 截圖指出：原畫的飛機列車根本動不了、晴雪夜仍能看見畫死在原背景裡的雨、兩張小卡的插畫像截圖貼上；同時**肯定卡片與版面可以保留**。
 - 本次已建立**全新乾淨場景底圖**（同樣採原核准的深藍粗輪廓平塗繪本風，不再有雨、飛機、列車烙印在底圖），加上獨立原創 SVG 飛機與橋上列車，CSS 實際左右移動。四種天氣的呈現已分開：晴有陽光、雨 Canvas 斜雨/漣漪、雪獨立雪花/積雪、夜有月亮星光，**晴/夜畫面沒有雨滴**；卡片裝飾改完整 SVG。
