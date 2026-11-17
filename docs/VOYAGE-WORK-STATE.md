@@ -5,11 +5,11 @@
 - 本次已建立**全新乾淨場景底圖**（同樣採原核准的深藍粗輪廓平塗繪本風，不再有雨、飛機、列車烙印在底圖），加上獨立原創 SVG 飛機與橋上列車，CSS 實際左右移動。四種天氣的呈現已分開：晴有陽光、雨 Canvas 斜雨/漣漪、雪獨立雪花/積雪、夜有月亮星光，**晴/夜畫面沒有雨滴**；卡片裝飾改完整 SVG。
 - **重要誠實註記**：乾淨底圖是基於批准畫風重新製作，與批准的原 PNG **不會逐像素完全相同**，使用者還沒有核准新畫面；此輪無法聲稱 100% 美術還原。真氣象 API、四國主圖、正式交通/翻譯/費用串接都未完成。
 - **唯一新版預覽 URL**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-06-INTERACTIVE.html
-- 設計分支 HTML commit `3c9cf7b4341c01e2f8b331872ca3c31d4748f768`；main **只新增獨立預覽路徑** commit `e9aaf8763288f31981c1b17059a3d1bbb65d83f6`。GitHub Pages run `44033450533` **需確認最終部署結論**。
+- 設計分支 HTML commit `3c9cf7b4341c01e2f8b331872ca3c31d4748f768`；main **只新增獨立預覽路徑** commit `e9aaf8763288f31981c1b17059a3d1bbb65d83f6`。GitHub Pages run `44033450533` 已確認 **completed/success**（main commit `e9aaf8763288f31981c1b17059a3d1bbb65d83f6`）。
 - 自動/視覺測試：Chromium 390px、360px、1440px 共 **60/60 checks pass、0 JS 錯誤**。canvas 逐天氣像素及車/飛機 4 個時點位置檢查都完成，細節 QA 和四天氣截圖保存於 Library；**WebKit 無安裝，不能稱已驗收 iPhone Safari**。
 - 保護措施：原 V7 測試 `v2-review-20261112/index.html` blob `0027652b222854d9bc78d4f21940b2196e1cce20`、根 `index.html` blob `acefa83e8eddfb950e22f0d6766fc626ad5da9d7` 未變；原 localStorage 未讀寫。新原型使用 `voyage-scene06-visual-review-only`。
 - 全套可恢復檔案、QA、GitHub 提交與正確下一步已保存：[docs/VOYAGE-SCENE-06-20261117.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-SCENE-06-20261117.md)（commit `eebeda05cb5848f6956750dfd8bae635fc8d83c4`）。
-- **下一步**：使用者 iPhone Safari 開啟 Scene06 驗收畫風、四天氣、機車方向及卡片。獲核准後才能擴四國原創動畫及接續其它全站設計整改，最後才 V7 真實產品整合。**第一關尚未通過。**
+- **下一步**：使用者 iPhone Safari 開啟 Scene06 驗收畫風、四天氣、飛機與列車方向及卡片。獲核准後才能擴四國原創動畫及接續其它全站設計整改，最後才 V7 真實產品整合。**第一關尚未通過。**
 
 
 
