@@ -1,5 +1,17 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## 🧭 2026-11-17 Scene10｜核准原圖插畫直接進網頁（**目前最新進度**）
+- 使用者明確否決 Scene08/09「原本自己生成的模板好看、網頁卻完全不像」；要求**自行比對原始四張照片，停止擅自創新**。本次從已核准的真正 941×1672 `雨中首爾旅行首頁_ui.png` 直接萃取飛機＋機場＋韓屋插畫，沒有再畫另一套。
+- **Scene10 獨立操作預覽**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-10-INTERACTIVE.html
+- 真正 HTML 文字/日期/checkbox，背景裝飾取原圖並做去背；移動中的飛機 PNG 也是原圖素材，方向朝右，保持先前的移動動畫。兩卡形狀、顏色、資訊層級重新按照高畫質原圖對齊。原 V7 未改。
+- 手機為保持字級可讀，兩卡橫向鄰接可滑；桌面在旁欄上下排列。這是**唯一尚未與原生成圖完全相同的排版差異**，未經使用者核准不能視為最終。
+- GitHub design branch 新 HTML commit `203bdc61a61990143956390d4287acf43cebffe4`；main **只新增獨立 Scene10 設計頁** commit `03bdfdaa6c4efdd8aa4d10f778881e830e760cde`。GitHub Pages run `44049981158` 已核實 completed/success。
+- Chromium 360/390/1440 共 **47/47 檢查通過、0 JS errors**；已另對照原稿與真頁面圖片，不可以用測試數取代美術評分。原 Scene08、V7 test、main/index blob 均不變。
+- [Scene10 詳細視覺/驗收/資產規格](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-SCENE-10-20261117.md)（commit `76be9583b9197cb3d7c2bb3170ee10e11b49a22c`）；原型 Library `libfile_7f7f46df25ac819187efd316092a4d8e`。
+- **下一步**：使用者 iPhone Safari 確認 Scene10 原版飛機/左右卡插畫與文字是否達標。首爾美術明確核准後再做日本/泰國/越南，整體視覺 OK 才進 V7 真實功能整合；**第一關仍未宣告完成**。
+
+
+
 ## ✅ 2026-11-17 Scene08｜依新傳的4張圖片精準修飛機＋2卡（**最新工作斷點**）
 - 用戶直接要求：會動的飛機**使用圖1細長白機身＋粉紅機翼**，不要 Scene07 圖2短胖機型；兩張卡**直接參照原本自己生成的圖4 模板**，而不是圖3 只有小插圖。**只改這些，其餘一律保留；核准後才開始其它三國**。
 - 新版獨立可操作 URL：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-08-INTERACTIVE.html
