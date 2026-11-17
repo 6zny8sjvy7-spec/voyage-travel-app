@@ -6,7 +6,7 @@
 - 本輪真正有操作：六分頁、日期與首爾當地倒數、首頁卡片、雨景 Canvas 細微動態、晴雪夜試玩鍵、日期上的首爾塔 SVG 跳動、單日/週總覽、四國交通靜態雙語站序與收合。**僅屬設計演示，未接正式個人/即時資料**。
 - Chromium 390/360/1440 寬度 51/51 檢查通過、0 JS 錯誤；**實體 Safari 尚未驗收**。
 - **必須誠實標記未完成：列車和飛機目前仍是核准畫作裡的靜態元素，沒有完成無瑕疵的分層運動；其餘天氣模式不是獨立完成的精緻插畫，也未接真正天氣。** 切其他三國首頁顯示「場景尚未製作」。
-- 設計分支 commit `189898434adac06a290bb7891c9aa89838c00e2b`；main 僅新增獨立 HTML 預覽 commit `666c157dfbd9b45a9e841b4f430d02e7d7093d8f`，原 V7 檔案 SHA 保持一致。Pages `44030067183` 須查最终結果。
+- 設計分支 commit `189898434adac06a290bb7891c9aa89838c00e2b`；main 僅新增獨立 HTML 預覽 commit `666c157dfbd9b45a9e841b4f430d02e7d7093d8f`，原 V7 檔案 SHA 保持一致。Pages `44030067183` 已實際確認 **completed/success**（對應 main commit `666c157dfbd9b45a9e841b4f430d02e7d7093d8f`）。獨立圖片/互動預覽尚需使用者 iPhone Safari 實測；本機 Chromium 不允許訪問 file/http URL，所以跨刷新 localStorage 持久化**未完成測試**。
 - **所有工件與下一個可恢復步驟**：[docs/VOYAGE-FIDELITY-05-STATUS.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-FIDELITY-05-STATUS.md)；規格文件 commit `eb866fb429f29869c86dd2d69a15f1824f802cb5`。Library 原型 HTML ID `libfile_bc5d47f53e448191ad752cbca02d5811`。
 - **下一步**：使用者在 iPhone Safari 先驗收原圖忠實度，再做不殘影的同筆觸飛機/列車分層動畫與獨立天氣場景；第一關未正式核准，不得進 V7 整合開發。
 
