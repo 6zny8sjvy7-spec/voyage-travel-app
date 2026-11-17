@@ -1,5 +1,17 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## ✅ 2026-11-17 Scene08｜依新傳的4張圖片精準修飛機＋2卡（**最新工作斷點**）
+- 用戶直接要求：會動的飛機**使用圖1細長白機身＋粉紅機翼**，不要 Scene07 圖2短胖機型；兩張卡**直接參照原本自己生成的圖4 模板**，而不是圖3 只有小插圖。**只改這些，其餘一律保留；核准後才開始其它三國**。
+- 新版獨立可操作 URL：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-08-INTERACTIVE.html
+- Scene08 完成：細長平塗側視飛機，飛行朝右上；左卡白底日期航班雙欄 + 完整機場航廈塔台/地面飛機；右卡三項真正可勾選護照效期、K-ETA、T-money + 底部韓屋草地。絕無裁圖小貼片。其它 Scene07 原本的天氣、行程、交通、列車、六分頁均不動。
+- **隔離本地資料**：Scene08 三項勾選鍵 `voyage-scene08-reminders-preview-only`，不讀寫 V7 旅行紀錄。原來 Scene07 的獨立 demo state 仍繼承，正式 V7 storage 不碰。
+- HTML 位於 `design-previews/VOYAGE-SCENE-08-INTERACTIVE.html`。設計分支 commit `244a198713bce8d9549fee17153c3d768c50d392`；main 只新增預覽檔 commit `c02e036d5e4428bdb958fd02d6e7ac011615c650`，blob `9e777caf00b5cf2b33ae498b4b6614c240c41f4f`。
+- **Pages run `44046056031` 已確認 completed/success**。Chrome/Chromium 模擬 390px/360px/1440px，**48/48 項測試通過、0 JS errors**；但原始圖4低解析度且**使用者真實 iPhone Safari 美術核准尚未完成**，不可稱完成第一關。
+- 原 Scene07 預覽、原 V7 測試頁和正式根頁的 GitHub blob 均原封不動。
+- **最完整跨聊天恢復路徑與附檔ID**：[docs/VOYAGE-SCENE-08-20261117.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-SCENE-08-20261117.md)（commit `9b6b79819a225449c3df0b70049a1bbb6fffd08b`）。
+- **下一步**：請使用者只驗收 3 個指定改動；若核准，再按已核准的平塗繪本風逐一製作日本、泰國、越南場景和天氣。未核准前不得跳四國或改真正 V7。
+
+
 ## ✅ 2026-11-17 Scene07｜指定三項插畫整改（目前最新進度）
 - **使用者本輪只要求** (1) 首頁會動飛機造型改可愛、(2) 左卡改完整機場／飛機小場景、(3) 右卡改完整韓屋／植物小場景。其它原本已認可設計不得修改，**首爾驗收無誤才接日本、泰國、越南**。
 - **獨立 Scene07 可操作預覽**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-07-INTERACTIVE.html
