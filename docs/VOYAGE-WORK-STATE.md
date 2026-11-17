@@ -11,7 +11,7 @@
 - **新獨立網頁網址**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-VISUAL-03-INTERACTIVE.html
 - GitHub **設計分支** HTML commit `50c4977031146de4583220d175e627db7de2332d`、JS commit `2fc1f89fc283ed77875f4a46d432b39e14c52d78`；**main 僅新增設計預覽檔** JS commit `b4db8e6d4a3a93786f95328bcd4715e775fe9ab6`、HTML commit `9598b00bff1a17404ce0782264257b4421e6e7f4`。
 - 靜態驗證：JS `new Function` 解析無誤、29 個引用 DOM id 無缺漏、六分頁 DOM 存在、首爾原創 WebP 資料已嵌入、頁面與 JS 的相對路徑一致。**尚未完成真實 iPhone Safari 點擊驗收。**
-- GitHub Pages run `43997736149`，交付前必須查 completed/success；**不許因檔案 commit 成功就宣稱網頁已驗收**。
+- GitHub Pages run `43997736149`，已確認 GitHub Actions `43997736149` **completed/success**，對應 commit `9598b00bff1a17404ce0782264257b4421e6e7f4`；仍須使用者 iPhone Safari 真實點擊驗收。
 - 原 V7 測試頁 blob `0027652b222854d9bc78d4f21940b2196e1cce20`、正式根頁 blob `acefa83e8eddfb950e22f0d6766fc626ad5da9d7`，與上一輪相同，未改動現有產品碼/資料。
 - **仍未完成**：四國高品質動畫主視覺、真實天氣 API、實際四國全線交通/即時班次、翻譯 OCR / 語音實機、費用與資料真正整合；其頁面目前仍為可操作的版型示意。
 - **下一步**：讓使用者用 iPhone Safari 看新可操作 V3 首頁與其他頁面，核准或回饋首頁美術/操作；設計未獲確認前不得修改正式 V7 App 或開始下一階段完整功能整改。
