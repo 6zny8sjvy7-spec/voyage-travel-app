@@ -1,5 +1,18 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## ✅ 2026-11-17 首爾 Flat 04 互動首頁 — **最新進度，從此接續**
+- 使用者**核准 2026-11-17 `雨中首爾旅行首頁_ui.png` 的平塗繪本美術方向**，要求立即做成真正可操作的首爾網頁，嚴禁再把漂亮靜態圖冒充會動的網站。
+- 已完成獨立預覽網頁 **https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-FLAT-04-INTERACTIVE.html**，GitHub Pages run **`44012232296` completed/success**；正式旅行 App V7 不變。
+- 真正主程式：`design-previews/VOYAGE-FLAT-04-INTERACTIVE.html`，design 分支 commit `3215b387f7309583ca1954f641ec6555a6809a74`；main 只新增獨立設計預覽檔，commit `f724dc653da262d0e94bfa9eb77daf1fe27af4be`； blob `a82bd3c2ad0f6de46658b37d669a801f6f2f7701`。
+- 首爾無字城市背景＋獨立可移動 SVG 列車與飛機，不是 Emoji。手動晴/雨/雪/夜鍵，Canvas 自然雨雪光點層；首頁出發日期設定與目的地當地時區倒數、卡片與勾選、6 主分頁、單日/週總覽、日期上方依國家代表性建築 SVG 跳動、四國交通雙語站序展開**可操作**。
+- 使用者核准的**原始圖**已在 Library `/VOYAGE/DesignReview/APPROVED-20261117-Seoul-flat-reference.png` ID `libfile_0136e14631cc819197ca3db158195ff8`；新分層用背景圖也已存 Library ID `libfile_9d16ec7f25d88191aefa657b51064093`。新背景參考美術並非逐像素重製，**未經使用者核准不可稱符合原圖**。
+- QA：Chromium 390×844、360×780、1440×900，69 checks passed / 0 failed / 0 JS error；未做實體 iPhone Safari 或真實天氣/交通/翻譯端到端。完整報告 Library ID `libfile_dc4db396ca0481918a109d0dedf2b63f`。本機 browser 限制以 `page.set_content` 驗證，**不能把存儲持久化視為已在 Safari 實測**。
+- 安全：`v2-review-20261112/index.html` blob `0027652b222854d9bc78d4f21940b2196e1cce20`、根頁 `index.html` blob `acefa83e8eddfb950e22f0d6766fc626ad5da9d7` **未修改**；真資料鍵 `voyage-v2-review-20261112`、`voyage-v02` 未使用。預覽專用 key `voyage-approved-flat04-demo-only-v1`。
+- 詳細規格及可回復 ID：[docs/VOYAGE-FLAT-04-20261117.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-FLAT-04-20261117.md)。
+- **下一步，第一關尚未完成**：使用者 iPhone Safari 點開 Flat04 預覽，先確認平塗場景、雨雪/夜景、列車飛機、實際卡片，回報不足再修；美術 OK 再逐國擴東京/曼谷/胡志明，逐頁定稿後才建立真 V7 整合分支。**不可拿此版替換正式產品**。
+
+
+
 ## 2026-11-17 第一關｜V3 首爾主視覺「可操作版」交付（最新）
 - 使用者指出前次 `VOYAGE-SEOUL-HERO-03.html` 「什麼都不能按」。**根因：該檔是單一靜態插畫 HTML，不是手機操作原型**，之前未充分清楚交代。
 - **本次完成**：把已產出的原創首爾 WebP 城市插畫直接嵌入 V2 的六分頁互動框架，新增 `design-previews/VOYAGE-VISUAL-03-INTERACTIVE.html`，搭配 `design-previews/voyage-v3-interactions.js`，其互動包括：
