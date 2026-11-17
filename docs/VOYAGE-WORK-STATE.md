@@ -1,5 +1,23 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## 2026-11-17 第一關｜V3 首爾主視覺「可操作版」交付（最新）
+- 使用者指出前次 `VOYAGE-SEOUL-HERO-03.html` 「什麼都不能按」。**根因：該檔是單一靜態插畫 HTML，不是手機操作原型**，之前未充分清楚交代。
+- **本次完成**：把已產出的原創首爾 WebP 城市插畫直接嵌入 V2 的六分頁互動框架，新增 `design-previews/VOYAGE-VISUAL-03-INTERACTIVE.html`，搭配 `design-previews/voyage-v3-interactions.js`，其互動包括：
+  1. 底部六分頁真正切頁，圖示改為 SVG 線稿；首頁行程、出發提醒與工具入口可點。
+  2. 首頁「晴、雨、雪、夜」可切換**視覺情境示意**（**非真實氣象、非分層原生城市動畫**）。
+  3. 行程單日與週總覽切換、日期可選、日期上方由 SVG 小飛機移動（非 Emoji）。
+  4. 交通依四國切換雙語站名、方向/站數示例、展開全部沿途站名。
+  5. 四國選擇仍可測交通資料示例，但**只有首爾 Hero V3 真正原創插畫**；切其他三國顯示「插畫尚待設計」不顯示錯國家的首爾畫，也不偷用被否決的 V2 幾何 Hero。
+- **新獨立網頁網址**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-VISUAL-03-INTERACTIVE.html
+- GitHub **設計分支** HTML commit `50c4977031146de4583220d175e627db7de2332d`、JS commit `2fc1f89fc283ed77875f4a46d432b39e14c52d78`；**main 僅新增設計預覽檔** JS commit `b4db8e6d4a3a93786f95328bcd4715e775fe9ab6`、HTML commit `9598b00bff1a17404ce0782264257b4421e6e7f4`。
+- 靜態驗證：JS `new Function` 解析無誤、29 個引用 DOM id 無缺漏、六分頁 DOM 存在、首爾原創 WebP 資料已嵌入、頁面與 JS 的相對路徑一致。**尚未完成真實 iPhone Safari 點擊驗收。**
+- GitHub Pages run `43997736149`，交付前必須查 completed/success；**不許因檔案 commit 成功就宣稱網頁已驗收**。
+- 原 V7 測試頁 blob `0027652b222854d9bc78d4f21940b2196e1cce20`、正式根頁 blob `acefa83e8eddfb950e22f0d6766fc626ad5da9d7`，與上一輪相同，未改動現有產品碼/資料。
+- **仍未完成**：四國高品質動畫主視覺、真實天氣 API、實際四國全線交通/即時班次、翻譯 OCR / 語音實機、費用與資料真正整合；其頁面目前仍為可操作的版型示意。
+- **下一步**：讓使用者用 iPhone Safari 看新可操作 V3 首頁與其他頁面，核准或回饋首頁美術/操作；設計未獲確認前不得修改正式 V7 App 或開始下一階段完整功能整改。
+
+
+
 ## 2026-11-16 首爾 Hero V3 真實公開樣稿（**最新部署**）
 - **已將單一原創首爾 Hero V3 手機設計審查稿做成可直接開啟的獨立 GitHub Pages 預覽**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SEOUL-HERO-03.html
 - 源文件已 commit 至設計分支 `design-previews/VOYAGE-SEOUL-HERO-03.html` commit `49a295054de2617d144942efa19c01c4c071eb1c`，獨立預覽文件已複製進 main 的**新增單一路徑** commit `6ee0821c945ba10298e8a1a5b888872e5a4622d0`；此檔為**自含 WebP 插畫的靜態 HTML**，不用外部圖片服務。
