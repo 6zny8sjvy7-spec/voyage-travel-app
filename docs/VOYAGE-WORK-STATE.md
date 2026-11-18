@@ -1,5 +1,16 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## ✅ 2026-11-18 Scene11｜**已製作最新核准圖之橋上列車動態網頁（目前最新）**
+- 使用者已核准 `明洞漢江列車之旅.png`（1448×1086；火車在欄杆內側），說「請依這張圖例來做網頁動版」。此前助手僅回規格，使用者於 11/18 16:50 指正「你剛剛都沒做」。
+- 現已真正完成新網頁 **https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-11-INTERACTIVE.html**；GitHub Pages run **44274356356 completed/success**。
+- 主場景使用**最新核准圖片**，保留構圖/文字/南山塔/橋/水面/天氣按鈕造型；透過影像對齊只修除原列車/飛機遮蔽位置，再抽取原畫列車作獨立 CSS 水平移動，**SVG 橋護欄固定在動車前面**，原本說的「車不能漂浮、要在桿子內」已做成分層；同畫風粉翼飛機獨立向右上飛行。晴雨雪夜切換、雨雪粒子、雲動與水光運作。
+- Chromium 390px/360px/1440px **51/51 checks pass、0 JS errors**，包括動車方向/位移、橋護欄圖層排序、沒有 body 橫向溢出、4天氣、6分頁與交通保留。但**使用者 Safari 視覺驗收尚未完成**；不得以這些程式檢查自動核准美術。
+- GitHub design HTML commit `66248724b8aaf1ef91a720e5fb4f40c08dc4f5ea`，main **只新增獨立預覽** commit `3290378b750a53db29dd55c1bac71f25dfcf167f`；原 Scene10、V7、root index SHA 未變；不接觸 V7 使用者資料，預覽專用鍵 `voyage-approved-bridge11-preview-only`。
+- 恢復的所有細節、原圖來源、QA 檔案 ID、局部背景非逐像素忠實的誠實說明及未來步驟：[docs/VOYAGE-SCENE-11-20261118.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-SCENE-11-20261118.md)，文件 commit `d632c1348cd1c3807a45c92d8b20e8b60bed8f8d`。
+- **下一步**：使用者先在 iPhone Safari 驗收列車真的在欄杆內跑、是否有背景修補痕跡、飛機/四天氣。若 OK，再開始日本/泰國/越南各國景與天氣；之後才接原 V7 功能整改。
+
+
+
 ## 🧭 2026-11-17 Scene10｜核准原圖插畫直接進網頁（**目前最新進度**）
 - 使用者明確否決 Scene08/09「原本自己生成的模板好看、網頁卻完全不像」；要求**自行比對原始四張照片，停止擅自創新**。本次從已核准的真正 941×1672 `雨中首爾旅行首頁_ui.png` 直接萃取飛機＋機場＋韓屋插畫，沒有再畫另一套。
 - **Scene10 獨立操作預覽**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-10-INTERACTIVE.html
