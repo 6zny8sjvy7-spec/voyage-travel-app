@@ -8,14 +8,16 @@ const $=id=>document.getElementById(id),E=U.E,button=U.button;
 const section=$("transportSection"),toolbar=section?.querySelector(".transport-panel"),result=$("v2RouteResults");
 if(!section||!toolbar||!result)return;
 let mode="mixed",version=0,lastCountry="",lastData=null;
-// Chinese station names below are a limited, manually checked glossary.
-// Unknown local destinations are shown with a Chinese warning, never guessed.
-const koreanNames={
- "명동":"明洞","명동역":"明洞","서울역":"首爾站","서울":"首爾",
- "진접":"榛接","사당":"舍堂","오이도":"烏耳島",
- "홍대입구":"弘大入口","회현":"會賢","공덕":"孔德",
- "불암산":"佛岩山","당고개":"堂嶺（舊名，現稱佛岩山）",
- "강남":"江南","신촌":"新村","시청":"市廳","동대문":"東大門"
+// Limited checked display glossary, not a claim of four-country station coverage.
+const localizedNames={
+ KR:{"명동":"明洞","명동역":"明洞","myeongdong":"明洞","서울역":"首爾站","서울":"首爾","seoul station":"首爾站",
+ "진접":"榛接","jinjeop":"榛接","사당":"舍堂","sadang":"舍堂","오이도":"烏耳島","oido":"烏耳島",
+ "홍대입구":"弘大入口","hongik univ.":"弘大入口","회현":"會賢","공덕":"孔德",
+ "불암산":"佛岩山","당고개":"堂嶺（舊名，現稱佛岩山）","danggogae":"堂嶺（舊名，現稱佛岩山）",
+ "강남":"江南","신촌":"新村","시청":"市廳","동대문":"東大門"},
+ TH:{"สยาม":"暹羅","siam":"暹羅","อโศก":"阿索克","asok":"阿索克","ชิดลม":"奇隆","chit lom":"奇隆","เพลินจิต":"奔集","phloen chit":"奔集"},
+ JP:{"渋谷":"澀谷","shibuya":"澀谷","新宿":"新宿","shinjuku":"新宿","浅草":"淺草","asakusa":"淺草","銀座":"銀座","ginza":"銀座","表参道":"表參道","omote-sando":"表參道","東京":"東京","tokyo":"東京"},
+ VN:{"bến thành":"濱城","ben thanh":"濱城","濱城市場":"濱城","hồ chí minh":"胡志明市"}
 };
 function bilingual(raw,t,kind){
  const name=String(raw||"").trim();
@@ -24,12 +26,15 @@ function bilingual(raw,t,kind){
  if(code==="KR"){
   const line=name.match(/^(?:서울\s*)?(\d+)\s*호선$/u);
   if(kind==="line"&&line)return "首爾地鐵 "+line[1]+" 號線 · "+name;
-  const key=name.replace(/\s*(?:행|방면|역)$/u,"").trim();
-  const known=koreanNames[name]||koreanNames[key];
-  if(known)return known+"（"+name+"）";
-  if(/[가-힣]/u.test(name))return "中文譯名待核實 · "+name;
  }
- return name;
+ if(code==="TH"&&kind==="line"&&/^BTS\s+Sukhumvit/iu.test(name))return "BTS 素坤逸線 · "+name;
+ if(code==="JP"&&kind==="line"&&/Ginza\s+Line|銀座線/iu.test(name))return "東京地鐵銀座線 · "+name;
+ if(code==="VN"&&kind==="line"&&/(?:Metro|MRT)\s*(?:Line)?\s*1\b/iu.test(name))return "捷運 1 號線 · "+name;
+ const key=name.toLocaleLowerCase().replace(/\s*(?:행|방면|역)$/u,"").trim();
+ const known=localizedNames[code]?.[key]||localizedNames[code]?.[name];
+ if(known)return known+"（"+name+"）";
+ // Never invent a Chinese station name from a foreign-language source string.
+ return "中文譯名待核實 · "+name;
 }
 function modeName(m){return m==="rail"?"地鐵／BTS／鐵道":m==="bus"?"公車":"綜合轉乘"}
 function modeItems(items){return (items||[]).filter(item=>mode==="mixed"||item.transportMode===mode)}
