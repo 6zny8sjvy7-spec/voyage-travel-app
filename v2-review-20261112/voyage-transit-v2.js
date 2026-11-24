@@ -95,6 +95,12 @@ async function apiSearch(from,to){
  return adapter.plan(from,to,t,{time:date+"T"+clock+":00"+offset});
 }
 let searchVersion=0;
+document.addEventListener("voyage:transit-mode-changed",()=>{
+ searchVersion++;
+ searchBtn.disabled=false;
+ // Pending old-mode searches may finish later. Their generation is invalidated.
+ status("交通模式已切換；先前不同車種的 A→B 路線已清除，請重新查詢。");
+});
 function countryRouteFallback(from,to){
  if(!window.VoyageRegionV4?.isSeoul(trip()))return null;
  // Deliberately limit offline fallback to the explicitly documented corridor.
@@ -104,9 +110,13 @@ function countryRouteFallback(from,to){
 function filterMode(routes){
  const mode=window.VoyageTransitUIV5?.mode||"mixed";
  if(mode==="mixed")return routes;
- const railModes=new Set(["RAIL","SUBWAY","SUBURBAN","TRAM","LIGHT_RAIL","MONORAIL","FUNICULAR"]);
- const transitOnly=routes.filter(route=>route.legs.some(l=>mode==="bus"?l.mode==="BUS":railModes.has(l.mode)));
- return transitOnly;
+ const railModes=new Set(["RAIL","SUBWAY","SUBURBAN","TRAM","LIGHT_RAIL","MONORAIL","FUNICULAR","METRO"]);
+ const types=route=>(route.legs||[]).filter(l=>!["WALK","BIKE","CAR"].includes(l.mode)).map(l=>(l.mode||"").toUpperCase());
+ // Pure rail and pure bus are separate. A rail-plus-bus trip belongs ONLY under mixed.
+ return routes.filter(route=>{
+  const legs=types(route);
+  return legs.length>0&&legs.every(type=>mode==="bus"?type==="BUS":railModes.has(type));
+ });
 }
 async function search(){
  const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),t=trip();
