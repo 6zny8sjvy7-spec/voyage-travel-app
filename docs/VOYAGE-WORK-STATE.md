@@ -1,5 +1,18 @@
 # VOYAGE｜工作斷點（自動跨聊天室復原入口）
 
+## ✅ 2026-11-24｜首爾首頁 Scene12 修補並**接入原 V7 網頁**（**最新斷點**）
+- 使用者在 11/24 發現 Scene11 **飛機殘影、倒數 53/47 疊字、房子被背景合成拉歪**，希望「一次改然後用正式網站」。本次另自查 CSS 讓火車在 390px 由原應 160×24 被錯拉為 160×106，已修復長寬比。
+- **本次實際更新的原 V7 網址**：https://6zny8sjvy7-spec.github.io/voyage-travel-app/v2-review-20261112/；GitHub Pages run **45348996789 completed/success**。
+- **本次不再將原 Scene11 展示整頁蓋進正式 V7**。main 中只新增 `design-previews/VOYAGE-HERO-12.html`（乾淨首爾畫面與動態）及 `v2-review-20261112/voyage-home-art12.js`（首爾旅行限定 iframe 整合器），並在原 `v2-review-20261112/index.html` **只新增一行載入 JS**，其餘 V7 內頁/功能/資料格式完全未改。
+- **主提交**：Hero `f2fdbf3ffd2e2301b0230b6d5ad0d0acc80d7af2`、整合器 `ed6a753972f915f8f4418f9045b6f1e136406bfe`、V7 index `a2d63a3a01748b765eaa4ebeedf287ba1b9f0316`。
+- 修復方案：以最後核准的 `明洞漢江列車之旅.png` 為主，只重建火車/飛機遮蔽位置（**局部仍需美術檢查**），擦除舊「53」，由 DOM 按首爾日期算倒數，原車身以 641/95 比例移動且護欄仍在前景。
+- **保護正式舊根目錄**：GitHub Pages 根 `index.html` 是較早的另一套 App，其 localStorage `voyage-v02` 與 V7 的 `voyage-v2-review-20261112` **不同**。根站未改，避免沒有搬運資料就整頁換版。若未來要統一根網址，需先明確資料遷移及跨瀏覽器驗證。
+- Chromium 360/390/1440px 靜態與動畫尺寸、模擬 iframe 切國/日期/天氣測試完成。**實體 iPhone Safari/真實 V7 全功能 end-to-end 仍未驗收**；Pages 成功不等於美術已完全通過。
+- 全部修改、限制、檔案與下一步詳見 [docs/VOYAGE-HOME-V12-20261124.md](https://github.com/6zny8sjvy7-spec/voyage-travel-app/blob/design/voyage-ui-v1-20261116/docs/VOYAGE-HOME-V12-20261124.md)（commit `c2a5bd17d39fc6bd60a6afa4195ca6370a6715ac`）。
+- **下一步**：使用者用 Safari 直接進入原 V7 網址切首爾驗收 Scene12，若仍有殘影/房屋局部差異就只修那一區；**不要擅自重做已接受的卡片/功能**。確認後再做日本、泰國、越南，最後再統一 root/V7 產品資料及網址。
+
+
+
 ## ✅ 2026-11-18 Scene11｜**已製作最新核准圖之橋上列車動態網頁（目前最新）**
 - 使用者已核准 `明洞漢江列車之旅.png`（1448×1086；火車在欄杆內側），說「請依這張圖例來做網頁動版」。此前助手僅回規格，使用者於 11/18 16:50 指正「你剛剛都沒做」。
 - 現已真正完成新網頁 **https://6zny8sjvy7-spec.github.io/voyage-travel-app/design-previews/VOYAGE-SCENE-11-INTERACTIVE.html**；GitHub Pages run **44274356356 completed/success**。
