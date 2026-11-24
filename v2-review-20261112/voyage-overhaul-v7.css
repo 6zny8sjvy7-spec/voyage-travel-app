@@ -122,3 +122,28 @@ body.dark #week .v3-event-name,body.dark #events .v3-event-name{
 }
 body.dark #week .v3-event-detail,body.dark #events .v3-event-detail{color:#d5e2f5!important}
 body.dark .v1-sub,body.dark .v3-event-detail{color:#b9cbe6}
+
+/* VOYAGE QA13 departure cards — explicit rail/bus mode and readable bilingual output */
+#v5TransitPanel{border:1px solid var(--line);background:var(--card);border-radius:19px;padding:16px;margin:14px 0;box-shadow:0 7px 22px #27324c0d}
+#v5TransitPanel h3{margin:0 0 8px;font-size:17px;line-height:1.4}
+#v5TransitPanel .v5-mode-switch{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+#v5TransitPanel .v5-mode-switch button{flex:1 1 105px;min-height:43px;white-space:normal;border-radius:13px;line-height:1.3}
+#v5TransitPanel .v5-mode-switch button[aria-pressed="true"]{background:#dfe8ff;color:#244c9b;border:2px solid #7595e0;font-weight:850}
+#v5TransitPanel .v5-departure-query{display:flex;flex-wrap:wrap;align-items:flex-end;gap:9px;margin:13px 0}
+#v5TransitPanel .v5-departure-query label{flex:1 1 215px;min-width:0;display:grid;gap:8px}
+#v5TransitPanel #v5DepartureStation{width:100%;min-height:43px}
+#v5TransitPanel #v5DepartureResult{margin-top:12px;line-height:1.55;min-width:0}
+#v5TransitPanel .v5-station-heading{display:block;font-size:14px;margin-bottom:10px}
+#v5TransitPanel .v5-departure-list{display:grid;gap:10px;max-width:100%}
+#v5TransitPanel .v5-departure-item{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:100%;min-width:0;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:0 3px 12px #1b35520a}
+#v5TransitPanel .v5-service-info{display:grid;gap:4px;flex:1;min-width:0;overflow-wrap:anywhere}
+#v5TransitPanel .v5-service-type{font-size:12px;color:var(--muted);font-weight:750}
+#v5TransitPanel .v5-service-info b{font-size:14px;line-height:1.5}
+#v5TransitPanel .v5-service-headsign{font-size:13px;line-height:1.55}
+#v5TransitPanel .v5-service-info small{font-size:11px;color:var(--muted);line-height:1.45}
+#v5TransitPanel .v5-eta-schedule,#v5TransitPanel .v5-eta-realtime{flex:0 0 auto;min-width:75px;max-width:130px;text-align:right;font-size:13px;line-height:1.4}
+#v5TransitPanel .v5-eta-realtime{color:#236e60}
+body.dark #v5TransitPanel .v5-mode-switch button[aria-pressed="true"]{background:#28467a;color:#ecf4ff;border-color:#86aaf6}
+body.dark #v5TransitPanel .v5-departure-item{background:#213452;border-color:#3f597a}
+body.dark #v5TransitPanel .v5-eta-realtime{color:#9dffe4}
+@media(max-width:500px){#v5TransitPanel{padding:12px}#v5TransitPanel .v5-departure-item{padding:11px 12px;align-items:flex-start}#v5TransitPanel .v5-eta-schedule,#v5TransitPanel .v5-eta-realtime{min-width:62px;max-width:90px;font-size:12px}}
