@@ -133,6 +133,20 @@ async function plan(from,to,t,{fetcher=fetch,signal,time}={}){
  if(!result.length)throw new Error("此城市的公開交通資料目前沒有可驗證的乘車路線");
  return result;
 }
+// Classify departures only from explicit provider fields or unambiguous, named rail brands.
+ // A numeric bus line or a station alone is never proof of the vehicle type.
+function departureMode(row){
+ const options=[row?.mode,row?.route?.mode,row?.route?.transportMode,row?.transportMode,row?.trip?.mode,row?.trip?.route?.mode];
+ for(const value of options){
+  const v=String(typeof value==="string"?value:value?.mode||value?.type||value?.name||"").toUpperCase().replace(/[ -]/g,"_");
+  if(["BUS","TROLLEYBUS","COACH"].includes(v))return "bus";
+  if(["RAIL","SUBWAY","METRO","TRAM","LIGHT_RAIL","SUBURBAN","REGIONAL_RAIL","HIGHSPEED_RAIL","LONG_DISTANCE","MONORAIL"].includes(v))return "rail";
+  if(["FERRY","BOAT","CAR","BIKE","WALK","TAXI"].includes(v))return "other";
+ }
+ const label=String(row?.displayName||row?.routeShortName||row?.routeLongName||"").trim();
+ if(/^(?:서울\s*\d+\s*호선|수도권\s*\d+\s*호선|지하철\s*\d+\s*호선|서울교통공사\s*\d+\s*호선|AREX(?:\s|$)|BTS(?:\s|$)|MRT(?:\s|$)|JR(?:\s|$)|Tokyo\s+Metro(?:\s|$))/iu.test(label))return "rail";
+ return "unknown";
+}
 function readableDeparture(row,now=Date.now()){
  const place=row.place||{};
  const ts=place.departure||place.departureTime||place.scheduledDeparture||row.departure||row.scheduledDeparture;
@@ -140,7 +154,7 @@ function readableDeparture(row,now=Date.now()){
  const when=Date.parse(ts),mins=Math.ceil((when-now)/60000);
  if(mins<0||mins>180)return null;
  const realtime=row.realTime===true&&["OBSERVED","PREDICTED","PROPAGATED"].includes(place.departureTimestampReason);
- return{line:String(row.displayName||row.routeShortName||row.routeLongName||row.mode||"路線未標示"),headsign:String(row.headsign||row.tripTo?.name||"方向未標示"),minutes:mins,time:ts,realtime,cancelled:row.cancelled===true||row.tripCancelled===true,stop:String(place.name||""),source:ATTRIBUTION};
+ return{line:String(row.displayName||row.routeShortName||row.routeLongName||row.mode||"路線未標示"),headsign:String(row.headsign||row.tripTo?.name||"方向未標示"),transportMode:departureMode(row),minutes:mins,time:ts,realtime,cancelled:row.cancelled===true||row.tripCancelled===true,stop:String(place.name||""),source:ATTRIBUTION};
 }
 async function departures(name,t,{fetcher=fetch,signal}={}){
  const station=await geocode(name,t,{fetcher,signal});
