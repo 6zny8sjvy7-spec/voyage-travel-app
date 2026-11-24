@@ -735,15 +735,9 @@ if(existingPicker){home.append(el("div",{class:"v7-trip-switch"},[el("label",{fo
 home.append(el("div",{class:"v2-section-label"},[el("h2",{text:"旅行快速入口"}),el("span",{text:"點一下，就到要用的功能"})]));
 const nav=[
 ["🗓️","我的行程","時間軸與週行事曆",()=>setTab("itinerary")],
-["🚇","交通導航","查路線與搭乘",()=>setTab("transport")],
-["💳","費用與分帳","換匯與結算",()=>U.showPage("expenses")],
-["🍜","美食口袋名單","餐廳與想吃的料理",()=>U.showPage("foods")],["🛍️","購物願望","想買的東西與紀念品",()=>U.showPage("wishlist")],
-["🧳","行李清單","旅伴各自打包",()=>U.showPage("packing")],
-["🗣️","即時翻譯","翻譯與朗讀",()=>U.showPage("translation")],
-["🏨","機票住宿","預約與地址",()=>U.showPage("documents")],
-
-["👥","多人協作","邀請好友同行",()=>U.showPage("collab")],
-["📥","匯入行程","備份與追加匯入",()=>U.showPage("import")],["📚","旅行紀錄","歷史旅行和封存",()=>U.showPage("history")]
+["🚇","交通導航","站數、方向與轉乘",()=>setTab("transport")],
+["💳","費用與分帳","預算與匯率",()=>U.showPage("expenses")],
+["🧳","旅行工具","美食、行李、購物、翻譯集中在這裡",()=>U.showPage("overview")]
 ];
 const grid=el("div",{class:"v2-quick-grid"});for(const [emoji,label,sub,fn] of nav){const b=el("button",{class:"v2-link"});b.append(el("span",{class:"v2-icon",text:emoji}),el("span",{text:label}),el("small",{text:sub}));b.onclick=fn;grid.append(b)}home.append(grid);
 home.append(el("div",{class:"v2-section-label"},[el("h2",{text:"旅程小提醒"}),el("span",{text:"旅行資料會自動儲存在裝置上"})]));
@@ -1142,5 +1136,5 @@ window.VoyageWeatherV3={classify,draw};
 <script src="./voyage-forward-ui.js"></script>
 <script src="./voyage-import-v6.js"></script>
 <script src="./voyage-trip-v6.js"></script>
-<script src="./voyage-home-art12.js"></script>
+<script src="./voyage-home-art13.js"></script>
 </body></html>
