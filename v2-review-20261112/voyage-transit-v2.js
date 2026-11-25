@@ -134,6 +134,19 @@ async function search(){
  }finally{if(generation===searchVersion)searchBtn.disabled=false}
 }
 function stationText(s){const label=window.VoyageTransitV5?.stationLabel?.(s,trip())||[s.zh,s.en,s.local,s.name].filter(Boolean).join(" · ")||"站名資料不足";const id=String(s.id||"").trim();const passengerCode=/^G(?:0[1-9]|1[0-9])$/.test(id)?id:"";return label+(passengerCode?" · "+passengerCode:"")}
+function routeLineLabel(value){
+ const line=String(value||"路線未提供");
+ if(window.VoyageRegionV4?.countryCode(trip())!=="KR")return line;
+ const m=line.match(/^서울\s*(\d+)\s*호선$/);
+ if(m)return"首爾地鐵 "+m[1]+" 號線 · "+line;
+ if(/공항철도/.test(line))return"機場鐵道 · "+line;
+ return line;
+}
+function routeDirectionLabel(value){
+ const raw=String(value||"方向未提供");
+ if(/[\u3400-\u9FFF]/u.test(raw))return raw;
+ return window.VoyageTransitV5?.stationLabel?.(raw,trip())||raw+"（中文名稱尚未核實）";
+}
 function knownCount(leg,route){
  if(["WALK","BIKE","CAR"].includes(leg.mode))return null;
  if(leg.sequenceComplete===false)return null;
@@ -157,10 +170,10 @@ function draw(routes){
   const counts=legs.map(l=>knownCount(l,route));
   const verified=counts.length>0&&counts.every(n=>Number.isInteger(n));
   const count=verified?counts.reduce((a,b)=>a+b,0):null;
-  const main=legs.map(l=>(l.mode==="BUS"?"🚌 ":"🚇 ")+(l.line||"未知車號")).join(" → ");
+  const main=legs.map(l=>(l.mode==="BUS"?"🚌 ":"🚇 ")+routeLineLabel(l.line||"未知車號")).join(" → ");
   const walk=route.legs.filter(l=>["WALK","BIKE"].includes(l.mode)).reduce((n,l)=>n+(Number(l.duration)||0),0);
   const first=legs[0]?.stations?.[0],lastLeg=legs[legs.length-1],last=lastLeg?.stations?.[(lastLeg.stations||[]).length-1];
-  const stationName=st=>st?([st.zh,st.en,st.local,st.name].filter(Boolean)[0]||"站名待核對"):"站名資料不足";
+  const stationName=st=>st?(window.VoyageTransitV5?.stationLabel?.(st,trip())||[st.zh,st.en,st.local,st.name].filter(Boolean)[0]||"站名待核對"):"站名資料不足";
   return {
    title:"方案 "+(index+1)+" · "+main,
    stations:count===null?"站數尚未核實":"共 "+count+" 站",
@@ -178,11 +191,11 @@ function draw(routes){
   if(!counts.length||counts.some(x=>x===null))details.append(E("p",{class:"v2-route-status",text:"資料來源未提供完整停靠站順序，不能確認總站數；不會把只有起終點的路段誤算為 1 站，也不會猜測公車站數。"}));
   for(const [i,leg] of route.legs.entries()){
    const row=E("div",{class:"v2-route-leg"}),walking=["WALK","BIKE","CAR"].includes(leg.mode),n=knownCount(leg,route);
-   row.append(E("strong",{text:(i+1)+". "+(walking?"🚶 步行":leg.mode==="BUS"?"🚌 公車 "+(leg.line||"未提供車號"):"🚆 "+(leg.line||"未提供路線"))}));
+   row.append(E("strong",{text:(i+1)+". "+(walking?"🚶 步行":leg.mode==="BUS"?"🚌 公車 "+routeLineLabel(leg.line||"未提供車號"):"🚆 "+routeLineLabel(leg.line||"未提供路線"))}));
    if(walking){
     if(Number(leg.duration)>0)row.append(E("div",{class:"v1-sub",text:"預估步行 "+Math.ceil(leg.duration/60)+" 分"}));
    }else{
-    row.append(E("div",{class:"v1-sub",text:"搭乘方向："+(leg.headsign||"未提供目的地方向")}));
+    row.append(E("div",{class:"v1-sub",text:"搭乘方向："+routeDirectionLabel(leg.headsign||"未提供目的地方向")}));
     row.append(E("div",{class:"v1-sub",text:n===null?"本段站數尚未核實":"本段搭乘 "+n+" 站"}));
     if(leg.directionVerified===false)row.append(E("p",{class:"v2-route-status",text:"來源缺少官方方向標示，不能確認正確月台或站牌方向。"}));
    }
