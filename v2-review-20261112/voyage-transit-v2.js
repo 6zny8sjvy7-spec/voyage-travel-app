@@ -70,6 +70,7 @@ toLabel.after(toolbar);
 const routeStyle=E("style",{text:".v2-route-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0}.v2-route-card h3{font-size:16px;margin:0 0 7px}.v2-route-leg{border-left:3px solid #f0ab72;margin:12px 0 0 9px;padding:2px 0 4px 18px}.v2-route-leg strong{font-size:14px}.v2-route-station{position:relative;padding:8px 2px;font-size:13px;border-bottom:1px solid var(--line)}.v2-route-station:before{content:'';position:absolute;left:-27px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid #de9c77}.v2-route-station:last-child:before{background:#d48563}.v2-route-source{font-size:11px;color:var(--muted);line-height:1.65}.v2-route-source a{color:var(--blue)}.v2-route-status{background:var(--soft);border-radius:12px;padding:10px;font-size:12px;margin:8px 0}"});
 const v6Styles=E("style",{text:".v6-route-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:9px;margin:14px 0}.v6-route-choice{display:block;text-align:left;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card);font-weight:650;line-height:1.65;white-space:normal;color:var(--ink)}.v6-route-choice[aria-pressed=true]{border:2px solid var(--blue);background:var(--soft)}.v6-route-detail{padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}.v6-route-detail .v2-route-leg{margin-top:11px}"});document.head.append(v6Styles);
 document.head.append(routeStyle);
+const v8Styles=E("style",{text:".v8-route-suggestions{margin-top:12px;padding:13px;border-radius:14px;border:1px solid var(--line);background:var(--card)}.v8-suggestion-group{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.v8-suggestion-group>b{width:100%;font-size:13px}.v8-suggestion-group button{text-align:left;max-width:100%;white-space:normal;min-height:38px}"});document.head.append(v8Styles);
 let selectedRoute=null;
 function routeSEO(toKey,fromKey){const forward=fromKey==="myeongdong"&&toKey==="hongdae",reverse=fromKey==="hongdae"&&toKey==="myeongdong";if(!forward&&!reverse)return null;
 const steps=forward?[
@@ -118,6 +119,32 @@ function filterMode(routes){
   return legs.length>0&&legs.every(type=>mode==="bus"?type==="BUS":railModes.has(type));
  });
 }
+async function offerRouteCandidates(from,to,t,generation,tripId){
+ const adapter=window.VoyageTransitV5;
+ if(typeof adapter?.suggestStations!=="function")return;
+ const box=E("div",{class:"v8-route-suggestions",id:"v8RouteStationCandidates"});
+ box.append(E("strong",{text:"附近可選站點（來自公開地理搜尋，請核對官方站牌後手動選擇）"}));
+ for(const entry of [{id:"transitFrom",label:"出發站",name:from},{id:"transitTo",label:"抵達站",name:to}]){
+  let choices=[];
+  try{choices=await adapter.suggestStations(entry.name,t)}catch(_){continue}
+  if(generation!==searchVersion||trip().id!==tripId)return;
+  if(!choices.length)continue;
+  const group=E("div",{class:"v8-suggestion-group"});
+  group.append(E("b",{text:entry.label+"："+entry.name}));
+  for(const stop of choices.slice(0,5)){
+   const name=stop.zh?stop.zh+"（"+stop.name+"）":stop.name;
+   const select=button(name+(stop.local&&stop.local!==stop.name?" · "+stop.local:""),()=>{
+    $(entry.id).value=stop.name;
+    box.remove();
+    status("已選擇來源候選站「"+stop.name+"」。請再次按『查詢實際交通路線』核對完整站數及方向。");
+   },"secondary");
+   group.append(select);
+  }box.append(group);
+ }
+ if(generation===searchVersion&&box.querySelector(".v8-suggestion-group")){
+  result.append(box);
+ }
+}
 async function search(){
  const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),t=trip();
  if(!from||!to){status("請先填出發站及抵達站");return}
@@ -142,6 +169,7 @@ async function search(){
  }catch(error){
   if(generation!==searchVersion||trip().id!==tripId)return;
   status("查無能在 VOYAGE 內核實的「"+t.country+" · "+t.city+"」路線："+error.message+"。請檢查站名或嘗試當地文字；免費資料無法查到時不猜測站數或跳轉外站。");
+  await offerRouteCandidates(from,to,t,generation,tripId);
  }finally{if(generation===searchVersion)searchBtn.disabled=false}
 }
 function stationText(s){
