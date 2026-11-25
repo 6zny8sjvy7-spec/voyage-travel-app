@@ -118,6 +118,47 @@ async function lookupForRoute(from,t,route){
   if(generation===version)arrivals.textContent="本次無法核對 A 站同線同方向的班次："+String(error?.message||"資料來源無回應")+"。";
  }finally{if(generation===version)refresh.disabled=false}
 }
+/* A→B is the primary action. Station-specific timetable and older manual
+   boarding controls remain available under expandable advanced sections. */
+function restoreJourneyOrder(){
+ const region=$("v4TransitRegion");
+ if(region)section.insertBefore(bar,region);
+ else section.insertBefore(bar,toolbar);
+ // Previously the route response rendered ABOVE the A/B input. Put it immediately
+ // after the original input panel without replacing the actual source elements.
+ section.insertBefore(toolbar,result);
+ const timetable=E("details",{id:"v5OptionalDepartures",class:"v5-optional"});
+ timetable.append(E("summary",{text:"查看此站下一班（班表／有來源才顯示即時）"}),query,arrivals);
+ result.after(timetable);
+ const oldSwitch=section.querySelector(":scope > .view-switch");
+ if(oldSwitch){
+  const legacy=E("details",{id:"v5ManualProgress",class:"v5-optional"});
+  legacy.append(E("summary",{text:"手動記錄搭乘進度（舊功能，選用）"}),oldSwitch);
+  timetable.after(legacy);
+ }
+ const fields=$("planFields"),minutes=$("transitDuration")?.closest("label"),add=$("addTransit");
+ if(fields&&minutes&&add){
+  const manual=E("details",{id:"v5ManualTransitAdd",class:"v5-optional"});
+  manual.append(E("summary",{text:"手動新增交通行程（沒有查詢結果時選用）"}),minutes,add);
+  fields.append(manual);
+ }
+ const help=E("p",{class:"v1-sub",text:"先選地鐵／BTS、公車或綜合轉乘，輸入 A 出發站和 B 目的站，再按「查詢 A → B 怎麼搭」。結果就在下方；沒有可信來源時明確標示站數／方向待核對。"});
+ toolbar.before(help);
+ const style=E("style",{text:`
+ #transportSection .v5-mode-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}
+ #transportSection .v5-mode-switch button{min-width:0;white-space:normal;padding:11px 5px}
+ #transportSection .v5-mode-switch button[aria-pressed="true"]{border:2px solid var(--blue);background:var(--soft);font-weight:800}
+ #transportSection .v5-optional{margin:12px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:11px 13px}
+ #transportSection .v5-optional summary{cursor:pointer;color:var(--ink);font-weight:700}
+ #transportSection #v2RouteResults{scroll-margin-top:18px}
+ #transportSection #v5DepartureResult{margin-top:10px}
+ #transportSection .transport-panel{margin-top:9px}
+ #transportSection #planFields #v5ManualTransitAdd{grid-column:1 / -1}
+ @media(max-width:600px){#transportSection .v5-mode-switch button{font-size:12px;padding:10px 3px}}
+ `});
+ document.head.append(style);
+}
+restoreJourneyOrder();
 const oldRender=render;render=function(){oldRender();refreshCountry()};
 refreshCountry();
 global.VoyageTransitUIV5={get mode(){return mode},refreshCountry,lookup,lookupForRoute};
