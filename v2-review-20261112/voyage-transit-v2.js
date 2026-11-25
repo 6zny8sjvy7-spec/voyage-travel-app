@@ -23,7 +23,7 @@ const panel=$("transportSection");
 const legacyExternalRouteButton=$("vTransitRoute");
 if(legacyExternalRouteButton)legacyExternalRouteButton.remove();
 panel.insertBefore(result,panel.querySelector(".transport-panel"));
-const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢實際交通路線",search,"primary");
+const toolbar=E("div",{class:"v1-actions"}),searchBtn=button("🔎 查詢 A → B 怎麼搭",search,"primary");
 toolbar.append(searchBtn);
 const regionInfo=E("div",{id:"v4TransitRegion",class:"v1-box"});
 panel.insertBefore(regionInfo,result);
@@ -55,6 +55,8 @@ function refreshRegion(){
  if(!regionInfo.firstChild||lastDestination!==identifier){
   regionInfo.replaceChildren();
   const heading=E("strong",{text:"📍 目前查詢地區："+name});
+  const places=({KR:["例如 明洞／명동","例如 弘大入口／홍대입구"],TH:["例如 暹羅／Siam","例如 阿索克／Asok"],JP:["例如 新宿／Shinjuku","例如 澀谷／Shibuya"],VN:["例如 濱城／Bến Thành","例如 河內"]})[reg?.code]||["出發站完整名稱","抵達站完整名稱"];
+  $("transitFrom").placeholder=places[0];$("transitTo").placeholder=places[1];
   const description=E("p",{class:"v1-sub",text:(reg?.rail||"依城市查詢")+"／"+(reg?.bus||"公車")+"。車站查詢、資料來源與可用服務會依目前旅行目的地切換；沒有授權的即時到站資訊不顯示倒數。"});
   regionInfo.append(heading,description);
   regionInfo.append(E("p",{class:"v1-sub",text:"所有查詢結果留在 VOYAGE，無法確認站序就顯示資料不足，不需要跳到其他網站。"}));
@@ -68,7 +70,7 @@ const toLabel=$("transitTo").closest("label");
 toLabel.after(toolbar);
 // Boarding direction is a ROUTE RESULT, never a field the traveler must guess.
 const routeStyle=E("style",{text:".v2-route-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0}.v2-route-card h3{font-size:16px;margin:0 0 7px}.v2-route-leg{border-left:3px solid #f0ab72;margin:12px 0 0 9px;padding:2px 0 4px 18px}.v2-route-leg strong{font-size:14px}.v2-route-station{position:relative;padding:8px 2px;font-size:13px;border-bottom:1px solid var(--line)}.v2-route-station:before{content:'';position:absolute;left:-27px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid #de9c77}.v2-route-station:last-child:before{background:#d48563}.v2-route-source{font-size:11px;color:var(--muted);line-height:1.65}.v2-route-source a{color:var(--blue)}.v2-route-status{background:var(--soft);border-radius:12px;padding:10px;font-size:12px;margin:8px 0}"});
-const v6Styles=E("style",{text:".v6-route-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:9px;margin:14px 0}.v6-route-choice{display:block;text-align:left;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card);font-weight:650;line-height:1.65;white-space:normal;color:var(--ink)}.v6-route-choice[aria-pressed=true]{border:2px solid var(--blue);background:var(--soft)}.v6-route-detail{padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}.v6-route-detail .v2-route-leg{margin-top:11px}"});document.head.append(v6Styles);
+const v6Styles=E("style",{text:".v6-route-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:9px;margin:14px 0}.v6-route-choice{display:block;text-align:left;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card);font-weight:650;line-height:1.65;white-space:normal;color:var(--ink)}.v6-route-choice[aria-pressed=true]{border:2px solid var(--blue);background:var(--soft)}.v6-route-detail{padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}.v6-route-detail .v2-route-leg{margin-top:11px}"});document.head.append(v6Styles);
 document.head.append(routeStyle);
 let selectedRoute=null;
 function routeSEO(toKey,fromKey){const forward=fromKey==="myeongdong"&&toKey==="hongdae",reverse=fromKey==="hongdae"&&toKey==="myeongdong";if(!forward&&!reverse)return null;
@@ -95,6 +97,8 @@ async function apiSearch(from,to){
  return adapter.plan(from,to,t,{time:date+"T"+clock+":00"+offset});
 }
 let searchVersion=0;
+function invalidate(){searchVersion++;selectedRoute=null;searchBtn.disabled=false;}
+
 function countryRouteFallback(from,to){
  if(!window.VoyageRegionV4?.isSeoul(trip()))return null;
  // Deliberately limit offline fallback to the explicitly documented corridor.
@@ -105,7 +109,10 @@ function filterMode(routes){
  const mode=window.VoyageTransitUIV5?.mode||"mixed";
  if(mode==="mixed")return routes;
  const railModes=new Set(["RAIL","SUBWAY","SUBURBAN","TRAM","LIGHT_RAIL","MONORAIL","FUNICULAR"]);
- const transitOnly=routes.filter(route=>route.legs.some(l=>mode==="bus"?l.mode==="BUS":railModes.has(l.mode)));
+ const transitOnly=routes.filter(route=>{
+  const travel=(route.legs||[]).filter(l=>!["WALK","BIKE","CAR"].includes(l.mode));
+  return travel.length>0 && travel.every(l=>mode==="bus"?l.mode==="BUS":railModes.has(l.mode));
+ });
  return transitOnly;
 }
 async function search(){
@@ -126,7 +133,7 @@ async function search(){
   status("查無能在 VOYAGE 內核實的「"+t.country+" · "+t.city+"」路線："+error.message+"。請檢查站名或嘗試當地文字；免費資料無法查到時不猜測站數或跳轉外站。");
  }finally{if(generation===searchVersion)searchBtn.disabled=false}
 }
-function stationText(s){const names=[s.zh,s.en,s.local,s.name].filter(Boolean);const id=String(s.id||"").trim();const passengerCode=/^G(?:0[1-9]|1[0-9])$/.test(id)?id:"";return [...new Set([...names,...(passengerCode?[passengerCode]:[])])].join(" · ")||"站名資料不足"}
+function stationText(s){const label=window.VoyageTransitV5?.stationLabel?.(s,trip())||[s.zh,s.en,s.local,s.name].filter(Boolean).join(" · ")||"站名資料不足";const id=String(s.id||"").trim();const passengerCode=/^G(?:0[1-9]|1[0-9])$/.test(id)?id:"";return label+(passengerCode?" · "+passengerCode:"")}
 function knownCount(leg,route){
  if(["WALK","BIKE","CAR"].includes(leg.mode))return null;
  if(leg.sequenceComplete===false)return null;
@@ -233,8 +240,8 @@ function saveRoute(route){
   U.toast("搭車日期「"+chosenDate+"」不在旅行天數內；請先調整日期或新增天數");return;
  }
  if(!D.validTime(time)){U.toast("請先設定有效出發時間");return}if(!confirm("將 "+route.legs.length+" 段交通路線加入 "+chosenDate+"（第 "+(chosenDateIndex+1)+" 天）？不會更改你填寫的時間與既有行程。"))return;const first=route.legs.find(x=>x.mode!=="WALK")||route.legs[0],notes=route.legs.map((l,i)=>(i+1)+". "+l.line+(Number(l.duration)>0?" · 約 "+Math.ceil(l.duration/60)+" 分鐘":"")+"："+l.stations.map(x=>x.zh||x.en||x.local||x.name||"站名待核對").join(" → ")+"\n方向："+l.headsign).join("\n")+"\n資料參考："+route.source+"\n"+route.label;t.days[chosenDateIndex].push({id:D.uid(),type:"transport",name:(first?.mode==="BUS"?"🚌 ":"🚆 ")+from+" → "+to,from,to,time,date:chosenDate,duration:Number(route.minutes)>0?route.minutes:null,line:first?.line||"",notes,source:route.source,routeInfo:D.clone(route),stopSequence:D.clone(stops)});day=chosenDateIndex;save();render();setTab("itinerary");U.toast("交通路線已加入 "+chosenDate+" 的時間軸")}
-window.VoyageRouteV2={search,routeSEO,routeStops,saveRoute};
-status("輸入起終站，例如「明洞」與「弘大」，按上方『查詢實際交通路線』即可看到站序及轉乘。非所有國家都支援公開交通資料。");
+window.VoyageRouteV2={search,routeSEO,routeStops,saveRoute,invalidate};
+status("先選擇交通方式，再輸入 A 出發站及 B 目的站，按「查詢 A → B 怎麼搭」。如果站數、班次或方向缺少可信來源，會明確顯示未核實。");
 const oldRender=render;
 render=function(){oldRender();refreshRegion()};
 refreshRegion();
