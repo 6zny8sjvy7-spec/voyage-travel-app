@@ -149,6 +149,7 @@ async function search(){
  const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),t=trip();
  if(!from||!to){status("請先填出發站及抵達站");return}
  if(from===to){status("起點和終點相同，請確認站名");return}
+ if(neighborhoodAlternatives(from,to))return;
  const country=window.VoyageRegionV4?.countryCode(t);
  const queryNames=from+" "+to;
  if(country==="KR"&&/(?:สยาม|อโศก|สะพานตากสิน|(?:^|\s)(?:Siam|Asok|Saphan\s*Taksin|BTS\s*Sukhumvit)(?:\s|$))/iu.test(queryNames)){
@@ -171,6 +172,23 @@ async function search(){
   status("查無能在 VOYAGE 內核實的「"+t.country+" · "+t.city+"」路線："+error.message+"。請檢查站名或嘗試當地文字；免費資料無法查到時不猜測站數或跳轉外站。");
   await offerRouteCandidates(from,to,t,generation,tripId);
  }finally{if(generation===searchVersion)searchBtn.disabled=false}
+}
+function neighborhoodAlternatives(from,to){
+ // Seongsu-dong is a district, NOT a platform. Never assign a station without user choice.
+ const pairs=[["from",from],["to",to]].filter(([,v])=>/^(?:聖水洞|圣水洞|성수동|seongsu[\s-]?dong)$/iu.test(v));
+ if(!pairs.length||window.VoyageRegionV4?.countryCode(trip())!=="KR")return false;
+ result.replaceChildren(E("h3",{text:"聖水洞是地區名稱，請先選擇實際地鐵站"}),E("p",{class:"v2-route-status",text:"『聖水洞／성수동』不是單一地鐵月台，搜尋整個區域容易搭錯站。請依你實際要去的街道或景點選擇站名。以下只提供附近的真實站名，不代表已查到路線或搭乘方向。"}));
+ const options=[["聖水站（성수）","성수"],["纛島站（뚝섬）","뚝섬"],["首爾森林站（서울숲）","서울숲"]];
+ for(const [which] of pairs){
+  const group=E("div",{class:"v8-route-suggestions"});
+  group.append(E("strong",{text:"選擇"+(which==="from"?"出發":"抵達")+"站："}));
+  for(const [label,official] of options)group.append(button(label,()=>{
+   $(which==="from"?"transitFrom":"transitTo").value=official;
+   status("已選擇 "+label+"。請確認景點距離，再按『查詢實際交通路線』核對方向及站數。");
+  },"secondary"));
+  result.append(group);
+ }
+ return true;
 }
 function stationText(s){
  if(!s)return "站名資料不足";
