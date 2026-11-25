@@ -15,7 +15,7 @@ const style=document.createElement('style');style.textContent=`
 @media(max-width:480px){#v2Home .voyage-seoul-hero-v12{border-radius:18px}#v2Home .v2-home-hero.v12-home-actions .v2-toolbar button{font-size:12px;flex-basis:105px}}
 `;document.head.append(style);
 let lastTripDate='';let frame=null;
-const homeId='v2Home',source='../design-previews/VOYAGE-HERO-12.html';
+const homeId='v2Home',source='../design-previews/VOYAGE-HERO-14-WEATHER.html?v=20261125';
 function details(){try{return window.VoyageUI?.current?.() || null;}catch(e){return null}}
 function isSeoul(t){const city=String(t?.city||'');return /(首爾|seoul|서울)/i.test(city)}
 function sendTrip(t){const val=t?.startDate||'';if(frame?.contentWindow && val!==lastTripDate){lastTripDate=val;frame.contentWindow.postMessage({type:'voyage-home-scene',startDate:val},location.origin);}}
