@@ -88,6 +88,16 @@ section.insertBefore(bar,toolbar);
 const v8style=E("style",{text:"#v5TransitPanel{padding:12px 14px;margin:12px 0;border:1px solid var(--line);border-radius:16px;background:var(--card)}#v5TransitPanel .v5-mode-switch{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}#v5TransitPanel .v5-mode-switch [aria-pressed='true']{background:#286acb;color:white}#v5DepartureDetails{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}#v5DepartureDetails summary{cursor:pointer;font-weight:700;min-height:32px}#v5DepartureResult{max-height:260px;overflow:auto;margin-top:8px;overscroll-behavior:contain}#v5StationSuggestions{display:grid;gap:7px;margin-top:9px}#v5StationSuggestions button{text-align:left;white-space:normal;line-height:1.45;min-height:38px}"});document.head.append(v8style);
 function refreshCountry(){
  const t=trip(),code=R?.countryCode(t)||"",key=code+"|"+t.city+"|"+t.id;
+ const samples={
+  KR:["例如 明洞／명동／Myeongdong","例如 弘大入口／홍대입구","查詢首爾站名：明洞／명동"],
+  TH:["例如 暹羅／Siam／สยาม","例如 阿索克／Asok／อโศก","查詢曼谷站名：Siam／สยาม"],
+  JP:["例如 銀座／銀座","例如 淺草／浅草","查詢日本站名：銀座／Ginza"],
+  VN:["例如 濱城／Bến Thành","例如 市劇院／Nhà hát Thành phố","查詢越南站名：Bến Thành"]
+ };
+ const example=samples[code]||["輸入出發站","輸入抵達站","輸入本站站名"];
+ if($("transitFrom"))$("transitFrom").placeholder=example[0];
+ if($("transitTo"))$("transitTo").placeholder=example[1];
+ input.placeholder=example[2];
  desc.textContent=(A.description(t)||"尚未支援")+" · 目前目的地："+(t.city||"未設定城市")+"。只查詢該城市附近的車站，不會沿用前一國交通資料。";
  if(key!==lastCountry){if(lastCountry){arrivals.textContent="已切換目的地。請重新查詢這個城市的站名。";input.value="";lastData=null;departureDetails.open=false;document.getElementById("v5StationSuggestions")?.remove()}lastCountry=key;version++}
 }
