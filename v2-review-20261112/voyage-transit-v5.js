@@ -28,7 +28,7 @@ function matchesCountry(entry,code){
 }
 // Display/search aliases are lookup hints, never invented verified stop sequences.
 const stationAlias={
- KR:{"明洞":["Myeongdong","명동"],"弘大":["Hongik Univ.","홍대입구","Hongdae"],"弘大入口":["Hongik Univ.","홍대입구"],"聖水":["Seongsu","성수"],"首爾站":["Seoul Station","서울역"],"江南":["Gangnam","강남"],"孔德":["Gongdeok","공덕"]},
+ KR:{"明洞":["Myeongdong","명동","명동역"],"弘大":["Hongik Univ.","홍대입구","Hongdae","홍대입구역"],"弘大入口":["Hongik Univ.","홍대입구"],"聖水":["Seongsu","성수"],"首爾站":["Seoul Station","서울역","서울"],"江南":["Gangnam","강남"],"孔德":["Gongdeok","공덕"],"會賢":["Hoehyeon","회현"],"舍堂":["Sadang","사당"],"烏耳島":["Oido","오이도"],"榛接":["Jinjeop","진접"],"市廳":["City Hall","시청"],"新村":["Sinchon","신촌"],"東大門":["Dongdaemun","동대문"]},
  TH:{"暹羅":["Siam","สยาม"],"阿索克":["Asok","อโศก"],"奇隆":["Chit Lom","ชิดลม"],"勝利紀念碑":["Victory Monument","อนุสาวรีย์ชัยสมรภูมิ"],"莫奇":["Mo Chit","หมอชิต"]},
  JP:{"新宿":["Shinjuku","新宿"],"澀谷":["Shibuya","渋谷"],"東京站":["Tokyo","東京"],"大阪":["Osaka","大阪"],"梅田":["Umeda","梅田"]},
  VN:{"濱城市場":["Bến Thành","Ben Thanh"],"檳城市場":["Bến Thành","Ben Thanh"],"濱城":["Bến Thành","Ben Thanh"],"河內":["Hà Nội","Hanoi"]}
@@ -57,13 +57,13 @@ function stationMatches(label,query,code){
  return aliases(query,code).some(alias=>normName(alias)===candidate);
 }
 function suggestStation(entries,phrase,t){
- const list=Array.isArray(entries)?entries:Array.isArray(entries?.results)?entries.results:[];
+ const list=Array.isArray(entries)?entries:Array.isArray(entries?.results)?entries.results:Array.isArray(entries?.places)?entries.places:[];
  const origin=cityOrigin(t),code=R?.countryCode(t),q=String(phrase).trim().toLowerCase();
  return list.map(p=>{
  const c=safeCoords(p);if(!c||!matchesCountry(p,code))return null;
  const km=origin?distance(origin,c):Infinity;if(!origin||km>120)return null;
- const label=String(p.name||p.place?.name||p.stopName||"").trim();
- if(!stationMatches(label,phrase,code))return null;
+ const label=String(p.name||p.place?.name||p.stopName||"").trim();const alt=p.translations||p.place?.translations||p.names||{};
+ if(![label,alt.zh,alt["zh-TW"],alt.ko,alt.ja,alt.en,alt.local].some(n=>n&&stationMatches(n,phrase,code)))return null;
  const candidate=normName(label);
  let score=km/10+(candidate===normName(phrase)?-20:-10);
  return{p,c,km,score,label,id:String(p.id||p.place?.id||"")};
@@ -75,17 +75,42 @@ async function json(url,signal,fetcher=fetch){
  return response.json();
 }
 function context(t){const country=R?.countryCode(t)||"";if(!supported.has(country))throw new Error("目前先支援韓國、泰國、日本、越南四國");if(!cityOrigin(t))throw new Error("尚未確認目的地城市座標，請先設定正確城市");return{country,language:lang[country],origin:cityOrigin(t)}}
+function stationOptions(entries,phrase,t){
+ const list=Array.isArray(entries)?entries:Array.isArray(entries?.results)?entries.results:Array.isArray(entries?.places)?entries.places:[];
+ const center=cityOrigin(t),code=R?.countryCode(t),seen=new Set();
+ return list.map(p=>{const c=safeCoords(p),name=String(p.name||p.place?.name||p.stopName||"").trim();
+ if(!center||!c||!matchesCountry(p,code)||!name||isVirtualStop(name)||distance(center,c)>120)return null;
+ const key=normName(name)+"|"+(p.id||p.place?.id||"");if(seen.has(key))return null;seen.add(key);
+ const alt=p.translations||p.place?.translations||p.names||{};
+ return {name,id:String(p.id||p.place?.id||""),lat:c.lat,lon:c.lon,zh:String(alt["zh-TW"]||alt.zh||""),local:String(alt[lang[code]]||"")};
+ }).filter(Boolean).slice(0,8);
+}
+async function suggestStations(name,t,{fetcher=fetch,signal}={}){
+ const cfg=context(t),q=String(name||"").trim();if(!q)return [];
+ const variants=[q,...aliases(q,cfg.country)].slice(0,5),seen=new Set(),list=[];
+ for(const term of variants){
+  if(seen.has(term))continue;seen.add(term);
+  try{
+   const p=new URLSearchParams({text:term,type:"STOP",place:cfg.origin.lat+","+cfg.origin.lon,numResults:"12",language:cfg.language});
+   const data=await json(SERVICE+"/api/v1/geocode?"+p,signal,fetcher);
+   for(const item of stationOptions(data,q,t))if(!list.some(x=>x.id&&x.id===item.id||normName(x.name)===normName(item.name)))list.push(item);
+  }catch(error){if(signal?.aborted)throw error;}
+  if(list.length>=8)break;
+ }
+ return list.slice(0,8);
+}
 async function geocode(name,t,{fetcher=fetch,signal}={}){
  const cfg=context(t),q=String(name||"").trim();if(!q)throw new Error("請輸入站名");
- const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x,x+", "+t.city])],seen=new Set();
+ const names=aliases(q,cfg.country),variants=[...names.flatMap(x=>[x,x+", "+t.city])],seen=new Set(),possible=[];
  for(const term of variants){
  if(seen.has(term))continue;seen.add(term);
  const p=new URLSearchParams({text:term,type:"STOP",place:cfg.origin.lat+","+cfg.origin.lon,numResults:"10",language:cfg.language});
  const found=await json(SERVICE+"/api/v1/geocode?"+p,signal,fetcher);
  const best=suggestStation(found,q,t);
  if(best)return{...best.c,id:best.id,name:best.label,source:"Transitous / OpenStreetMap",country:cfg.country};
+ for(const candidate of stationOptions(found,q,t))if(!possible.some(x=>normName(x)===normName(candidate.name)))possible.push(candidate.name);
  }
- throw new Error("無法確認「"+q+"」的精確車站名稱；相似站名不會自動選取，以免搭錯方向。可改輸入完整官方英文／當地站名後在 VOYAGE 重新查詢");
+ throw new Error("無法確認「"+q+"」的精確車站。"+(possible.length?" 可選候選："+possible.slice(0,4).join("、")+"。":"")+" 請從候選站明確選擇，不會自動猜測相似站名。");
 }
 function parseStop(raw){
  if(!raw)return null;
@@ -169,5 +194,5 @@ function google(from,to,t){return"https://www.google.com/maps/dir/?api=1&origin=
 function naver(from,to,t){return"https://map.naver.com/p/search/"+encodeURIComponent(to+", "+t.city+", "+t.country)}
 const countryText={KR:"韓國：地鐵／AREX／可取得的公車資料",TH:"泰國：BTS／MRT／機場快線／可取得的公車資料",JP:"日本：地鐵／鐵道／可取得的公車資料",VN:"越南：城市鐵路／可取得的公車資料"};
 function description(t){const code=R?.countryCode(t);return countryText[code]||"尚未加入的國家"}
-global.VoyageTransitV5={supported,context,geocode,plan,departures,normalizePlan,readableDeparture,suggestStation,stationMatches,matchesCountry,safeCoords,distance,google,naver,description,ATTRIBUTION};
+global.VoyageTransitV5={supported,context,geocode,suggestStations,stationOptions,plan,departures,normalizePlan,readableDeparture,suggestStation,stationMatches,matchesCountry,safeCoords,distance,google,naver,description,ATTRIBUTION};
 })(window);
