@@ -166,5 +166,5 @@ async function lookupForRoute(from,t,route){
 }
 const oldRender=render;render=function(){oldRender();refreshCountry()};
 refreshCountry();
-global.VoyageTransitUIV5={get mode(){return mode},refreshCountry,lookup,lookupForRoute};
+global.VoyageTransitUIV5={get mode(){return mode},bilingual,refreshCountry,lookup,lookupForRoute};
 })(window);
