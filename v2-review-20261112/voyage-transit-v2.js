@@ -122,7 +122,15 @@ async function search(){
  const from=$("transitFrom").value.trim(),to=$("transitTo").value.trim(),t=trip();
  if(!from||!to){status("請先填出發站及抵達站");return}
  if(from===to){status("起點和終點相同，請確認站名");return}
- const generation=++searchVersion,country=window.VoyageRegionV4?.countryCode(t),tripId=t.id;
+ const country=window.VoyageRegionV4?.countryCode(t);
+ const queryNames=from+" "+to;
+ if(country==="KR"&&/(?:สยาม|อโศก|สะพานตากสิน|(?:^|\s)(?:Siam|Asok|Saphan\s*Taksin|BTS\s*Sukhumvit)(?:\s|$))/iu.test(queryNames)){
+  status("目前選擇的是「韓國 · "+t.city+"」旅行。你輸入的站名屬泰國曼谷；請先切換到泰國旅程再搜尋 BTS／MRT，系統不能拿首爾站網硬查曼谷。");return;
+ }
+ if(country==="TH"&&/(?:명동|홍대입구|서울역|myeongdong|hongik\s*univ)/iu.test(queryNames)){
+  status("目前選擇的是「泰國 · "+t.city+"」旅行。你輸入的是韓國站名；請先切換到韓國旅程，避免混用跨國資料。");return;
+ }
+ const generation=++searchVersion,tripId=t.id;
  status("正在查詢「"+t.city+"」"+ensurePlanDate(t)+" "+($("transitTime")?.value||"") +"（當地時間）的公開交通資料。來源查不到時不會編造站序與即時到站。");
  searchBtn.disabled=true;
  try{
@@ -136,7 +144,16 @@ async function search(){
   status("查無能在 VOYAGE 內核實的「"+t.country+" · "+t.city+"」路線："+error.message+"。請檢查站名或嘗試當地文字；免費資料無法查到時不猜測站數或跳轉外站。");
  }finally{if(generation===searchVersion)searchBtn.disabled=false}
 }
-function stationText(s){const names=[s.zh,s.en,s.local,s.name].filter(Boolean);const id=String(s.id||"").trim();const passengerCode=/^G(?:0[1-9]|1[0-9])$/.test(id)?id:"";return [...new Set([...names,...(passengerCode?[passengerCode]:[])])].join(" · ")||"站名資料不足"}
+function stationText(s){
+ if(!s)return "站名資料不足";
+ const display=window.VoyageTransitUIV5?.bilingual?.(s.local||s.name||s.en||"",trip(),"stop")||"";
+ const translated=String(s.zh||"").trim();
+ const first=translated?translated+(s.local&&s.local!==translated?"（"+s.local+"）":""):display;
+ const names=[first,s.en,s.local,s.name].filter(Boolean);
+ const id=String(s.id||"").trim();
+ const passengerCode=/^G(?:0[1-9]|1[0-9])$/.test(id)?id:"";
+ return [...new Set([...names,...(passengerCode?[passengerCode]:[])])].join(" · ")||"站名資料不足"
+}
 function knownCount(leg,route){
  if(["WALK","BIKE","CAR"].includes(leg.mode))return null;
  if(leg.sequenceComplete===false)return null;
@@ -163,7 +180,7 @@ function draw(routes){
   const main=legs.map(l=>(l.mode==="BUS"?"🚌 ":"🚇 ")+(l.line||"未知車號")).join(" → ");
   const walk=route.legs.filter(l=>["WALK","BIKE"].includes(l.mode)).reduce((n,l)=>n+(Number(l.duration)||0),0);
   const first=legs[0]?.stations?.[0],lastLeg=legs[legs.length-1],last=lastLeg?.stations?.[(lastLeg.stations||[]).length-1];
-  const stationName=st=>st?([st.zh,st.en,st.local,st.name].filter(Boolean)[0]||"站名待核對"):"站名資料不足";
+  const stationName=st=>st?stationText(st):"站名資料不足";
   return {
    title:"方案 "+(index+1)+" · "+main,
    stations:count===null?"站數尚未核實":"共 "+count+" 站",
