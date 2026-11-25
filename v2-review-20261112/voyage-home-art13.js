@@ -29,14 +29,44 @@ const homeId='v2Home',source='../design-previews/VOYAGE-HERO-14-WEATHER.html?v=2
 function details(){try{return window.VoyageUI?.current?.() || null;}catch(e){return null}}
 function isSeoul(t){const city=String(t?.city||'');return /(首爾|seoul|서울)/i.test(city)}
 function sendTrip(t){const val=t?.startDate||'';if(frame?.contentWindow && val!==lastTripDate){lastTripDate=val;frame.contentWindow.postMessage({type:'voyage-home-scene',startDate:val},location.origin);}}
+/* Presentation-only: synchronize the approved scene to weather fetched by V7. */
+function syncLiveWeather(){
+ const t=details();
+ if(!isSeoul(t)||!frame)return;
+ try{
+  const doc=frame.contentDocument,hero=doc?.getElementById('hero');
+  if(!hero)return;
+  const w=window.VoyageCurrentWeather;
+  const valid=!!(w&&w.city===t.city&&typeof w.isDay==='boolean'&&Number.isFinite(Number(w.code)));
+  let scene=null;
+  if(valid){
+   const code=Number(w.code);
+   const kind=window.VoyageWeatherV3?.classify?.(code,w.isDay)||
+     (code>=71&&code<=86?'snow':code>=95||code>=51&&code<=67||code>=80&&code<=82?'rain':w.isDay?'sun':'moon');
+   scene=kind==='snow'?'snow':kind==='rain'||kind==='storm'?'rain':!w.isDay?'night':kind==='sun'?'sun':null;
+  }
+  const chosen=scene||'sun';
+  const control=doc.querySelector('.controls [data-weather="'+chosen+'"]');
+  if(control&&(hero.dataset.weather!==chosen||control.getAttribute('aria-pressed')!=='true'))control.click();
+  if(!scene){
+   hero.dataset.weather=valid?'cloud':'unknown';
+   const plate=doc.getElementById('plate');
+   if(plate?.dataset.sunless)plate.src=plate.dataset.sunless;
+   doc.querySelectorAll('.controls [data-weather]').forEach(b=>b.setAttribute('aria-pressed','false'));
+  }
+  hero.dataset.liveWeather=valid?'verified':'unavailable';
+  hero.setAttribute('aria-label',valid?'首爾漢江動態插畫：依當地天氣更新，亦可手動試玩':'首爾漢江動態插畫：天氣尚未更新，可手動試玩');
+ }catch(error){console.warn('VOYAGE Seoul weather visual could not synchronize',error);}
+}
 function refresh(){const home=document.getElementById(homeId);if(!home)return;const card=home.querySelector('.v2-home-hero');if(!card)return;
  const t=details(),shown=isSeoul(t);document.body.classList.toggle('voyage-seoul-v13',shown);let wrapper=home.querySelector('.voyage-seoul-hero-v12');
  if(!shown){if(wrapper)wrapper.remove();card.classList.remove('v12-home-actions');frame=null;lastTripDate='';return;}
- if(!wrapper){wrapper=document.createElement('section');wrapper.className='voyage-seoul-hero-v12';wrapper.setAttribute('aria-label','首爾動態城市與天氣場景');const el=document.createElement('iframe');el.title='首爾旅程首頁插畫及天氣切換';el.setAttribute('scrolling','no');el.loading='eager';el.src=source;wrapper.append(el);home.insertBefore(wrapper,card);frame=el;lastTripDate='';el.addEventListener('load',()=>{lastTripDate='';sendTrip(details())});}
+ if(!wrapper){wrapper=document.createElement('section');wrapper.className='voyage-seoul-hero-v12';wrapper.setAttribute('aria-label','首爾動態城市與天氣場景');const el=document.createElement('iframe');el.title='首爾旅程首頁插畫及天氣切換';el.setAttribute('scrolling','no');el.loading='eager';el.src=source;wrapper.append(el);home.insertBefore(wrapper,card);frame=el;lastTripDate='';el.addEventListener('load',()=>{lastTripDate='';sendTrip(details());syncLiveWeather()});}
  else frame=wrapper.querySelector('iframe');card.classList.add('v12-home-actions');sendTrip(t);
 }
 let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;refresh();});}
 function start(){const home=document.getElementById(homeId);if(!home)return;new MutationObserver(schedule).observe(home,{childList:true});refresh()}
+document.addEventListener('voyage-weather',syncLiveWeather);
 window.addEventListener('message',e=>{if(e.origin!==location.origin)return;if(e.data?.type!=='voyage-hero-size'||!Number.isFinite(e.data.height))return;if(!frame||e.source!==frame.contentWindow)return;const h=Math.max(240,Math.min(1500,e.data.height));frame.style.height=h+'px';});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
