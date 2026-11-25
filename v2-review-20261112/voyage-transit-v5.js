@@ -28,7 +28,7 @@ function matchesCountry(entry,code){
 }
 // Display/search aliases are lookup hints, never invented verified stop sequences.
 const stationAlias={
- KR:{"明洞":["Myeongdong","명동"],"弘大":["Hongdae"],"弘大入口":["Hongik Univ.","홍대입구","Hongdae Entrance"],"聖水":["Seongsu","성수"],"首爾站":["Seoul Station","서울역"],"江南":["Gangnam","강남"],"孔德":["Gongdeok","공덕"],"舍堂":["Sadang","사당"],"烏耳島":["Oido","오이도"],"榛接":["Jinjeop","진접"],"忠武路":["Chungmuro","충무로"],"會賢":["Hoehyeon","회현"],"東大門":["Dongdaemun","동대문"],"市廳":["City Hall","시청"]},
+ KR:{"明洞":["Myeongdong","명동"],"弘大":["Hongdae","Hongik Univ.","홍대입구"],"弘大入口":["Hongik Univ.","홍대입구","Hongdae Entrance"],"聖水":["Seongsu","성수"],"首爾站":["Seoul Station","서울역"],"江南":["Gangnam","강남"],"孔德":["Gongdeok","공덕"],"舍堂":["Sadang","사당"],"烏耳島":["Oido","오이도"],"榛接":["Jinjeop","진접"],"忠武路":["Chungmuro","충무로"],"會賢":["Hoehyeon","회현"],"東大門":["Dongdaemun","동대문"],"市廳":["City Hall","시청"]},
  TH:{"暹羅":["Siam","สยาม"],"阿索克":["Asok","อโศก"],"奇隆":["Chit Lom","ชิดลม"],"勝利紀念碑":["Victory Monument","อนุสาวรีย์ชัยสมรภูมิ"],"莫奇":["Mo Chit","หมอชิต"]},
  JP:{"新宿":["Shinjuku","新宿"],"澀谷":["Shibuya","渋谷"],"東京站":["Tokyo","東京"],"大阪":["Osaka","大阪"],"梅田":["Umeda","梅田"]},
  VN:{"濱城市場":["Bến Thành","Ben Thanh"],"檳城市場":["Bến Thành","Ben Thanh"],"濱城":["Bến Thành","Ben Thanh"],"河內":["Hà Nội","Hanoi"]}
