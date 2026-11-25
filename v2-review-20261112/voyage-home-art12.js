@@ -19,14 +19,31 @@ const homeId='v2Home',source='../design-previews/VOYAGE-HERO-12.html';
 function details(){try{return window.VoyageUI?.current?.() || null;}catch(e){return null}}
 function isSeoul(t){const city=String(t?.city||'');return /(首爾|seoul|서울)/i.test(city)}
 function sendTrip(t){const val=t?.startDate||'';if(frame?.contentWindow && val!==lastTripDate){lastTripDate=val;frame.contentWindow.postMessage({type:'voyage-home-scene',startDate:val},location.origin);}}
+/* The existing app fetches Open-Meteo weather. Scene12 receives ONLY the verified
+   display category, never a guessed condition or any stored trip mutation. */
+function syncWeather(){
+ const t=details();if(!isSeoul(t)||!frame?.contentWindow)return;
+ const w=window.VoyageCurrentWeather;
+ const valid=!!(w&&w.city===t.city&&typeof w.isDay==='boolean'&&Number.isFinite(Number(w.code)));
+ let scene='cloud';
+ if(valid){
+  const kind=window.VoyageWeatherV3?.classify?.(w.code,w.isDay)||'unknown';
+  if(!w.isDay)scene='night';
+  else if(kind==='snow')scene='snow';
+  else if(kind==='rain'||kind==='storm')scene='rain';
+  else if(kind==='sun')scene='sun';
+ }
+ frame.contentWindow.postMessage({type:'voyage-weather-sync',scene,verified:valid},location.origin);
+}
 function refresh(){const home=document.getElementById(homeId);if(!home)return;const card=home.querySelector('.v2-home-hero');if(!card)return;
  const t=details(),shown=isSeoul(t);let wrapper=home.querySelector('.voyage-seoul-hero-v12');
  if(!shown){if(wrapper)wrapper.remove();card.classList.remove('v12-home-actions');frame=null;lastTripDate='';return;}
- if(!wrapper){wrapper=document.createElement('section');wrapper.className='voyage-seoul-hero-v12';wrapper.setAttribute('aria-label','首爾動態城市與天氣場景');const el=document.createElement('iframe');el.title='首爾旅程首頁插畫及天氣切換';el.setAttribute('scrolling','no');el.loading='eager';el.src=source;wrapper.append(el);home.insertBefore(wrapper,card);frame=el;lastTripDate='';el.addEventListener('load',()=>{lastTripDate='';sendTrip(details())});}
- else frame=wrapper.querySelector('iframe');card.classList.add('v12-home-actions');sendTrip(t);
+ if(!wrapper){wrapper=document.createElement('section');wrapper.className='voyage-seoul-hero-v12';wrapper.setAttribute('aria-label','首爾動態城市與天氣場景');const el=document.createElement('iframe');el.title='首爾旅程首頁插畫及天氣切換';el.setAttribute('scrolling','no');el.loading='eager';el.src=source;wrapper.append(el);home.insertBefore(wrapper,card);frame=el;lastTripDate='';el.addEventListener('load',()=>{lastTripDate='';sendTrip(details());syncWeather()});}
+ else frame=wrapper.querySelector('iframe');card.classList.add('v12-home-actions');sendTrip(t);syncWeather();
 }
 let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;refresh();});}
 function start(){const home=document.getElementById(homeId);if(!home)return;new MutationObserver(schedule).observe(home,{childList:true});refresh()}
+document.addEventListener('voyage-weather',syncWeather);
 window.addEventListener('message',e=>{if(e.origin!==location.origin)return;if(e.data?.type!=='voyage-hero-size'||!Number.isFinite(e.data.height))return;if(!frame||e.source!==frame.contentWindow)return;const h=Math.max(240,Math.min(1500,e.data.height));frame.style.height=h+'px';});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
