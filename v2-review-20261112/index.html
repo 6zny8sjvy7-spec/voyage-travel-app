@@ -519,7 +519,7 @@ pages.overview=box=>box.append(E("p",{text:"旅行資料預設儲存在這台裝
 renderWeek=weekRender;
 const originalRender=render;render=function(){originalRender();try{summaryRender();renderMore();eventExtras()}catch(e){console.error("VOYAGE 擴充畫面",e)}};
 quick.onclick=()=>{if(typeof window.VoyageUI.addExpense==="function")window.VoyageUI.addExpense();else toast("費用模組尚未載入")};
-window.VoyageUI={E,$v,D,button,field,get,openDialog,metric,toaster:toast,toast,current,tripEditor,eventEditor,backup,renderMore,showPage,pages,dialog,root};
+window.VoyageUI={E,$v,D,button,field,get,openDialog,metric,toaster:toast,toast,current,tripEditor,eventEditor,backup,renderMore,showPage,pages,dialog,root,save};
 render();
 })();
 
@@ -1171,5 +1171,5 @@ window.VoyageWeatherV3={classify,draw};
 <script src="./voyage-forward-ui.js"></script>
 <script src="./voyage-import-v6.js"></script>
 <script src="./voyage-trip-v6.js"></script>
-<script src="./voyage-home-art13.js?audit=20261125b"></script>
+<script src="./voyage-home-art13.js?audit=20261125v8"></script><script src="./voyage-home-cards-v8.js?audit=20261125v8"></script>
 </body></html>
