@@ -36,11 +36,13 @@ function bilingual(raw,t,kind){
  // Never invent a Chinese station name from a foreign-language source string.
  return "中文譯名待核實 · "+name;
 }
+function timezone(t){return R?.get(t)?.region||t?.tz||"Asia/Taipei"}
+function tripClock(instant,t){return new Date(instant).toLocaleString("zh-TW",{timeZone:timezone(t),hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})}
 function modeName(m){return m==="rail"?"地鐵／BTS／鐵道":m==="bus"?"公車":"綜合轉乘"}
 function modeItems(items){return (items||[]).filter(item=>mode==="mixed"||item.transportMode===mode)}
 function renderDepartures(data,t){
  const rows=modeItems(data?.items),station=bilingual(data?.station?.name,t,"stop");
- arrivals.replaceChildren(E("strong",{class:"v5-station-heading",text:station+" · 查詢時間 "+new Date(data.at).toLocaleTimeString("zh-TW")}));
+ arrivals.replaceChildren(E("strong",{class:"v5-station-heading",text:station+" · 查詢時間 "+tripClock(data.at,t)+"（目的地當地時間）"}));
  if(!rows.length){
   arrivals.append(E("p",{class:"v2-route-status",text:mode==="mixed"?"此站目前沒有可驗證的下一班資料。":"此站未取得已確認屬於「"+modeName(mode)+"」的班次。未標示車種的資料不會混進此分類。"}));
   return;
@@ -58,7 +60,7 @@ function renderDepartures(data,t){
   const eta=E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:displayTime(item,t)});
   row.append(info,eta);group.append(row);
  }
- arrivals.append(group,E("p",{class:"v1-sub",text:"查詢結果只顯示來源可確認的班次與車種；未知車種僅在「綜合轉乘」內顯示。更新時間："+new Date(data.at).toLocaleString("zh-TW")+"；不是持續倒數。"}));
+ arrivals.append(group,E("p",{class:"v1-sub",text:"查詢結果只顯示來源可確認的班次與車種；未知車種僅在「綜合轉乘」內顯示。更新時間："+tripClock(data.at,t)+"（目的地當地時間）"+"；不是持續倒數。"}));
 }
 const bar=E("section",{id:"v5TransitPanel",class:"v5-transit-panel"});
 bar.append(E("h3",{text:"🚇 交通助手 · 不用自己猜搭乘方向"}));
@@ -134,7 +136,7 @@ function displayTime(item,t){
  const time=Date.parse(item.time||"");
  if(!Number.isFinite(time))return "班表時間未提供";
  let local="";
- try{local=new Intl.DateTimeFormat("zh-TW",{timeZone:t.tz||"Asia/Taipei",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(time))}
+ try{local=new Intl.DateTimeFormat("zh-TW",{timeZone:timezone(t),hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(time))}
  catch{local=new Date(time).toISOString().slice(11,16)}
  return "表定 "+local;
 }
@@ -169,7 +171,7 @@ async function lookupForRoute(from,t,route){
    row.append(E("div",{class:"v5-service-info"},[E("b",{text:bilingual(item.line,t,"line")+" · 往 "+bilingual(item.headsign,t,"destination")}),E("div",{class:"v1-sub",text:item.realtime?"來源標示即時到站":"時刻表預估，非即時"})]),E("strong",{class:item.realtime?"v5-eta-realtime":"v5-eta-schedule",text:displayTime(item,t)}));
    group.append(row);
   }
-  arrivals.append(group,E("p",{class:"v1-sub",text:"查詢時間："+new Date(data.at).toLocaleString("zh-TW")+"。不是持續即時倒數；資訊過期請重新搜尋 A→B。"}));
+  arrivals.append(group,E("p",{class:"v1-sub",text:"查詢時間："+tripClock(data.at,t)+"（目的地當地時間）"+"。不是持續即時倒數；資訊過期請重新搜尋 A→B。"}));
  }catch(error){
   if(generation===version)arrivals.textContent="本次無法核對 A 站同線同方向的班次："+String(error?.message||"資料來源無回應")+"。";
  }finally{if(generation===version)refresh.disabled=false}
