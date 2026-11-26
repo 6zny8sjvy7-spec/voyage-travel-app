@@ -32,7 +32,7 @@ function create(){
  const reminder=el('section','voyage-story-card voyage-story-reminder');
  const head=el('button','voyage-story-head');head.type='button';head.setAttribute('aria-label','前往行李清單管理旅行提醒');
  head.innerHTML='<span class="voyage-story-icon">'+bellSVG+'</span><span>旅行小提醒</span><span class="voyage-story-arrow">›</span>';
- head.addEventListener('click',()=>U.showPage('packing'));
+ head.addEventListener('click',showAllReminders);
  reminder.append(head,el('div','voyage-story-checklist'));
  for(const [card,url] of [[next,AIRPORT],[reminder,PALACE]]){
   const art=el('span','voyage-story-art'),img=el('img');
@@ -77,69 +77,119 @@ function nextItem(t){
  if(upcoming.length)return upcoming[0];
  return validDate(t.startDate)&&t.startDate>=currentDate?{date:t.startDate,kind:'trip',title:t.city||'旅行已建立',time:''}:null;
 }
-function suggestions(t){
- if(isKorea(t))return ['確認護照效期（需 6 個月以上）','完成 K-ETA 申請（依資格確認）','準備 T-money 交通卡'];
- return ['確認護照效期與入境條件','確認機票與住宿資訊','準備交通與付款方式'];
+
+/* Purpose-built country checklist; no dependency on packing or automatic verification. */
+const COUNTRY_RULES={
+ KR:{name:'韓國',items:[
+ ['passport','檢查護照效期及韓國入境資格','https://www.visa.go.kr/'],
+ ['keta','確認 K-ETA 豁免或申請適用性（依護照與日期）','https://www.k-eta.go.kr/'],
+ ['arrival','確認韓國 e-Arrival 入境申報是否適用','https://www.e-arrivalcard.go.kr/'],
+ ['tmoney','準備 T-money 交通卡與機場接駁',''],
+ ['network','準備韓國 eSIM、網路和地圖','']]},
+ JP:{name:'日本',items:[
+ ['passport','檢查護照效期及日本免簽／簽證資格','https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html'],
+ ['visitjapan','確認 Visit Japan Web 入境、海關填寫方式','https://services.digital.go.jp/en/visit-japan-web/'],
+ ['transit','準備 Suica／PASMO 或當地車票',''],
+ ['booking','核對住宿、航班與機場交通',''],
+ ['network','準備日本上網及付款方式','']]},
+ TH:{name:'泰國',items:[
+ ['passport','確認護照效期及泰國簽證／免簽資格','https://www.thaievisa.go.th/'],
+ ['tdac','於抵達前 3 天內確認及辦理 TDAC 入境卡','https://tdac.immigration.go.th/'],
+ ['transit','確認 BTS／MRT 車票及機場交通',''],
+ ['network','準備泰國 eSIM 及叫車方式',''],
+ ['money','準備泰銖及付款方式','']]},
+ VN:{name:'越南',items:[
+ ['passport','確認護照效期與越南簽證／免簽資格','https://evisa.gov.vn/'],
+ ['evisa','若需要 e-Visa，確認核發及有效日期','https://evisa.gov.vn/'],
+ ['hotel','核對住宿地址、機票及入境資料',''],
+ ['transit','準備機場接送與市區交通',''],
+ ['money','準備越南網路、越盾及付款方式','']]},
+ OTHER:{name:'目的地',items:[
+ ['passport','確認護照效期及入境資格',''],
+ ['arrival','確認入境申報及海關最新規定',''],
+ ['transit','確認機場與當地交通方式',''],
+ ['hotel','核對住宿、航班及訂單',''],
+ ['network','準備上網及當地付款方式','']]}
+};
+function countryCode(t){
+ const s=String(t?.country||'')+' '+String(t?.city||'');
+ if(/韓國|南韓|korea|대한민국|seoul|首爾|서울/i.test(s))return'KR';
+ if(/日本|japan|tokyo|osaka|東京|大阪/i.test(s))return'JP';
+ if(/泰國|thailand|bangkok|曼谷|ไทย/i.test(s))return'TH';
+ if(/越南|vietnam|viet nam|hanoi|saigon|河內|胡志明/i.test(s))return'VN';
+ return'OTHER';
 }
-function matched(packing,name){
- return packing.find(x=>String(x.name||'').trim()===name)||null;
+function countryInfo(t){
+ const code=countryCode(t),data=COUNTRY_RULES[code];
+ return {code,name:data.name,items:data.items.map(([id,label,url])=>({id,label,url}))};
 }
-function checkedFor(item,member){return !!item?.checkedBy?.[member];}
+function doneStates(t,code){
+ const v=t?.countryReminderChecks?.[code];
+ return v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+}
+function saveDone(id,done){
+ const t=U.current?.();if(!t||typeof U.save!=='function')return;
+ const code=countryCode(t);
+ if(!COUNTRY_RULES[code].items.some(x=>x[0]===id))return;
+ if(!t.countryReminderChecks||typeof t.countryReminderChecks!=='object')t.countryReminderChecks={};
+ if(!t.countryReminderChecks[code]||typeof t.countryReminderChecks[code]!=='object')t.countryReminderChecks[code]={};
+ t.countryReminderChecks[code][id]=!!done;
+ U.save();render();
+}
+const modalStyle=el('style');
+modalStyle.textContent='dialog.voyage-country-tasks{box-sizing:border-box;width:min(90vw,580px);max-height:82dvh;overflow:auto;padding:20px;border:2px solid #253148;border-radius:20px;background:#fffefa;color:#253148}dialog.voyage-country-tasks::backdrop{background:#17284688}.voyage-country-tasks h2{font-size:19px;margin:0 0 12px}.voyage-country-tasks p{font-size:12px;line-height:1.5;color:#5c6373}.voyage-country-tasks label{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #e6e3dd;font-size:14px}.voyage-country-tasks label span{flex:1}.voyage-country-tasks input{width:20px;height:20px;flex:none;accent-color:#8cb89c}.voyage-country-tasks a{font-size:12px;color:#385ab9}.voyage-country-tasks button{margin-top:16px;padding:11px;border-radius:12px;width:100%;background:#edf1ff;border:1px solid #b1b8ca;font-weight:750}';
+document.head.append(modalStyle);
+function showAllReminders(){
+ const t=U.current?.();if(!t)return;
+ const r=countryInfo(t),dlg=el('dialog','voyage-country-tasks'),heading=el('h2','',r.name+' · 旅行小提醒');
+ const count=el('p'),summary=()=>{
+  const state=doneStates(U.current?.(),r.code);
+  count.textContent='已自行確認 '+r.items.filter(x=>state[x.id]).length+'／'+r.items.length+' 項。勾選不代表系統已審核護照、簽證或入境申報。';
+ };
+ summary();
+ dlg.append(heading,count,el('p','','以下依目的地國家提供出發前提醒；實際規定依護照國籍、入境日期及旅行目的不同，請透過官方連結重新查核。'));
+ for(const item of r.items){
+  const line=el('label'),input=el('input'),txt=el('span','',item.label);
+  input.type='checkbox';input.checked=!!doneStates(t,r.code)[item.id];
+  input.addEventListener('change',()=>{saveDone(item.id,input.checked);summary();});
+  line.append(input,txt);
+  if(item.url){const link=el('a','','官方查核');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',e=>e.stopPropagation());line.append(link);}
+  dlg.append(line);
+ }
+ const exit=el('button','','返回旅行首頁');exit.type='button';exit.addEventListener('click',()=>dlg.close());
+ dlg.append(exit);dlg.addEventListener('close',()=>dlg.remove(),{once:true});
+ document.body.append(dlg);dlg.showModal();
+}
 function render(){
  const t=U.current?.();if(!t)return;
  let pair=home.querySelector('#voyage-approved-scene10-cards');
- const headings=[...home.querySelectorAll(':scope > .v2-section-label')];
- const quick=headings.find(x=>x.textContent.includes('旅行快速入口'));
+ const quick=[...home.querySelectorAll(':scope > .v2-section-label')].find(x=>x.textContent.includes('旅行快速入口'));
  if(!quick)return;
  if(!pair){pair=create();home.insertBefore(pair,quick);}
  else if(pair.nextElementSibling!==quick)home.insertBefore(pair,quick);
  pair.querySelectorAll('.voyage-story-art').forEach(node=>{node.hidden=!isSeoul(t);});
- const next=nextItem(t);
- const date=next?.date||'';
- const datePart=pair.querySelector('[data-story-date]');
- datePart.textContent=date?date.slice(5).replace('-','/'):'—';
+ const next=nextItem(t),date=next?.date||'';
+ pair.querySelector('[data-story-date]').textContent=date?date.slice(5).replace('-','/'):'—';
  pair.querySelector('[data-story-weekday]').textContent=date?'（'+['日','一','二','三','四','五','六'][new Date(date+'T12:00:00Z').getUTCDay()]+'）':'';
- const name=pair.querySelector('[data-story-trip]');
- name.textContent=next?.title||'尚無下一個行程';
- const info=pair.querySelector('[data-story-flight-detail]');
- if(next?.kind==='flight')info.textContent=[next.time&&next.time+' 起飛',next.place&&'航班／機場：'+next.place].filter(Boolean).join(' · ')||'航班時間待設定';
- else if(next?.kind==='event')info.textContent=next.time?next.time+' · 已排入旅程':'已排入旅程 · 時間待設定';
- else info.textContent=next?'尚未新增航班，點此編排行程':'點此新增旅行或行程';
+ pair.querySelector('[data-story-trip]').textContent=next?.title||'尚無下一個行程';
+ const detail=pair.querySelector('[data-story-flight-detail]');
+ if(next?.kind==='flight')detail.textContent=[next.time&&next.time+' 起飛',next.place&&'航班／機場：'+next.place].filter(Boolean).join(' · ')||'航班時間待設定';
+ else if(next?.kind==='event')detail.textContent=next.time?next.time+' · 已排入旅程':'已排入旅程 · 時間待設定';
+ else detail.textContent=next?'尚未新增航班，點此編排行程':'點此新增旅行或行程';
  const list=pair.querySelector('.voyage-story-checklist');list.replaceChildren();
- const member=String(t.people?.[0]||'我');
- const packing=Array.isArray(t.packing)?t.packing:[];
- const hints=suggestions(t);
- const tasks=packing.length?
-  [...packing.filter(x=>!checkedFor(x,member)),...packing.filter(x=>checkedFor(x,member))].slice(0,3).map(x=>({name:x.name,record:x})):
-  hints.map(name=>({name,record:matched(packing,name)}));
- for(const task of tasks){
-  const label=el('label'),input=el('input'),title=el('span','',task.name);
-  input.type='checkbox';input.checked=checkedFor(task.record,member);
-  input.setAttribute('aria-label',task.name+'；勾選會同步至行李清單');
-  input.addEventListener('change',()=>{
-   const live=U.current?.();if(!live)return;
-   const entries=live.packing||[];
-   let item=entries.find(x=>x.id&&x.id===task.record?.id)||matched(entries,task.name);
-   if(!item){
-    if(!input.checked){render();return;}
-    item={id:U.D.uid(),name:task.name,owner:member,type:'shared',checkedBy:{}};
-    entries.push(item);
-   }
-   if(!item.checkedBy||typeof item.checkedBy!=='object')item.checkedBy={};
-   item.checkedBy[member]=input.checked;
-   U.save();
-   render();
-  });
-  label.append(input,title);list.append(label);
+ const cfg=countryInfo(t),status=doneStates(t,cfg.code);
+ const items=[...cfg.items.filter(x=>!status[x.id]),...cfg.items.filter(x=>status[x.id])].slice(0,3);
+ pair.querySelector('.voyage-story-reminder .voyage-story-head').title=cfg.name+' · 已確認 '+cfg.items.filter(x=>status[x.id]).length+'/'+cfg.items.length+'，點此查看所有提醒';
+ for(const item of items){
+  const line=el('label'),input=el('input'),label=el('span','',item.label);
+  input.type='checkbox';input.checked=!!status[item.id];input.setAttribute('aria-label',cfg.name+'：'+item.label);
+  input.addEventListener('change',()=>saveDone(item.id,input.checked));
+  line.append(input,label);list.append(line);
  }
- if(!tasks.length){const p=el('span','voyage-story-empty','尚未建立待辦，點標題前往行李清單');list.append(p);}
 }
 let scheduled=false;
-function update(){
- if(scheduled)return;
- scheduled=true;
- requestAnimationFrame(()=>{scheduled=false;render();});
-}
+function update(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;render();});}
 new MutationObserver(update).observe(home,{childList:true});
 update();
+
 })();
