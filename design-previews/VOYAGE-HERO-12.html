@@ -16,6 +16,9 @@
 #hero[data-night="true"] #night{opacity:1}
 #hero[data-night="true"][data-weather=night] #stars{opacity:1}
 #hero[data-night="true"] #sun-disc{opacity:0!important}
+#hero[data-night="true"] #rail-copy{filter:brightness(.58) saturate(.72)!important}
+#hero[data-night="true"] #train{filter:brightness(.64) saturate(.68) drop-shadow(0 1px 1px #27355066)!important}
+#hero[data-night="true"] #plane{filter:brightness(.72) saturate(.75)!important}
 body[data-weather-ui="auto"] .controls{display:none!important}
 #hero[data-weather=rain] #plate,#hero[data-weather=rain] #rail-copy{filter:brightness(.86) saturate(.76)}#hero[data-weather=snow] #plate,#hero[data-weather=snow] #rail-copy{filter:brightness(1.05) saturate(.79)}#hero[data-weather=night] #plate,#hero[data-weather=night] #rail-copy{filter:brightness(.7) saturate(.7)}
 #hero[data-weather=night] #plane{filter:brightness(.9)}
@@ -132,5 +135,5 @@ window.addEventListener('message',e=>{if(e.origin!==location.origin)return;if(e.
  }});
 function reportHeight(){try{parent.postMessage({type:'voyage-hero-size',height:Math.ceil(document.getElementById('hero').getBoundingClientRect().height+2)},location.origin)}catch(e){}};
 if(window.ResizeObserver)new ResizeObserver(reportHeight).observe(document.getElementById('hero'));
-window.addEventListener('resize',()=>{resize();reportHeight()});resize();choose('cloud');date();tick();requestAnimationFrame(reportHeight);if(autoMode)parent.postMessage({type:'voyage-weather-request'},location.origin);
+window.addEventListener('resize',()=>{resize();reportHeight()});resize();choose('cloud');date();tick();setInterval(date,60000);requestAnimationFrame(reportHeight);if(autoMode)parent.postMessage({type:'voyage-weather-request'},location.origin);
 })();</script></body></html>
