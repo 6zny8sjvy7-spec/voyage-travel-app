@@ -178,7 +178,7 @@ function render(){
  else detail.textContent=next?'尚未新增航班，點此編排行程':'點此新增旅行或行程';
  const list=pair.querySelector('.voyage-story-checklist');list.replaceChildren();
  const cfg=countryInfo(t),status=doneStates(t,cfg.code);
- const items=[...cfg.items.filter(x=>!status[x.id]),...cfg.items.filter(x=>status[x.id])].slice(0,3);
+ const items=cfg.items.slice(0,3);
  pair.querySelector('.voyage-story-reminder .voyage-story-head').title=cfg.name+' · 已確認 '+cfg.items.filter(x=>status[x.id]).length+'/'+cfg.items.length+'，點此查看所有提醒';
  for(const item of items){
   const line=el('label'),input=el('input'),label=el('span','',item.label);
