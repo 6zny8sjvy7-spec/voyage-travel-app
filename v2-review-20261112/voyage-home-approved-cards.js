@@ -168,7 +168,7 @@ function render(){
  if(!pair){pair=create();home.insertBefore(pair,quick);}
  else if(pair.nextElementSibling!==quick)home.insertBefore(pair,quick);
  pair.querySelectorAll('.voyage-story-art').forEach(node=>{node.hidden=!isSeoul(t);});
- const next=nextItem(t),date=next?.date||'';
+ const next=window.VoyageHomeGuard?.cityMismatch?.(t)?null:nextItem(t),date=next?.date||'';
  pair.querySelector('[data-story-date]').textContent=date?date.slice(5).replace('-','/'):'—';
  pair.querySelector('[data-story-weekday]').textContent=date?'（'+['日','一','二','三','四','五','六'][new Date(date+'T12:00:00Z').getUTCDay()]+'）':'';
  pair.querySelector('[data-story-trip]').textContent=next?.title||'尚無下一個行程';
