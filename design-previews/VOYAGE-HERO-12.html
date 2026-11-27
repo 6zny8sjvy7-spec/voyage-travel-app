@@ -63,10 +63,24 @@ function date(){
 }
 
 function installExactRailClone(img){
- if(document.getElementById('rail-copy'))return;
- const rail=img.cloneNode(false);rail.id='rail-copy';rail.alt='';
- rail.setAttribute('aria-hidden','true');rail.removeAttribute('loading');
- img.after(rail);
+ /* Previous full-width cloned rail covered the original bridge with a second,
+    vertically shifted railing. Keep exactly one rail foreground. */
+ document.getElementById('rail-copy')?.remove();
+ const prior=document.getElementById('rail-joints');
+ if(prior)return;
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.id='rail-joints';svg.setAttribute('viewBox','0 0 1448 946');
+ svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');
+ svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;';
+ // Connect the only two steps of the source illustration, rather than repeat
+ // a complete railing over the entire river.
+ svg.innerHTML='<g fill="none" stroke-linecap="round" stroke-linejoin="round">'
+ +'<path d="M536 691Q575 689 625 652M1208 652Q1250 667 1304 692" stroke="#334763" stroke-width="12"/>'
+ +'<path d="M536 692Q579 690 625 655M1208 655Q1252 670 1304 694" stroke="#f9f2df" stroke-width="5"/>'
+ +'<path d="M536 711Q582 708 625 674M1208 675Q1251 692 1304 713" stroke="#344d71" stroke-width="9"/>'
+ +'<path d="M536 710Q582 705 625 672M1208 674Q1251 690 1304 710" stroke="#f5eee3" stroke-width="4"/>'
+ +'</g>';
+ img.after(svg);
 }
 /* Inpaint only dark printed characters in the SKY's date row. Color comes
    from nearby original sky pixels; no buildings, railings or train are edited. */
