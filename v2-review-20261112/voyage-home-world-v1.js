@@ -24,7 +24,8 @@ style.textContent=[
 '#v2Home .vw-train{animation:vw-travel 15s ease-in-out infinite alternate}',
 '#v3WeatherArt .vw-weather-illustration{display:block;width:100%;height:100%;min-height:96px;max-width:186px}',
 '#v2Home .v2-home-hero.vw-home-actions{min-height:0!important;margin:0 0 18px!important;padding:0 4px 4px!important;display:flex!important;background:transparent!important;border:0!important;box-shadow:none!important}',
-'#v2Home .v2-home-hero.vw-home-actions .v2-big-icon,#v2Home .v2-home-hero.vw-home-actions .v2-small-icon,#v2Home .v2-home-hero.vw-home-actions .eyebrow,#v2Home .v2-home-hero.vw-home-actions h2,#v2Home .v2-home-hero.vw-home-actions p{display:none!important}',
+'#v2Home .v2-home-hero.vw-home-actions .v2-small-icon,#v2Home .v2-home-hero.vw-home-actions .eyebrow,#v2Home .v2-home-hero.vw-home-actions h2,#v2Home .v2-home-hero.vw-home-actions p{display:none!important}',
+'#v2Home .v2-home-hero.vw-home-actions .v2-big-icon{display:inline-flex!important;align-items:center;font-size:32px!important;line-height:1;order:-1;margin-right:6px}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-hero-copy{width:100%;max-width:none!important;padding:0!important}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:0!important;padding:0!important}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-toolbar button{flex:1 1 150px}',
@@ -101,7 +102,7 @@ function iconSVG(kind,night){
 let scene=null,currentKey='',iconKey='';
 function state(t){
  const w=window.VoyageCurrentWeather;
- const valid=!!(w&&w.city===t.city&&w.tripId===t.id&&Number.isFinite(Number(w.code))&&typeof w.isDay==='boolean');
+ const valid=!!(!mismatch(t)&&w&&w.city===t.city&&w.tripId===t.id&&Number.isFinite(Number(w.code))&&typeof w.isDay==='boolean');
  if(!valid)return{kind:'unknown',night:false};
  return{kind:window.VoyageWeatherV3?.classify?.(w.code,w.isDay)||'unknown',night:!w.isDay};
 }
