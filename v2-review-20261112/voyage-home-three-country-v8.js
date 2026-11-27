@@ -11,7 +11,7 @@ function render(){
  if(!scene.querySelector('.v8-jp-paint'))scene.insertAdjacentHTML('afterbegin',art);
  const text=scene.querySelector('.vw-detail');if(!text)return;
  const caption=/福岡|fukuoka/i.test(String(t.city||''))?
- '九州福岡的海濱、春日櫻花和日本旅行風景。':
+ '日本風格插畫：櫻花與城市列車（非福岡實景）。':
  '日本代表插畫：春日海灣與城市列車（非這趟旅行城市的實景）。';
  if(text.textContent!==caption)text.textContent=caption;
 }
