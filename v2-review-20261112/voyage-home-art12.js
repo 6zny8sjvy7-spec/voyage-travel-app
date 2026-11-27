@@ -17,7 +17,7 @@ const style=document.createElement('style');style.textContent=`
 let lastTripDate='',lastWeatherSignature='';let frame=null;
 const homeId='v2Home',source='../design-previews/VOYAGE-HERO-12.html?mode=auto&rev=20261126';
 function details(){try{return window.VoyageUI?.current?.() || null;}catch(e){return null}}
-function isSeoul(t){const city=String(t?.city||'');return /(首爾|seoul|서울)/i.test(city)}
+function isSeoul(t){const city=String(t?.city||'');return window.VoyageRegionV4?.countryCode?.(t)==='KR'&&!window.VoyageHomeGuard?.cityMismatch?.(t)&&/(首爾|seoul|서울)/i.test(city)}
 function sendTrip(t){const val=t?.startDate||'',days=Array.isArray(t?.days)?t.days.length:0,tripName=String(t?.name||t?.city||'旅行');const sig=JSON.stringify([t?.id,val,days,tripName]);if(frame?.contentWindow&&sig!==lastTripDate){lastTripDate=sig;frame.contentWindow.postMessage({type:'voyage-home-scene',startDate:val,days,tripName},location.origin);}}
 /* The existing app fetches Open-Meteo weather. Scene12 receives ONLY the verified
    display category, never a guessed condition or any stored trip mutation. */
