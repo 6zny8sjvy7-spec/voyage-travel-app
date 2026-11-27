@@ -78,7 +78,11 @@ function thailand(){
  '<div class="vw-night vw-night-fill" aria-hidden="true"></div>'+
  '<div class="vw-waterlight" aria-hidden="true"></div>';
 }
-function japan(){
+function japan(t){
+ if(/福岡|fukuoka|博多|hakata/i.test(asText(t?.city))){
+  return '<img class="vw-art vw-art-photo" src="./assets/voyage-japan-fukuoka-hero-v2.webp" alt="福岡港灣、櫻花與鐵道的主題插畫" decoding="async" loading="eager">'+
+   '<div class="vw-night vw-night-fill" aria-hidden="true"></div><div class="vw-waterlight" aria-hidden="true"></div>';
+ }
  let s=prefix+'<rect width="1448" height="850" fill="url(#vwSkyJ)"/><g class="vw-sun"><circle cx="1230" cy="130" r="67" fill="#ffefbd" stroke="#f3c4a0" stroke-width="7"/></g>';
  s+=cloud(825,170)+cloud(1220,270);
  s+='<g fill="#9ab0cb">'+Array.from({length:18},(_,i)=>'<rect x="'+(i*92)+'" y="'+(420-i%5*33)+'" width="'+(57+i%3*13)+'" height="250" rx="8"/>').join('')+'</g>';
@@ -129,10 +133,11 @@ async function repairCity(){
 function refresh(){
  const t=U.current?.(),card=home.querySelector('.v2-home-hero');if(!t||!card)return;
  const code=countryCode(t),enabled=code==='TH'||code==='JP',old=home.querySelector('.vw-scene');
+ const artKey=code==='JP'&&/福岡|fukuoka|博多|hakata/i.test(asText(t.city))?'JP-FUKUOKA':code==='JP'?'JP-OTHER':code;
  if(!enabled){old?.remove();card.classList.remove('vw-home-actions');scene=null;currentKey='';return;}
- if(!scene||!scene.isConnected||scene.dataset.country!==code){
-  old?.remove();scene=document.createElement('section');scene.className='vw-scene';scene.dataset.country=code;
-  scene.innerHTML=(code==='TH'?thailand():japan())+'<div class="vw-precip"></div><div class="vw-copy"><h2></h2><p class="vw-detail"></p><p class="vw-dates"></p><div class="vw-counter"></div><div class="vw-warning" hidden></div></div>';
+ if(!scene||!scene.isConnected||scene.dataset.country!==code||scene.dataset.artKey!==artKey){
+  old?.remove();scene=document.createElement('section');scene.className='vw-scene';scene.dataset.country=code;scene.dataset.artKey=artKey;
+  scene.innerHTML=(code==='TH'?thailand():japan(t))+'<div class="vw-precip"></div><div class="vw-copy"><h2></h2><p class="vw-detail"></p><p class="vw-dates"></p><div class="vw-counter"></div><div class="vw-warning" hidden></div></div>';
   home.insertBefore(scene,card);currentKey='';
  }
  const key=JSON.stringify([t.id,t.city,t.name,t.startDate,t.days?.length,code]);
@@ -140,7 +145,7 @@ function refresh(){
   const invalid=mismatch(t),name=invalid?(code==='TH'?'泰國':'日本')+' · 城市待確認':asText(t.city||t.country);
   const dates=tripDates(t);
   scene.querySelector('h2').textContent='下一站，'+name+' ♡';
-  scene.querySelector('.vw-detail').textContent=code==='TH'?(/曼谷|bangkok/i.test(asText(t.city))?'昭披耶河的色彩與熱帶微風，等你收藏。':'泰國代表插畫：曼谷河畔（非目前城市的實景）'):(/東京|tokyo/i.test(asText(t.city))?'櫻花街道、東京晴空與城市列車，等你探索。':'日本代表插畫：東京城市風格（非目前城市的實景）');
+  scene.querySelector('.vw-detail').textContent=code==='TH'?(/曼谷|bangkok/i.test(asText(t.city))?'昭披耶河的色彩與熱帶微風，等你收藏。':'泰國代表插畫：曼谷河畔（非目前城市的實景）'):(/福岡|fukuoka|博多|hakata/i.test(asText(t.city))?'福岡的港灣、櫻花與春日街景，等你探索。':/東京|tokyo/i.test(asText(t.city))?'東京城市主題插畫與列車，等你探索。':'日本代表插畫：東京風格（非目前城市的實景）');
   scene.querySelector('.vw-dates').textContent=dates[0]+' · '+asText(t.name||'旅行');
   scene.querySelector('.vw-counter').textContent='▣ '+dates[1];
   const warn=scene.querySelector('.vw-warning');warn.replaceChildren();
