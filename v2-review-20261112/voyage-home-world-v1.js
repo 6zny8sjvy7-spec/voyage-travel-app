@@ -14,6 +14,8 @@ style.textContent=[
 '#v2Home .vw-warning{background:#fff9e9e8;border:1px solid #d3ad78;padding:9px;border-radius:12px;font-size:12px;margin-top:9px;line-height:1.4}',
 '#v2Home .vw-warning button{display:block;background:#4268ca;color:white;padding:8px 12px;margin-top:7px;border-radius:9px}',
 '#v2Home .vw-night{opacity:0;transition:opacity .5s}',
+'#v2Home .vw-scene[data-night="true"] .vw-copy,#v2Home .vw-scene[data-night="true"] .vw-copy h2{color:#fff9e9;text-shadow:0 2px 5px #061328ea}',
+'#v2Home .vw-scene[data-night="true"] .vw-counter{color:#26334f;text-shadow:none}',
 '#v2Home .vw-scene[data-night="true"] .vw-night{opacity:.72}',
 '#v2Home .vw-sun{opacity:0}',
 '#v2Home .vw-scene[data-condition="sun"]:not([data-night="true"]) .vw-sun{opacity:1}',
@@ -136,7 +138,7 @@ function refresh(){
   const invalid=mismatch(t),name=invalid?(code==='TH'?'泰國':'日本')+' · 城市待確認':asText(t.city||t.country);
   const dates=tripDates(t);
   scene.querySelector('h2').textContent='下一站，'+name+' ♡';
-  scene.querySelector('.vw-detail').textContent=code==='TH'?'昭披耶河的色彩與熱帶微風，等你收藏。':'櫻花街道、東京晴空與城市列車，等你探索。';
+  scene.querySelector('.vw-detail').textContent=code==='TH'?(/曼谷|bangkok/i.test(asText(t.city))?'昭披耶河的色彩與熱帶微風，等你收藏。':'泰國代表插畫：曼谷河畔（非目前城市的實景）'):(/東京|tokyo/i.test(asText(t.city))?'櫻花街道、東京晴空與城市列車，等你探索。':'日本代表插畫：東京城市風格（非目前城市的實景）');
   scene.querySelector('.vw-dates').textContent=dates[0]+' · '+asText(t.name||'旅行');
   scene.querySelector('.vw-counter').textContent='▣ '+dates[1];
   const warn=scene.querySelector('.vw-warning');warn.replaceChildren();
