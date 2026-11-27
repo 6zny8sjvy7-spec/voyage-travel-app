@@ -5,8 +5,8 @@ if(!U||!home)return;
 const style=document.createElement('style');
 style.id='vw-country-home-style';
 style.textContent=[
-'#v2Home .vw-scene{position:relative;width:100%;height:clamp(420px,50vw,600px);overflow:hidden;isolation:isolate;border:2px solid #2b3a61;border-radius:24px;margin:0 0 13px;background:#b7ddff;color:#27334f}',
-'#v2Home .vw-art{position:absolute;inset:0;width:100%;height:100%;display:block}',
+'#v2Home .vw-scene{position:relative;width:100%;height:clamp(280px,30vw,390px);overflow:hidden;isolation:isolate;border:2px solid #2b3a61;border-radius:24px;margin:0 0 13px;background:#b7ddff;color:#27334f}',
+'#v2Home .vw-art{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center center}',
 '#v2Home .vw-copy{position:absolute;z-index:5;left:5%;top:8%;width:58%;color:#233556;text-shadow:0 1px 1px #fff8}',
 '#v2Home .vw-copy h2{font-size:clamp(22px,3.7vw,46px);font-weight:900;margin:0 0 11px;line-height:1.1}',
 '#v2Home .vw-copy p{font-size:clamp(12px,1.6vw,21px);font-weight:750;line-height:1.5;margin:0 0 10px}',
@@ -14,6 +14,12 @@ style.textContent=[
 '#v2Home .vw-warning{background:#fff9e9e8;border:1px solid #d3ad78;padding:9px;border-radius:12px;font-size:12px;margin-top:9px;line-height:1.4}',
 '#v2Home .vw-warning button{display:block;background:#4268ca;color:white;padding:8px 12px;margin-top:7px;border-radius:9px}',
 '#v2Home .vw-night{opacity:0;transition:opacity .5s}',
+'#v2Home .vw-night-fill{position:absolute;inset:0;background:linear-gradient(150deg,#101947bc,#061c38b7);z-index:1;pointer-events:none}',
+'#v2Home .vw-waterlight{position:absolute;left:0;right:0;bottom:0;height:19%;pointer-events:none;z-index:2;opacity:.5;background:repeating-linear-gradient(97deg,transparent 0 31px,#fffecb4d 33px 38px,transparent 41px 78px);animation:vw-waterlight 7s ease-in-out infinite alternate}',
+'#v2Home .vw-scene[data-night="true"] .vw-waterlight{opacity:.25}',
+'#v2Home .vw-precip{z-index:3}',
+'#v2Home .vw-scene .vw-copy{padding:10px 14px;border-radius:18px;background:linear-gradient(90deg,#e9f4ffba 0%,#eaf5ff6b 60%,transparent 100%)}',
+'@keyframes vw-waterlight{from{background-position:0 0}to{background-position:140px 0}}',
 '#v2Home .vw-scene[data-night="true"] .vw-copy,#v2Home .vw-scene[data-night="true"] .vw-copy h2{color:#fff9e9;text-shadow:0 2px 5px #061328ea}',
 '#v2Home .vw-scene[data-night="true"] .vw-counter{color:#26334f;text-shadow:none}',
 '#v2Home .vw-scene[data-night="true"] .vw-night{opacity:.72}',
@@ -64,19 +70,13 @@ function cloud(x,y){return '<path d="M'+x+' '+(y+27)+'Q'+(x-15)+' '+y+' '+(x+14)
 const prefix='<svg class="vw-art" viewBox="0 0 1448 850" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="vwSkyT" x2="0" y2="1"><stop stop-color="#71bcfa"/><stop offset="1" stop-color="#ffdfac"/></linearGradient><linearGradient id="vwSkyJ" x2="0" y2="1"><stop stop-color="#8ab7f8"/><stop offset="1" stop-color="#f5d8e8"/></linearGradient><linearGradient id="vwRiver" x2="0" y2="1"><stop stop-color="#6acee0"/><stop offset="1" stop-color="#287dba"/></linearGradient></defs>';
 const overlay='<g class="vw-night"><rect width="1448" height="850" fill="#122447"/>'+Array.from({length:32},(_,i)=>'<circle fill="#fff6d3" cx="'+((i*167+32)%1448)+'" cy="'+((i*113+19)%480)+'" r="'+(i%4?2:3)+'"/>').join('')+'</g></svg>';
 function thailand(){
- let s=prefix+'<rect width="1448" height="850" fill="url(#vwSkyT)"/><g class="vw-sun"><circle cx="1200" cy="145" r="70" fill="#fff0a6" stroke="#ebc45f" stroke-width="6"/></g>';
- s+=cloud(915,185)+cloud(1220,280);
- s+='<g fill="#9fc9d4" opacity=".8">'+Array.from({length:17},(_,i)=>'<rect x="'+(i*105)+'" y="'+(420-(i*43%100))+'" width="'+(62+i%3*13)+'" height="240" rx="7"/>').join('')+'</g>';
- // Layered Wat Arun-inspired prang and riverside temples.
- s+='<g stroke="#3d5a78" stroke-width="7" stroke-linejoin="round"><path d="M817 598L844 500L868 410L889 301L904 268L920 406L941 503L974 598Z" fill="#fff3cb"/><path d="M868 409H923L909 384H878Z" fill="#f3b25f"/><path d="M843 513H947L938 488H853Z" fill="#dc8861"/><path d="M830 563H963L955 538H839Z" fill="#f2b966"/><path d="M884 298L901 201L916 296Z" fill="#f9d98b"/><path d="M902 202v-32" stroke="#d99c55"/><path d="M738 595L759 513L801 480L839 511L860 598Z" fill="#fff3d2"/><path d="M714 517L799 445L882 517L855 528L797 475L740 527Z" fill="#eb7f5e"/><path d="M1010 602L1031 522L1071 491L1118 523L1145 600Z" fill="#fff3cb"/><path d="M988 528L1073 457L1160 528L1131 538L1073 489L1015 540Z" fill="#ef8c55"/></g>';
- for(let i=0;i<17;i++){let x=666+i*49;s+='<ellipse cx="'+x+'" cy="'+(591+(i%2)*9)+'" rx="48" ry="51" fill="'+(i%3?'#63ca72':'#99e54d')+'" stroke="#3b966d" stroke-width="7"/>'}
- s+='<rect y="609" width="1448" height="241" fill="url(#vwRiver)"/>';
- for(let i=0;i<37;i++)s+='<path d="M'+(i*46)+' '+(653+(i%7)*29)+'h'+(15+i%4*7)+'" stroke="'+(i%3?'#aef7df':'#ffe3a0')+'" stroke-width="7" stroke-linecap="round"/>';
- s+='<g class="vw-boat" stroke="#2b4e7a" stroke-width="8" stroke-linejoin="round"><path d="M780 711L1130 711Q1085 793 945 777Q840 770 780 711Z" fill="#df7a60"/><path d="M810 708L863 673H1070L1120 706Z" fill="#ffd48a"/><path d="M868 669L900 628H1014L1054 668Z" fill="#e48567"/><circle cx="929" cy="675" r="17" fill="#ffcb9c"/><circle cx="978" cy="675" r="17" fill="#ffcb9c"/><path d="M1120 701l52 -49" stroke="#aa4e70" stroke-width="12"/></g>';
- for(let i=0;i<7;i++)s+=flower(38+i*52,760+i%2*37,i%2?'#f8a7c1':'#ffd6e7');
- s+='<path d="M-20 0Q144 100 321 -20" stroke="#7a5b3c" stroke-width="24" fill="none"/>';
- for(let i=0;i<9;i++)s+='<ellipse cx="'+(i*64-25)+'" cy="'+(i%3*17)+'" rx="69" ry="39" stroke="#268b58" stroke-width="8" fill="'+(i%2?'#6cdb61':'#a7ef43')+'"/>';
- return s+overlay;
+ // The approved art direction requires detailed original illustration, NOT a
+ // collection of primitive geometric SVG shapes. Image is stored locally in
+ // this same repository and contains no baked city/date/weather labels.
+ return '<img class="vw-art vw-art-photo" src="./assets/voyage-thailand-hero-v2.webp" '+
+ 'alt="昭披耶河、鄭王廟、長尾船、熱帶花卉的曼谷插畫" decoding="async" loading="eager">'+
+ '<div class="vw-night vw-night-fill" aria-hidden="true"></div>'+
+ '<div class="vw-waterlight" aria-hidden="true"></div>';
 }
 function japan(){
  let s=prefix+'<rect width="1448" height="850" fill="url(#vwSkyJ)"/><g class="vw-sun"><circle cx="1230" cy="130" r="67" fill="#ffefbd" stroke="#f3c4a0" stroke-width="7"/></g>';
