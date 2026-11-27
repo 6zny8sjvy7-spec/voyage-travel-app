@@ -23,6 +23,11 @@ style.textContent=[
 '#v2Home .vw-boat{animation:vw-float 6s ease-in-out infinite}',
 '#v2Home .vw-train{animation:vw-travel 15s ease-in-out infinite alternate}',
 '#v3WeatherArt .vw-weather-illustration{display:block;width:100%;height:100%;min-height:96px;max-width:186px}',
+'#v2Home .v2-home-hero.vw-home-actions{min-height:0!important;margin:0 0 18px!important;padding:0 4px 4px!important;display:flex!important;background:transparent!important;border:0!important;box-shadow:none!important}',
+'#v2Home .v2-home-hero.vw-home-actions .v2-big-icon,#v2Home .v2-home-hero.vw-home-actions .v2-small-icon,#v2Home .v2-home-hero.vw-home-actions .eyebrow,#v2Home .v2-home-hero.vw-home-actions h2,#v2Home .v2-home-hero.vw-home-actions p{display:none!important}',
+'#v2Home .v2-home-hero.vw-home-actions .v2-hero-copy{width:100%;max-width:none!important;padding:0!important}',
+'#v2Home .v2-home-hero.vw-home-actions .v2-toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:0!important;padding:0!important}',
+'#v2Home .v2-home-hero.vw-home-actions .v2-toolbar button{flex:1 1 150px}',
 '@keyframes vw-rain{from{background-position:0 -100px}to{background-position:24px 0}}',
 '@keyframes vw-snow{from{background-position:0 -90px}to{background-position:100px 90px}}',
 '@keyframes vw-float{50%{transform:translate(14px,-7px)}}',
@@ -112,7 +117,7 @@ async function repairCity(){
 function refresh(){
  const t=U.current?.(),card=home.querySelector('.v2-home-hero');if(!t||!card)return;
  const code=countryCode(t),enabled=code==='TH'||code==='JP',old=home.querySelector('.vw-scene');
- if(!enabled){old?.remove();scene=null;currentKey='';return;}
+ if(!enabled){old?.remove();card.classList.remove('vw-home-actions');scene=null;currentKey='';return;}
  if(!scene||!scene.isConnected||scene.dataset.country!==code){
   old?.remove();scene=document.createElement('section');scene.className='vw-scene';scene.dataset.country=code;
   scene.innerHTML=(code==='TH'?thailand():japan())+'<div class="vw-precip"></div><div class="vw-copy"><h2></h2><p class="vw-detail"></p><p class="vw-dates"></p><div class="vw-counter"></div><div class="vw-warning" hidden></div></div>';
@@ -130,7 +135,7 @@ function refresh(){
   if(invalid){warn.hidden=false;warn.append(document.createTextNode('目前選擇的是「'+asText(t.country)+'」，但是儲存的城市為「'+asText(t.city)+'」。請核對目的地。'));const b=document.createElement('button');b.textContent='更正城市（經確認才儲存）';b.type='button';b.addEventListener('click',repairCity);warn.append(b)}else warn.hidden=true;
   currentKey=key;
  }
- card.classList.add('v12-home-actions');
+ card.classList.add('vw-home-actions');
  const current=state(t);scene.dataset.condition=current.kind;scene.dataset.night=String(current.night);
 }
 function prettyIcon(){
