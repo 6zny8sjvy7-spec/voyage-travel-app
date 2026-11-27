@@ -44,7 +44,8 @@ const countryCode=t=>window.VoyageRegionV4?.countryCode?.(t)||(/[日本]|japan/i
 function mismatch(t){
  const c=countryCode(t),s=asText(t?.city);
  const observed=/(曼谷|bangkok|清邁|chiang mai|phuket|普吉)/i.test(s)?'TH':/(東京|tokyo|大阪|osaka|京都|kyoto)/i.test(s)?'JP':/(首爾|seoul|釜山|busan)/i.test(s)?'KR':'';
- return !!(observed&&c&&observed!==c);
+ const zone=asText(t?.tz),expectedZone={KR:'Asia/Seoul',JP:'Asia/Tokyo',TH:'Asia/Bangkok',VN:'Asia/Ho_Chi_Minh'}[c];
+  return !!((observed&&c&&observed!==c)||(expectedZone&&zone&&zone!==expectedZone));
 }
 window.VoyageHomeGuard={cityMismatch:mismatch,countryCode};
 function tripDates(t){
@@ -96,15 +97,16 @@ function iconSVG(kind,night){
  const sun='<circle cx="129" cy="48" r="33" fill="#ffec9b" stroke="#e3bb65" stroke-width="5"/>';
  const moon='<path d="M129 18Q100 72 154 94Q108 109 91 64Q81 32 118 14Z" fill="#fff4bb" stroke="#e7cc99" stroke-width="5"/>';
  const cloudShape='<path d="M31 105Q11 100 23 76Q30 61 49 66Q59 28 91 45Q110 15 140 41Q161 35 174 69Q198 70 191 92Q184 110 160 109Z" fill="#fff9ff" stroke="#718ab7" stroke-width="5"/>';
- const sky=night?moon:kind==='sun'||kind==='cloud'?sun:'';
+ const sky=night?moon:kind==='sun'?sun:'';
  const rain=kind==='rain'||kind==='storm'?Array.from({length:5},(_,i)=>'<path d="M'+(48+i*25)+' 116l-9 20" stroke="#80bdec" stroke-width="6" stroke-linecap="round"/>').join(''):'';
- const snow=kind==='snow'?'<text x="48" y="143" font-size="28" fill="#fff">❄ ❄ ❄</text>':'';
- return '<svg class="vw-weather-illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 150" aria-hidden="true">'+sky+cloudShape+rain+snow+'</svg>';
+ const snow=kind==='snow'?[48,95,145].map((x,i)=>'<g transform="translate('+x+' '+(125+i%2*9)+')" stroke="#91c3ef" stroke-width="4" stroke-linecap="round"><path d="M-10 0H10M0 -10V10M-7 -7L7 7M7 -7L-7 7"/></g>').join(''):'';
+  const lightning=kind==='storm'?'<path d="M113 109l-17 24h18l-11 17" fill="none" stroke="#e9b848" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>':'';
+ return '<svg class="vw-weather-illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 150" aria-hidden="true">'+sky+cloudShape+rain+snow+lightning+'</svg>';
 }
 let scene=null,currentKey='',iconKey='';
 function state(t){
  const w=window.VoyageCurrentWeather;
- const valid=!!(!mismatch(t)&&w&&w.city===t.city&&w.tripId===t.id&&Number.isFinite(Number(w.code))&&typeof w.isDay==='boolean');
+ const valid=!!(!mismatch(t)&&w&&w.city===t.city&&String(w.tripId)===String(t.id)&&w.locationKey===JSON.stringify([t.country,t.city,t.lat,t.lon,t.tz])&&Number.isInteger(w.code)&&typeof w.isDay==='boolean');
  if(!valid)return{kind:'unknown',night:false};
  let isDay=w.isDay;
  const zone=asText(t.tz)|| (countryCode(t)==='TH'?'Asia/Bangkok':'Asia/Tokyo');
