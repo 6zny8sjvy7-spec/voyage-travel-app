@@ -41,7 +41,7 @@ function create(){
  pair.append(next,reminder);return pair;
 }
 function isKorea(t){return /韓國|Korea|Seoul|首爾|서울/i.test([t.country,t.city].join(' '));}
-function isSeoul(t){return /首爾|Seoul|서울/i.test(String(t.city||''));}
+function isSeoul(t){return window.VoyageRegionV4?.countryCode?.(t)==='KR'&&!window.VoyageHomeGuard?.cityMismatch?.(t)&&/首爾|Seoul|서울/i.test(String(t.city||''));}
 function validDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(String(s||''));}
 function dateAfter(start,offset){
  if(!validDate(start))return '';
