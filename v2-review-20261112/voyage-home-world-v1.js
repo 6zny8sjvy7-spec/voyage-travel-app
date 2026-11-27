@@ -104,7 +104,14 @@ function state(t){
  const w=window.VoyageCurrentWeather;
  const valid=!!(!mismatch(t)&&w&&w.city===t.city&&w.tripId===t.id&&Number.isFinite(Number(w.code))&&typeof w.isDay==='boolean');
  if(!valid)return{kind:'unknown',night:false};
- return{kind:window.VoyageWeatherV3?.classify?.(w.code,w.isDay)||'unknown',night:!w.isDay};
+ let isDay=w.isDay;
+ const zone=asText(t.tz)|| (countryCode(t)==='TH'?'Asia/Bangkok':'Asia/Tokyo');
+ try{
+  const x=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(z=>[z.type,z.value]));
+  const now=x.year+'-'+x.month+'-'+x.day+'T'+x.hour+':'+x.minute;
+  if(w.sunrise?.slice(0,10)===now.slice(0,10)&&w.sunset?.slice(0,10)===now.slice(0,10))isDay=now>=w.sunrise&&now<w.sunset;
+ }catch(e){}
+ return{kind:window.VoyageWeatherV3?.classify?.(w.code,isDay)||'unknown',night:!isDay};
 }
 async function repairCity(){
  const t=U.current?.();if(!t)return;
@@ -150,6 +157,7 @@ function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queu
 new MutationObserver(schedule).observe(home,{childList:true});
 document.addEventListener('voyage-weather',()=>{iconKey='';schedule()});
 document.addEventListener('voyage-trip-changed',()=>{iconKey='';schedule()});
+setInterval(()=>{if(!document.hidden){iconKey='';schedule()}},60000);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
 window.VoyageHomeWorldQA={countryCode,mismatch,tripDates,state};
 })();
