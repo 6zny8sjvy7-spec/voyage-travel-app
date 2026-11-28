@@ -1,0 +1,46 @@
+name: VOYAGE ideas, Thai single-search, collaboration gate QA
+on:
+  push:
+    branches: [fix/20261128-ideas-transit-collab-audit]
+  workflow_dispatch:
+jobs:
+  official-root-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check new JS and Playwright syntax
+        working-directory: site/voyage-travel-app
+        run: |
+          node --check v2-review-20261112/voyage-ideas-v1.js
+          node --check v2-review-20261112/voyage-thai-transit-v1.js
+          node --check qa-previews/20261128-ideas-transit-collab-e2e.mjs
+      - name: Install Chromium and WebKit
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve real GitHub Pages root path
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" > /tmp/voyage.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8000/voyage-travel-app/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/voyage.log
+          exit 1
+      - name: Exercise actual formal root user flows
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-ideas-transit-collab-e2e.mjs
+      - name: Attach actual browser QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-ideas-single-transit-qa
+          path: site/voyage-travel-app/qa-previews/ideas-transit-shots/
+          if-no-files-found: ignore
