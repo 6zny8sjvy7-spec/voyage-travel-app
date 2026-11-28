@@ -9,7 +9,10 @@ css.textContent=`
 #v2Home .vw-scene[data-country="TH"].v4-th-hero{overflow:hidden!important;background-color:#42b9ec!important}
 #v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-picture{inset:0!important;width:100%!important;height:100%!important}
 #v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-image{object-fit:cover!important;object-position:center 43%!important;transform:none!important;filter:none!important}
-#v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-fade{z-index:2!important;background:linear-gradient(90deg,#dbf1ffe8 0%,#ecf7ffad 23%,#e8faff42 46%,transparent 72%)!important}
+#v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-fade{z-index:2!important;background:linear-gradient(90deg,#003c642b 0%,transparent 46%)!important}
+#v2Home .vw-scene[data-country="TH"].v4-th-hero .vw-copy h2,
+#v2Home .vw-scene[data-country="TH"].v4-th-hero .vw-copy p{color:#fff!important;text-shadow:0 2px 4px #15436b,0 1px 11px #16487ebd!important}
+#v2Home .vw-scene[data-country="TH"].v4-th-hero .vw-copy .vw-dates{color:#203a65!important;text-shadow:none!important}
 #v2Home .vw-scene[data-country="TH"].v4-th-hero .v5-plane-flight{position:absolute;z-index:2;left:-27%;top:9%;width:clamp(100px,20%,240px);height:auto;pointer-events:none;animation:voyage-thai-flight-left-to-right 22s linear infinite;will-change:left,transform}
 #v2Home .vw-scene[data-country="TH"].v4-th-hero .v5-plane-flight img{width:100%;height:auto;display:block;filter:drop-shadow(0 2px 1px #0d39652e)}
 #v2Home .vw-scene[data-country="TH"].v4-th-hero .v5-plane-flight::before,
@@ -18,7 +21,7 @@ css.textContent=`
 @keyframes voyage-thai-flight-left-to-right{0%{left:-29%;transform:translateY(24px) scale(.87);opacity:0}6%{opacity:1}89%{opacity:1}100%{left:114%;transform:translateY(-36px) scale(1.05);opacity:0}}
 @media(max-width:700px){
  #v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-image{object-position:58% center!important}
- #v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-fade{background:linear-gradient(180deg,#e9f7fff2 0%,#e6f5ffad 35%,transparent 75%)!important}
+ #v2Home .vw-scene[data-country="TH"].v4-th-hero .v4-fade{background:linear-gradient(180deg,#003b6526 0%,transparent 55%)!important}
  #v2Home .vw-scene[data-country="TH"].v4-th-hero .v5-plane-flight{top:14%;width:29%;animation-duration:20s}
 }
 @media(prefers-reduced-motion:reduce){#v2Home .vw-scene[data-country="TH"].v4-th-hero .v5-plane-flight{animation:none;left:46%;top:14%;opacity:1}}
