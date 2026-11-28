@@ -1,7 +1,7 @@
 -- VOYAGE private trip collaboration, run ONCE in your own Supabase project's SQL editor.
 -- Requires Supabase Auth with Email OTP and the deployed GitHub Pages URL in Auth Redirect URLs.
 -- This code does NOT create a Supabase project or enable sync automatically.
-create extension if not exists pgcrypto;
+-- Uses core PostgreSQL gen_random_uuid() and md5(), no optional extension required.
 
 create table if not exists public.voyage_trips (
   id uuid primary key default gen_random_uuid(),
@@ -94,9 +94,9 @@ begin
     select 1 from public.voyage_members m where m.trip_id=t.id
     and m.user_id=v_auth and m.role='editor'))
  ) then raise exception 'ACCESS_DENIED';end if;
- v_token:=encode(gen_random_bytes(24),'hex');
+ v_token:=replace(gen_random_uuid()::text,'-','') || replace(gen_random_uuid()::text,'-','');
  insert into public.voyage_invites(token_hash,trip_id,role,created_by)
- values(encode(digest(v_token,'sha256'),'hex'),p_trip_id,p_role,v_auth);
+ values(md5(v_token),p_trip_id,p_role,v_auth);
  return v_token;
 end $$;
 
@@ -110,7 +110,7 @@ begin
  if p_token is null or length(p_token)<30 or length(p_token)>100
    then raise exception 'INVALID_INVITE';end if;
  select * into v_inv from public.voyage_invites
-  where token_hash=encode(digest(p_token,'sha256'),'hex')
+  where token_hash=md5(p_token)
   for update;
  if not found or v_inv.used_at is not null or v_inv.expires_at<=now()
    then raise exception 'INVITE_EXPIRED_OR_USED';end if;
