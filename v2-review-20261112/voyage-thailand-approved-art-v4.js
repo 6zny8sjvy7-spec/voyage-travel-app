@@ -114,7 +114,7 @@ function paint(){
  const fromApp=document.getElementById('temp')?.textContent?.trim()||'';
  const safeTemp=/^-?\d+(?:\.\d+)?°C$/.test(fromApp)?fromApp:'';
  temp.textContent=(safeTemp?safeTemp+' · ':'')+String(t.city||'泰國');
- meta.textContent=w.observedAt?'當地天氣 · '+String(w.observedAt).replace('T',' '):'當地天氣已核對';
+ meta.textContent=w.observedAt?'泰國當地資料 '+String(w.observedAt).replace('T',' ')+(w.fetchedAt?' · 查詢 '+new Date(w.fetchedAt).toLocaleTimeString('zh-TW',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hour12:false}):''):'當地天氣已核對';
 }
 let queued=false;
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;paint()})}
