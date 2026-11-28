@@ -1,0 +1,62 @@
+name: VOYAGE formal Bangkok network and country switch QA
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/qa-bangkok-network.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -eu
+          root='https://6zny8sjvy7-spec.github.io/voyage-travel-app/'
+          for i in $(seq 1 15); do
+            if curl -fsSL "${root}?qa=4463d141" -o /tmp/vo.html && grep -Fq 'voyage-bts-network-v1.js?v=5d4ba0fb' /tmp/vo.html && grep -Fq 'voyage-thai-transit-v1.js?v=e0fca66c' /tmp/vo.html; then break; fi
+            sleep 8
+          done
+          grep -Fq 'voyage-bts-network-v1.js?v=5d4ba0fb' /tmp/vo.html
+          grep -Fq 'voyage-thai-transit-v1.js?v=e0fca66c' /tmp/vo.html
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps webkit chromium
+          node --input-type=module <<'JS'
+          import {webkit,chromium} from 'playwright';
+          import assert from 'node:assert/strict';
+          for(const [name,engine] of [['WebKit',webkit],['Chromium',chromium]]){
+            const browser=await engine.launch();
+            try{
+              const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+              await ctx.addInitScript(()=>{if(!sessionStorage.getItem('qa-seed')){localStorage.setItem('voyage-v02',JSON.stringify([{id:'qa-th',name:'QA Bangkok',country:'泰國',city:'曼谷',countryCode:'TH',lat:13.7563,lon:100.5018,tz:'Asia/Bangkok',days:[[]],people:['QA']},{id:'qa-kr',name:'QA Seoul',country:'韓國',city:'首爾',countryCode:'KR',lat:37.5665,lon:126.978,tz:'Asia/Seoul',days:[[]],people:['QA']} ]));localStorage.setItem('voyage-v02-active-id','qa-th');sessionStorage.setItem('qa-seed','1')}});
+              const p=await ctx.newPage();p.on('pageerror',e=>console.log('PAGEERROR',e.message));
+              await p.goto('https://6zny8sjvy7-spec.github.io/voyage-travel-app/?qa=4463d141',{waitUntil:'domcontentloaded'});
+              await p.waitForFunction(()=>window.VoyageBTSNetwork?.unique.length===194);
+              assert.equal(await p.locator('#themeBtn').count(),0);
+              assert.equal(await p.evaluate(()=>document.body.classList.contains('dark')),false);
+              await p.evaluate(()=>setTab('transport'));
+              const rail=p.locator('.v5-mode-switch button').first();
+              await rail.waitFor({state:'visible'});assert((await rail.innerText()).includes('BTS/MRT'));await rail.click();
+              const f=p.locator('#transitFrom'),t=p.locator('#transitTo');
+              await f.fill('三燕');await p.locator('.th-bts-suggestions button').filter({hasText:'BL27'}).first().waitFor({state:'visible'});
+              await f.fill('BL');assert.equal(await p.locator('.th-bts-suggestions').first().locator('button').count(),38);
+              await f.fill('RN');assert.equal(await p.locator('.th-bts-suggestions').first().locator('button').count(),10);
+              await f.fill('三燕');await p.locator('.th-bts-suggestions button').filter({hasText:'BL27'}).first().click();
+              await t.fill('อโศก');await p.locator('.th-bts-suggestions button').filter({hasText:'E4'}).last().click();
+              const btn=p.locator('[data-th-integrated]');assert.equal(await btn.innerText(),'查詢');await btn.click();
+              const result=p.locator('#v2RouteResults');await result.getByText(/搭乘 5 站/).first().waitFor();
+              assert((await result.innerText()).includes('สามย่าน'));assert((await result.innerText()).includes('อโศก'));assert((await result.innerText()).includes('步行轉乘'));
+              await f.fill('RN08');await t.fill('BL27');await btn.click();await result.getByText(/搭乘 23 站/).first().waitFor();
+              assert((await result.innerText()).includes('廊曼'));assert((await result.innerText()).includes('ดอนเมือง'));
+              assert(parseFloat(await f.evaluate(el=>getComputedStyle(el).fontSize))>=16);
+              assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'horizontal overflow');
+              await p.evaluate(()=>{active=trips.findIndex(t=>t.id==='qa-kr');day=0;render();document.dispatchEvent(new Event('voyage-trip-changed'))});
+              await p.waitForFunction(()=>document.querySelector('.v5-mode-switch button')?.textContent.includes('地鐵')&&!document.querySelector('.v5-mode-switch button')?.textContent.includes('BTS'));
+              await f.fill('BL');assert.equal(await p.locator('.th-bts-suggestions').first().isVisible(),false);
+              console.log('PASS',name,'194 stations, BL/RN prefix, Sam Yan aliases, cross-network route, country mode, no iOS input zoom or overflow, light header');
+            }finally{await browser.close()}
+          }
+          JS
