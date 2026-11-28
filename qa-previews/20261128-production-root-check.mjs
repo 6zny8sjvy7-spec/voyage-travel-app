@@ -66,7 +66,7 @@ for(const [browserName,browserType] of browserMatrix){
        await hero.locator('.v8-jp-art').waitFor({timeout:12000});
        loaded=await hero.locator('.v8-jp-art').evaluate(async el=>{
         const bg=getComputedStyle(el).backgroundImage;
-        const source=bg.match(/url\\(["']?([^"')]+)["']?\\)/)?.[1];
+        const source=bg.match(/url\(["']?([^"')]+)["']?\)/)?.[1];
         if(!source)return false;
         const probe=new Image();probe.src=source;
         try{await probe.decode();return probe.naturalWidth>0}catch{return false}
