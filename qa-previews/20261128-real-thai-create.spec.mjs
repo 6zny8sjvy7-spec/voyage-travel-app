@@ -14,9 +14,11 @@ for(const [engine,type] of states){
   for(const [device,viewport] of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
    const context=await browser.newContext({viewport});
    await context.addInitScript(data=>{
+    if(sessionStorage.getItem('voyage-qa-seeded'))return;
     localStorage.setItem('voyage-v02',JSON.stringify(data));
     localStorage.setItem('voyage-v02-active-id','existing-seoul');
     localStorage.setItem('voyage-theme','light');
+    sessionStorage.setItem('voyage-qa-seeded','1');
    },seed);
    const page=await context.newPage();
    const alerts=[],jsErrors=[];
