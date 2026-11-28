@@ -63,6 +63,14 @@ style.textContent=[
 '#transportSection.th-integrated #voyageThaiTransit{display:none!important}'
 ].join('\n');
 document.head.append(style);
+const btsCss=document.createElement('style');btsCss.textContent=`
+.th-bts-suggestions{max-height:235px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card);margin:5px 0;position:relative;z-index:2}
+.th-bts-suggestions[hidden]{display:none!important}
+.th-bts-suggestions button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);padding:10px 9px;border-radius:0;border-bottom:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}
+.th-bts-leg{padding:12px 14px;margin:12px 0;border:1px solid var(--line);border-left:5px solid;border-radius:12px;background:var(--card);overflow-wrap:anywhere}
+.th-bts-leg p{margin:7px 0}.th-route-direction{font-weight:800;color:var(--ink)}.th-transfer-label{font-weight:800;padding:8px;background:var(--soft);border-radius:10px}
+#transportSection.th-integrated .transport-panel label{min-width:0}#transportSection.th-integrated [data-th-integrated]{min-height:42px;width:100%}
+`;document.head.append(btsCss);
 /* The lower manual train tracker and duplicate station search are not relevant
    to a simple Thailand A→B query. Preserve their DOM for other countries, and
    keep date/time only under one optional "save this trip" disclosure. */
@@ -91,10 +99,10 @@ function refreshBus(){
 }
 for(const node of [from,to])node.addEventListener('input',refreshBus);
 panel.addEventListener('click',e=>{
- if(e.target.closest('.v5-mode-switch button'))requestAnimationFrame(refreshBus);
+ if(e.target.closest('.v5-mode-switch button')){stationPicker.forEach(x=>x.hidden=true);requestAnimationFrame(refreshBus);}
 });
 function updateCountry(){
- const isThai=active();refBox.hidden=!isThai;panel.classList.toggle('th-integrated',isThai);
+ const isThai=active();if(!isThai||window.VoyageTransitUIV5?.mode==='bus')stationPicker.forEach(x=>x.hidden=true);refBox.hidden=!isThai;panel.classList.toggle('th-integrated',isThai);
  if(isThai){
   if(planFields && planFields.parentElement!==compact){
    compact.append(planFields);compact.append(thSave);
@@ -108,7 +116,7 @@ function updateCountry(){
  }
  refreshBus();
  const oldHeading=panel.querySelector(':scope > h2');
- if(oldHeading&&isThai)oldHeading.textContent='🇹🇭 交通助手 · A → B 怎麼搭';
+ if(oldHeading&&isThai)oldHeading.textContent='🇹🇭 交通助手';
  else if(oldHeading&&oldHeading.textContent.includes('泰國'))oldHeading.textContent='交通 · 站名／方向／站數查詢';
 }
 function routeOf(start,end){
@@ -140,19 +148,48 @@ function display(route){
  });
  result.append(link);
 }
+const network=window.VoyageBTSNetwork;
+const stationText=s=>s.id+" · "+s.zh+" · "+s.en+" · "+s.th;
+function displayBTS(route){
+ result.replaceChildren();
+ const count=E('h3',route.stops===0?'起終點是同一站':'搭乘 '+route.stops+' 站 · '+(route.transfers?'轉乘 '+route.transfers+' 次':'不需換線'));
+ result.append(count);
+ if(!route.stops)return;
+ for(let i=0;i<route.legs.length;i++){
+  const leg=route.legs[i],line=network.lines[leg.line],a=leg.stations[0],b=leg.stations.at(-1);
+  if(i){const prior=route.legs[i-1].stations.at(-1);result.append(E('p','↳ 於 '+prior.zh+'（'+prior.th+'）轉乘 '+line.title,{class:'th-transfer-label'}));}
+  const card=E('section',undefined,{class:'th-bts-leg'});card.style.borderLeftColor=line.color;
+  card.append(E('strong',line.title),E('p','上車：'+stationText(a)),E('p','方向：往 '+leg.direction.zh+' · '+leg.direction.en+' · '+leg.direction.th,{class:'th-route-direction'}),E('p','搭乘 '+leg.count+' 站'),E('p','下車：'+stationText(b)));
+  const details=E('details');details.append(E('summary','查看 '+leg.stations.length+' 個站點（含上下車）'));const ol=E('ol');for(const s of leg.stations)ol.append(E('li',stationText(s)));details.append(ol);card.append(details);result.append(card);
+ }
+ result.append(E('p','站序規劃，非即時到站。部分列車可能提前折返，請確認月台終點可到目的站。',{class:'v1-sub'}));
+ result.append(E('a','BTS 官方路線圖',{href:'https://www.bts.co.th/routemap.html',target:'_blank',rel:'noopener noreferrer'}));
+ document.getElementById('transitLine').value=route.legs.map(l=>network.lines[l.line].title+' 往 '+l.direction.en+'（'+l.direction.th+'） · '+l.count+' 站').join('；');
+}
+const stationPicker=[];
+for(const input of [from,to]){
+ const list=E('div',undefined,{class:'th-bts-suggestions',role:'listbox'});list.hidden=true;input.after(list);stationPicker.push(list);
+ const draw=()=>{list.replaceChildren();const mode=window.VoyageTransitUIV5?.mode||'mixed';if(!active()||mode==='bus'||!network){list.hidden=true;return}const found=network.candidates(input.value);if(!found.length){list.hidden=true;return}for(const s of found){const b=E('button',stationText(s),{type:'button',role:'option'});b.addEventListener('click',()=>{input.value=s.id+' · '+s.en;list.hidden=true;refreshBus()});list.append(b)}list.hidden=false};
+ input.addEventListener('input',draw);input.addEventListener('focus',draw);input.addEventListener('blur',()=>setTimeout(()=>{list.hidden=true},200));list.addEventListener('pointerdown',e=>e.preventDefault());
+}
+const selectedCode=v=>String(v).split(' · ')[0];
+
 function intercept(event){
  if(!active())return;
  const filter=window.VoyageTransitUIV5?.mode||'mixed';
  if(filter==='bus')return; // Let the primary open-data search run; no guessed bus numbers.
  const a=from.value.trim(),b=to.value.trim();
  if(!a||!b)return;
+ const matchedBTS=network?.route(selectedCode(a),selectedCode(b));
+ if(matchedBTS){event.preventDefault();event.stopImmediatePropagation();stationPicker.forEach(x=>x.hidden=true);displayBTS(matchedBTS);return;}
  const matched=routeOf(a,b);
  if(!matched)return; // Cross-line A→B needs real routing, not a forced single-line answer.
  event.preventDefault();event.stopImmediatePropagation();
  display(matched);
 }
 function hook(){
- const btn=[...panel.querySelectorAll('button')].find(x=>/查詢\s*A\s*→\s*B\s*怎麼搭/.test(x.textContent));
+ const btn=panel.querySelector('[data-th-integrated]')||[...panel.querySelectorAll('button')].find(x=>/查詢\s*A\s*→\s*B\s*怎麼搭/.test(x.textContent));
+ if(btn){btn.textContent=active()?'查詢':'🔎 查詢 A → B 怎麼搭';}
  if(btn&&!btn.dataset.thIntegrated){btn.dataset.thIntegrated='1';btn.addEventListener('click',intercept,true)}
 }
 function refresh(){hook();updateCountry()}
