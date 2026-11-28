@@ -18,7 +18,7 @@ jobs:
       - name: Validate syntax
         working-directory: site/voyage-travel-app
         run: |
-          node --check v2-review-20261112/voyage-map.js
+          node --check v2-review-20261112/voyage-saved-map-links-v1.js
           node --check v2-review-20261112/voyage-thai-transit-v1.js
           node --check qa-previews/20261128-thai-map-delete-e2e.mjs
       - name: Install browsers
