@@ -1,0 +1,43 @@
+name: VOYAGE Thailand formal-root feature QA
+on:
+  push:
+    branches:
+      - feature/20261128-thailand-hero-transport-collections
+    paths:
+      - .github/workflows/qa-thailand-features.yml
+      - qa-previews/20261128-thai-features-e2e.mjs
+      - v2-review-20261112/voyage-thai-hero-v5.js
+      - v2-review-20261112/voyage-ideas-v1.js
+      - v2-review-20261112/voyage-history-country-v1.js
+      - v2-review-20261112/voyage-thai-transit-v1.js
+      - index.html
+  workflow_dispatch:
+jobs:
+  formal-site-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JS syntax of all new feature modules
+        working-directory: site/voyage-travel-app
+        run: |
+          for s in v2-review-20261112/voyage-{thai-hero-v5,ideas-v1,history-country-v1,thai-transit-v1}.js; do node --check "$s"; done
+      - name: Install Playwright browser engines
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve real GitHub Pages root path locally
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" >/tmp/voyage.log 2>&1 &
+          for n in $(seq 1 25); do curl -sf http://127.0.0.1:8000/voyage-travel-app/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/voyage.log
+          exit 1
+      - name: Test home, animated airplane, Thai rail, wish list and history on desktop/mobile
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-thai-features-e2e.mjs
