@@ -1,0 +1,25 @@
+name: VOYAGE production shared data synchronization
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/qa-sync-all.yml']
+permissions:
+  contents: read
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -eu
+          for i in $(seq 1 15); do
+            if curl -fsSL 'https://6zny8sjvy7-spec.github.io/voyage-travel-app/?v=2051bd5a' | grep -Fq 'voyage-friends-v1.js?v=72ebfc5b'; then break; fi
+            sleep 8
+          done
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps chromium webkit
+          node qa-previews/20261128-sync-all-production.mjs
