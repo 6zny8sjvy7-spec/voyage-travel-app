@@ -146,7 +146,7 @@ PP16|Tao Poon|เตาปูน|島本|Taopoon,陶汶
 `)},
 yellow:{title:"MRT 黃線 · Yellow Line",color:"#d8ab18",stations:parse(`
 YL01|Lat Phrao|ลาดพร้าว|拉拋|叻拋
-YL02|Phawana|ภาวนา|帕瓦那
+YL02|Phawana|ภาวนา|帕瓦那|拍瓦那,帕瓦納
 YL03|Chok Chai 4|โชคชัย 4|初猜四
 YL04|Lat Phrao 71|ลาดพร้าว 71|拉拋71
 YL05|Lat Phrao 83|ลาดพร้าว 83|拉拋83
@@ -240,8 +240,8 @@ const norm=s=>String(s||"").normalize("NFKC").toLowerCase().replace(/^(bts|mrt)\
 const all=Object.entries(lines).flatMap(([line,l])=>l.stations.map((s,index)=>({...s,line,index,key:line+":"+index})));
 const unique=[...new Map(all.map(s=>[s.id,s])).values()];
 const terms=s=>[s.id,s.en,s.th,s.zh,...s.aliases];
-const codeNorm=s=>norm(s).replace(/^([a-z]+)0+(\d+)$/,"$1$2");
-function candidates(q){const v=norm(q);if(!v)return unique;const exact=unique.filter(s=>terms(s).some(x=>norm(x)===v)||codeNorm(s.id)===codeNorm(v));if(exact.length)return exact;const prefix=unique.filter(s=>norm(s.id).startsWith(v));if(/^[a-z]{1,3}\d*$/.test(v)&&prefix.length)return prefix;const rest=unique.filter(s=>!prefix.includes(s)&&terms(s).some(x=>norm(x).includes(v)));return [...prefix,...rest]}
+const codeNorm=s=>norm(s).replace(/^y(?=\d|$)/,"yl").replace(/^([a-z]+)0+(\d+)$/,"$1$2");
+function candidates(q){const v=norm(q);if(!v)return unique;const exact=unique.filter(s=>terms(s).some(x=>norm(x)===v)||codeNorm(s.id)===codeNorm(v));if(exact.length)return exact;const prefix=unique.filter(s=>norm(s.id).startsWith(v)||codeNorm(s.id).startsWith(codeNorm(v)));if(/^[a-z]{1,3}\d*$/.test(v)&&prefix.length)return prefix;const rest=unique.filter(s=>!prefix.includes(s)&&terms(s).some(x=>norm(x).includes(v)));return [...prefix,...rest]}
 function resolve(q){const exact=unique.filter(s=>terms(s).some(x=>norm(x)===norm(q))||codeNorm(s.id)===codeNorm(q));if(exact.length)return exact.length===1?exact:[];const found=candidates(q);return found.length===1?found:[]}
 const links=new Set(["G1,S7","BL13,N8","BL14,N9","BL22,E4","BL26,S2","BL34,S12","BL10,PP16","PP11,PK01","PP15,RW02","BL15,YL01","E15,YL23","A4,YL11","N17,PK16","PK14,RN06","A6,BL21","A8,N2","BL11,RN01","BL11,RW01","RN01,RW01"].map(x=>x.split(",").sort().join(",")));
 const adjacency=new Map(all.map(s=>[s.key,[]]));const byKey=new Map(all.map(s=>[s.key,s]));for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const a=all[i],b=all[j];let cost=Infinity,change=false;if(a.line===b.line&&Math.abs(a.index-b.index)===1)cost=1;else if(a.id===b.id||links.has([a.id,b.id].sort().join(","))){cost=5;change=true}if(Number.isFinite(cost)){adjacency.get(a.key).push({key:b.key,cost,change});adjacency.get(b.key).push({key:a.key,cost,change})}}

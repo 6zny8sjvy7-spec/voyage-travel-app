@@ -43,6 +43,9 @@ jobs:
            const rail=pa.locator('.v5-mode-switch button').first();await rail.waitFor({state:'visible'});assert((await rail.innerText()).includes('BTS/MRT'));await rail.click();
            const from=pa.locator('#transitFrom');await from.fill('三燕');await pa.locator('.th-bts-suggestions button').filter({hasText:'BL27'}).first().waitFor({state:'visible'});
            await from.fill('RN');assert.equal(await pa.locator('.th-bts-suggestions').first().locator('button').count(),10);
+          await from.fill('BL27');await pa.locator('.th-bts-suggestions button').filter({hasText:'BL27'}).first().click();
+          await pa.locator('#transitTo').fill('Y2');await pa.locator('.th-bts-suggestions button').filter({hasText:'YL02'}).waitFor({state:'visible'});
+          await pa.locator('[data-th-integrated]').click();await pa.locator('#v2RouteResults').getByText(/YL02/).first().waitFor();
            await pa.evaluate(()=>window.VoyageUI.showPage('collab'));await pa.locator('#voyageFriendsName').fill(owner);await pa.getByRole('button',{name:'產生朋友邀請連結'}).click();
            await pa.locator('#voyageFriendsLink').waitFor({timeout:35000});
            const invite=await pa.locator('#voyageFriendsLink').inputValue();
@@ -68,7 +71,7 @@ jobs:
            await food(pa).getByText(friend,{exact:false}).first().waitFor();
            await food(pa).getByRole('button',{name:'取消我的已吃過'}).click();
            await cloudWait(pb,({owner,friend})=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.foodWishlist?.some(x=>x.visitedBy?.[owner]===false&&x.visitedBy?.[friend]===true)),{owner,friend});
-           for(const p of [pa,pb]){await p.evaluate(()=>setTab('home'));await p.locator('#v2Home .voyage-story-reminder .voyage-story-head').click();await p.locator('dialog.voyage-country-tasks[open]').waitFor()}
+           for(const p of [pa,pb]){await p.evaluate(()=>setTab('trips'));await p.locator('#v2Home .voyage-story-reminder .voyage-story-head').click();await p.locator('dialog.voyage-country-tasks[open]').waitFor()}
            const dialog=p=>p.locator('dialog.voyage-country-tasks[open]');
            await dialog(pa).locator('input').first().check();
            await dialog(pb).locator('.voyage-reminder-names').first().filter({hasText:owner}).waitFor({timeout:45000});

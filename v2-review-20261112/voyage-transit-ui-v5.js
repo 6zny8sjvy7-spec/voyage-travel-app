@@ -13,7 +13,7 @@ bar.append(E("h3",{text:"🚇 交通助手 · 不用自己猜搭乘方向"}));
 const desc=E("p",{class:"v1-sub",id:"v5RegionDesc",text:"請先選擇國家／城市旅行，系統才會查詢該城市的站網。"});bar.append(desc);
 const modes=E("div",{class:"v5-mode-switch",role:"group","aria-label":"交通方式"});
 for(const [id,label] of [["rail","🚇 地鐵／BTS"],["bus","🚌 公車"],["mixed","🔀 綜合轉乘"]]){
- const b=button(label,()=>{mode=id;version++;lastData=null;input.value="";arrivals.textContent="已切換「"+label+"」。舊的本站班次查詢結果已清除。";refresh.disabled=false;global.VoyageRouteV2?.invalidate?.();for(const child of modes.children)child.setAttribute("aria-pressed",String(child===b));result.replaceChildren(E("p",{class:"v2-route-status",text:"已切換成「"+label+"」。請在下方輸入 A 出發站與 B 抵達站查詢。"}));},"secondary");
+ const b=button(label,()=>{const currentLabel=id==="rail"?(R?.countryCode(trip())==="TH"?"🚆 BTS/MRT":"🚇 地鐵"):label;mode=id;version++;lastData=null;input.value="";arrivals.textContent="已切換「"+currentLabel+"」。舊的本站班次查詢結果已清除。";refresh.disabled=false;global.VoyageRouteV2?.invalidate?.();for(const child of modes.children)child.setAttribute("aria-pressed",String(child===b));result.replaceChildren(E("p",{class:"v2-route-status",text:"已切換成「"+currentLabel+"」。請在下方輸入 A 出發站與 B 抵達站查詢。"}));},"secondary");
  b.setAttribute("aria-pressed",String(id===mode));modes.append(b);
 }
 bar.append(modes);
