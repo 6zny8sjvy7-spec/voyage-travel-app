@@ -6,7 +6,7 @@ const {E,button,pages,current,toast,D}=U;
 const URL_BASE="https://jebxjyxpuxgnmowndhqb.supabase.co",KEY="sb_publishable_u9TGFHu8-OG1UUL9TYAwFA_j9LgB8vZ";
 const AUTH="voyage-friends-auth-1",STATE="voyage-friends-state-1";
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))||fallback}catch{return fallback}};
-let auth=read(AUTH,null),state=read(STATE,{}),running=false,status="尚未連線",lastLink="",conflict=null;
+let auth=read(AUTH,null),state=read(STATE,{}),running=false,status="尚未連線",lastLink="",lastLinkTrip="",conflict=null;
 const keep=()=>localStorage.setItem(STATE,JSON.stringify(state));
 const copy=o=>JSON.parse(JSON.stringify(o));
 const ordered=o=>Array.isArray(o)?o.map(ordered):o&&typeof o==="object"?Object.fromEntries(Object.keys(o).sort().map(k=>[k,ordered(o[k])])):o;
@@ -52,7 +52,7 @@ async function createShare(name){const t=current();if(!t.cloudId&&!confirm("分�
  if(t.cloudId&&!state[t.cloudId])throw Error("此旅行使用舊共編設定，請先備份，不會覆蓋舊資料");
  if(!t.cloudId){withName(t);const rows=await request("/rest/v1/voyage_trips",{owner:auth.user.id,payload:payload(t)},await token());const row=rows[0];bind(t,row);state[row.id].name=member();keep()}
  const invitation=await rpc("voyage_create_invite",{p_trip_id:t.cloudId,p_role:"editor"});
- const link=new URL(location.origin+location.pathname);link.hash="invite="+encodeURIComponent(invitation);lastLink=link.toString();
+ const link=new URL(location.origin+location.pathname);link.hash="invite="+encodeURIComponent(invitation);lastLink=link.toString();lastLinkTrip=t.cloudId;
  uiStatus("邀請連結已建立，7 天內可供多位朋友加入");
 }
 let invite=new URLSearchParams(location.hash.slice(1)).get("invite")||sessionStorage.getItem("voyage-friends-invite")||"";
@@ -64,13 +64,15 @@ async function join(name){await login(name);const id=await rpc("voyage_accept_in
 let uiBusy=false;
 async function action(fn){if(uiBusy||running)return;uiBusy=true;try{await fn()}catch(e){uiStatus("未完成："+e.message);toast(status)}finally{uiBusy=false;U.renderMore();sync()}}
 pages.collab=box=>{
- const t=current();box.append(E("h3",{text:invite?"✈️ 加入朋友的旅行":"👥 朋友共編"}),E("p",{class:"v1-sub",text:invite?"輸入暱稱即可加入，所有旅伴都可以編輯。":"只分享目前旅行；其他國家的旅行不會上傳。所有旅伴都能共同編輯。"}));
- const input=E("input",{id:"voyageFriendsName",type:"text",maxlength:"30",placeholder:"輸入暱稱",value:member()});if(auth)input.disabled=true;
- box.append(E("label",{},[E("span",{text:"暱稱"}),input]),E("div",{id:"voyageFriendsStatus",class:"v1-notice",text:status}));
+ const t=current();box.append(E("h3",{text:invite?"✈️ 加入朋友的旅行":"👥 朋友共編"}),E("p",{class:"v1-sub",text:invite?"請輸入你自己的暱稱即可加入，所有旅伴都可以編輯。":"先設定你自己的暱稱，再分享目前旅行。朋友收到連結後會自行取名，不需要你替他們設定。"}));
+ const input=E("input",{id:"voyageFriendsName",type:"text",maxlength:"30",placeholder:"輸入你自己的暱稱",value:member()});if(auth)input.disabled=true;
+ box.append(E("label",{},[E("span",{text:"我的暱稱"}),input]),E("div",{id:"voyageFriendsStatus",class:"v1-notice",text:status}));
+ if(!invite&&!auth)box.append(button("儲存我的暱稱",()=>action(async()=>{await login(input.value);uiStatus("我的暱稱已設定："+member())}),"secondary"));
+ if(!invite&&auth)box.append(E("p",{class:"v1-sub",text:"我的暱稱："+member()+"；朋友加入後會顯示各自的暱稱。"}));
  box.append(button(invite?"加入旅行":"產生朋友邀請連結",()=>action(()=>invite?join(input.value):createShare(input.value)),"primary"));
- if(lastLink&&!invite){const link=E("input",{id:"voyageFriendsLink",readonly:"readonly",value:lastLink});box.append(link,button("複製邀請連結",async()=>{try{await navigator.clipboard.writeText(lastLink);toast("邀請連結已複製")}catch{link.select();toast("請長按複製連結")}},"primary"))}
+ if(lastLink&&!invite&&t.cloudId&&lastLinkTrip===t.cloudId){const link=E("input",{id:"voyageFriendsLink",readonly:"readonly",value:lastLink});box.append(link,button("複製邀請連結",async()=>{try{await navigator.clipboard.writeText(lastLink);toast("邀請連結已複製")}catch{link.select();toast("請長按複製連結")}},"primary"))}
  if(t.cloudId&&state[t.cloudId])box.append(E("p",{class:"v1-sub",text:"目前旅伴："+(t.people||[]).join("、")+"；旅行修改會自動同步。請勿清除瀏覽器資料，否則需重新接受邀請。"}));
- if(conflict?.id===t.cloudId)box.append(E("p",{class:"v1-warning",text:"同一欄位同時被修改；本機修改已保留。請先備份，再選擇載入雲端版本。"}),button("保留本機備份並載入雲端",()=>action(async()=>{if(!confirm("本機修改會備份保存，確定載入雲端版本？"))return;replace(t,await getRow(t.cloudId));conflict=null;uiStatus("已讀取雲端版本")})));
+ if(conflict&&t.cloudId&&conflict.id===t.cloudId)box.append(E("p",{class:"v1-warning",text:"同一欄位同時被修改；本機修改已保留。請先備份，再選擇載入雲端版本。"}),button("保留本機備份並載入雲端",()=>action(async()=>{if(!confirm("本機修改會備份保存，確定載入雲端版本？"))return;replace(t,await getRow(t.cloudId));conflict=null;uiStatus("已讀取雲端版本")})));
 };
 const wishlist=pages.wishlist;if(wishlist)pages.wishlist=box=>{wishlist(box);const t=current();if(!t.cloudId||!state[t.cloudId]||!member())return;const rows=[...box.children].filter(r=>r.classList.contains("v1-item"));rows.forEach((r,i)=>{const x=t.wishlist[i],check=r.querySelector(".v1-check"),main=r.querySelector(".v1-item-main");if(!x||!check||!main)return;main.append(E("div",{class:"v1-sub",text:x.bought?"已購買："+(x.boughtBy||"未記錄"):"尚未購買"}));check.onchange=()=>{x.bought=check.checked;if(x.bought)x.boughtBy=personName(t);else delete x.boughtBy;save();U.renderMore();sync()}})};
 const packing=pages.packing;if(packing)pages.packing=box=>{packing(box);const t=current();if(!t.cloudId||!state[t.cloudId]||!member())return;const who=personName(t);const selector=box.querySelector("#vPackPerson");if(selector){selector.value=who;selector.disabled=true}const rows=[...box.children].filter(r=>r.classList.contains("v1-item"));rows.forEach((r,i)=>{const x=t.packing[i],check=r.querySelector(".v1-check"),main=r.querySelector(".v1-item-main");if(!x||!check||!main)return;x.checkedBy=x.checkedBy||{};check.checked=!!x.checkedBy[who];main.append(E("div",{class:"v1-sub",text:"已打包："+(Object.keys(x.checkedBy).filter(k=>x.checkedBy[k]).join("、")||"尚未打包")}));check.onchange=()=>{x.checkedBy[who]=check.checked;save();U.renderMore();sync()}})};
