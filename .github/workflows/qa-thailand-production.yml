@@ -1,0 +1,42 @@
+name: VOYAGE Thailand production candidate QA
+on:
+  push:
+    branches:
+      - release/20261128-production-thailand-first
+  workflow_dispatch:
+
+jobs:
+  thai-formal-root:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser engines
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve actual formal root
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" > /tmp/voyage-http.log 2>&1 &
+          for attempt in $(seq 1 25); do
+            if curl -sf "http://127.0.0.1:8000/voyage-travel-app/" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/voyage-http.log
+          exit 1
+      - name: Test official root with Thai trip and unchanged KR/JP
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-thailand-production-check.mjs
+      - name: Save official-root screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-thailand-production-QA
+          path: site/voyage-travel-app/qa-previews/thailand-production-screenshots/
+          if-no-files-found: ignore
