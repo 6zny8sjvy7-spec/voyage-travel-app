@@ -57,10 +57,10 @@ for(const [browserName,browserType] of [['chromium',chromium],['webkit',webkit]]
     assert.equal(await panel.locator('#thSimplePlanner').isVisible(),true);
     await page.screenshot({path:screen+'/'+browserName+'-'+device+'-bus.png'});
     await page.evaluate(()=>setTab('itinerary'));
-    const mapLink=page.locator('#v1MapStops .v1-map-source-link').first();
+    const mapLink=page.locator('#voyageSavedMapLinks .v1-map-source-link').first();
     await mapLink.waitFor({timeout:8000});
     assert.equal(await mapLink.getAttribute('href'),url,'Original short URL must appear in map section exactly');
-    assert((await page.locator('#v1MapStops').innerText()).includes('已保存地圖'),'Avoid saying saved maps URL is absent');
+    assert((await page.locator('#voyageSavedMapLinks').innerText()).includes('已保存地圖'),'Avoid saying saved maps URL is absent');
     await page.evaluate(()=>window.VoyageUI.eventEditor(0,false));
     await page.locator('#v1Dialog[open]').waitFor({timeout:7000});
     assert.equal(await page.locator('#vEvURL').inputValue(),url,'Editor carries original map link');
