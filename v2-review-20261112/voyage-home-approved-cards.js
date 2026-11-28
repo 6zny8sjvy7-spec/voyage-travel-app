@@ -123,7 +123,12 @@ function countryInfo(t){
  const code=countryCode(t),data=COUNTRY_RULES[code];
  return {code,name:data.name,items:data.items.map(([id,label,url])=>({id,label,url}))};
 }
+function reminderIdentity(t){const f=window.VoyageFriendsIdentity;return f?.isShared(t)?f.name():"";}
+function reminderNames(t,code,id){const v=t?.countryReminderBy?.[code]?.[id]||{};return Object.keys(v).filter(k=>v[k]&&(t.people||[]).includes(k));}
+function reminderCount(t,code,id){return reminderNames(t,code,id).length;}
 function doneStates(t,code){
+ const who=reminderIdentity(t);
+ if(who){const by=t?.countryReminderBy?.[code]||{};return Object.fromEntries(Object.entries(by).map(([k,v])=>[k,!!v?.[who]]))}
  const v=t?.countryReminderChecks?.[code];
  return v&&typeof v==='object'&&!Array.isArray(v)?v:{};
 }
@@ -133,25 +138,30 @@ function saveDone(id,done){
  if(!COUNTRY_RULES[code].items.some(x=>x[0]===id))return;
  if(!t.countryReminderChecks||typeof t.countryReminderChecks!=='object')t.countryReminderChecks={};
  if(!t.countryReminderChecks[code]||typeof t.countryReminderChecks[code]!=='object')t.countryReminderChecks[code]={};
- t.countryReminderChecks[code][id]=!!done;
+ const who=reminderIdentity(t);
+ if(who){t.countryReminderBy=t.countryReminderBy||{};t.countryReminderBy[code]=t.countryReminderBy[code]||{};t.countryReminderBy[code][id]=t.countryReminderBy[code][id]||{};t.countryReminderBy[code][id][who]=!!done;}
+ else t.countryReminderChecks[code][id]=!!done;
  U.save();render();
 }
 const modalStyle=el('style');
 modalStyle.textContent='dialog.voyage-country-tasks{box-sizing:border-box;width:min(90vw,580px);max-height:82dvh;overflow:auto;padding:20px;border:2px solid #253148;border-radius:20px;background:#fffefa;color:#253148}dialog.voyage-country-tasks::backdrop{background:#17284688}.voyage-country-tasks h2{font-size:19px;margin:0 0 12px}.voyage-country-tasks p{font-size:12px;line-height:1.5;color:#5c6373}.voyage-country-tasks label{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #e6e3dd;font-size:14px}.voyage-country-tasks label span{flex:1}.voyage-country-tasks input{width:20px;height:20px;flex:none;accent-color:#8cb89c}.voyage-country-tasks a{font-size:12px;color:#385ab9}.voyage-country-tasks button{margin-top:16px;padding:11px;border-radius:12px;width:100%;background:#edf1ff;border:1px solid #b1b8ca;font-weight:750}';
-document.head.append(modalStyle);
+modalStyle.textContent+='.voyage-reminder-names{display:block;font-size:11px;line-height:1.45;color:#63728b;margin-top:4px;overflow-wrap:anywhere}.voyage-reminder-count{flex:none;font-size:10px;color:#56657d;font-weight:700;white-space:nowrap}#v2Home .voyage-story-checklist label:has(.voyage-reminder-count){gap:4px}';document.head.append(modalStyle);
 function showAllReminders(){
  const t=U.current?.();if(!t)return;
  const r=countryInfo(t),dlg=el('dialog','voyage-country-tasks'),heading=el('h2','',r.name+' · 旅行小提醒');
  const count=el('p'),summary=()=>{
   const state=doneStates(U.current?.(),r.code);
-  count.textContent='已自行確認 '+r.items.filter(x=>state[x.id]).length+'／'+r.items.length+' 項。勾選不代表系統已審核護照、簽證或入境申報。';
+  count.textContent='我已確認 '+r.items.filter(x=>state[x.id]).length+'／'+r.items.length+' 項。勾選不代表系統已審核護照、簽證或入境申報。';
  };
  summary();
  dlg.append(heading,count,el('p','','以下依目的地國家提供出發前提醒；實際規定依護照國籍、入境日期及旅行目的不同，請透過官方連結重新查核。'));
  for(const item of r.items){
   const line=el('label'),input=el('input'),txt=el('span','',item.label);
   input.type='checkbox';input.checked=!!doneStates(t,r.code)[item.id];
-  input.addEventListener('change',()=>{saveDone(item.id,input.checked);summary();});
+  const names=el('small','voyage-reminder-names');
+  const updateNames=()=>{const current=U.current?.();const who=reminderIdentity(current);const checked=reminderNames(current,r.code,item.id);names.textContent=who?'已確認 '+checked.length+'/'+(current.people||[]).length+' 人'+(checked.length?' · '+checked.join('、'):''):'';};
+  updateNames();if(reminderIdentity(t))txt.append(names);
+  input.addEventListener('change',()=>{saveDone(item.id,input.checked);summary();updateNames();});
   line.append(input,txt);
   if(item.url){const link=el('a','','官方查核');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',e=>e.stopPropagation());line.append(link);}
   dlg.append(line);
@@ -184,7 +194,7 @@ function render(){
   const line=el('label'),input=el('input'),label=el('span','',item.label);
   input.type='checkbox';input.checked=!!status[item.id];input.setAttribute('aria-label',cfg.name+'：'+item.label);
   input.addEventListener('change',()=>saveDone(item.id,input.checked));
-  line.append(input,label);list.append(line);
+  if(reminderIdentity(t)){const total=(t.people||[]).length;const count=el('small','voyage-reminder-count',reminderCount(t,cfg.code,item.id)+'/'+total);count.title='已確認人數，點選旅行小提醒可查看姓名';line.append(input,label,count);}else line.append(input,label);list.append(line);
  }
 }
 let scheduled=false;
