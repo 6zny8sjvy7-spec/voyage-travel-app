@@ -38,3 +38,11 @@ jobs:
       - name: Test true click flows in Chromium and WebKit on desktop and mobile
         working-directory: site/voyage-travel-app
         run: node qa-previews/20261128-thai-places-history-e2e.mjs
+      - name: Upload true-layout QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-thai-places-visual-QA
+          path: site/voyage-travel-app/qa-previews/visual-shots/
+          if-no-files-found: ignore
+
