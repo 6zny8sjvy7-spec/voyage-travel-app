@@ -99,7 +99,7 @@ function updateCountry(){
   if(planFields && planFields.parentElement!==compact){
    compact.append(planFields);compact.append(thSave);
   }
-  result.after(compact,busHint);
+  if(compact.previousElementSibling!==result||busHint.previousElementSibling!==compact)result.after(compact,busHint);
  }else{
   compact.remove();busHint.remove();
   if(planFields&&originalPlanHost&&planFields.parentElement!==originalPlanHost){
