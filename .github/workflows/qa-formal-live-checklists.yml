@@ -1,0 +1,91 @@
+name: VOYAGE formal live checklist regression
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-formal-live-checklists.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the deployed formal website in two browsers
+        run: |
+          set -eu
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps chromium webkit
+          node --input-type=module <<'JS'
+          import {chromium,webkit} from 'playwright';
+          import assert from 'node:assert/strict';
+          const root='https://6zny8sjvy7-spec.github.io/voyage-travel-app/';
+          const run=process.env.GITHUB_RUN_ID+'-'+process.env.GITHUB_RUN_ATTEMPT;
+          const owner='QA-A-'+run,friend='QA-B-'+run;
+          const th={id:'qa-live-'+run,name:'VOYAGE QA live '+run,country:'泰國',city:'曼谷',countryCode:'TH',tz:'Asia/Bangkok',lat:13.7563,lon:100.5018,startDate:'2027-03-19',days:[[],[]],people:['我'],packing:[{id:'qa-p',name:'QA adapter',owner:'我',type:'shared',checkedBy:{}}],wishlist:[{id:'qa-w',name:'QA shopping',bought:false}],foodWishlist:[{id:'qa-f',name:'QA food',kind:'restaurant',cost:0,visited:false}],expenses:[],documents:[]};
+          const kr={id:'qa-local-'+run,name:'QA independent local trip',country:'韓國',countryCode:'KR',city:'首爾',days:[[]],lat:37.5665,lon:126.978};
+          let a,b;
+          try{
+           a=await chromium.launch();b=await webkit.launch();
+           const ca=await a.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true}),cb=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+           for(const [ctx,seed,id] of [[ca,[kr,th],th.id],[cb,[kr],kr.id]])await ctx.addInitScript(({seed,id})=>{if(!sessionStorage.getItem('qa-live-seeded')){localStorage.setItem('voyage-v02',JSON.stringify(seed));localStorage.setItem('voyage-v02-active-id',id);sessionStorage.setItem('qa-live-seeded','1')}},{seed,id});
+           const pa=await ca.newPage(),pb=await cb.newPage();
+           for(const p of [pa,pb]){p.on('dialog',d=>d.accept());p.on('pageerror',e=>console.log('PAGEERROR',e.message));}
+           const res=await pa.goto(root,{waitUntil:'domcontentloaded',timeout:85000});assert.equal(res.status(),200);
+           await pa.waitForFunction(()=>window.VoyageBTSNetwork?.unique.length===194&&window.VoyageUI&&window.VoyageFriendsIdentity);
+           assert.equal(await pa.locator('#themeBtn').count(),0);
+           assert.equal(await pa.evaluate(()=>document.body.classList.contains('dark')),false);
+           await pa.locator('#v2Home .voyage-story-reminder').waitFor({state:'visible'});
+           await pa.evaluate(()=>setTab('transport'));
+           const rail=pa.locator('.v5-mode-switch button').first();await rail.waitFor({state:'visible'});assert((await rail.innerText()).includes('BTS/MRT'));await rail.click();
+           const from=pa.locator('#transitFrom');await from.fill('三燕');await pa.locator('.th-bts-suggestions button').filter({hasText:'BL27'}).first().waitFor({state:'visible'});
+           await from.fill('RN');assert.equal(await pa.locator('.th-bts-suggestions').first().locator('button').count(),10);
+           await pa.evaluate(()=>window.VoyageUI.showPage('collab'));await pa.locator('#voyageFriendsName').fill(owner);await pa.getByRole('button',{name:'產生朋友邀請連結'}).click();
+           await pa.locator('#voyageFriendsLink').waitFor({timeout:35000});
+           const invite=await pa.locator('#voyageFriendsLink').inputValue();
+           await pb.goto(invite,{waitUntil:'domcontentloaded',timeout:85000});await pb.locator('#voyageFriendsName').fill(friend);await pb.getByRole('button',{name:'加入旅行',exact:true}).click();
+           const waitTrip=(p,n)=>p.waitForFunction(n=>JSON.parse(localStorage.getItem('voyage-v02')||'[]').some(t=>t.cloudId&&t.people?.includes(n)),n,{timeout:45000});
+           await waitTrip(pb,friend);await waitTrip(pa,friend);
+           const page=(p,name)=>p.evaluate(n=>window.VoyageUI.showPage(n),name);
+           const cloudWait=(p,cond,arg)=>p.waitForFunction(cond,arg,{timeout:45000});
+           const notice=async(p,actor,detail)=>{await p.locator('#voyageActivityBell').waitFor({state:'visible',timeout:45000});if(!await p.locator('#voyageActivityPanel').isVisible())await p.locator('#voyageActivityBell').click();await p.locator('#voyageActivityPanel .va-row').filter({hasText:actor}).filter({hasText:detail}).first().waitFor({state:'visible',timeout:45000});await p.locator('#voyageActivityPanel').getByRole('button',{name:'關閉'}).click()};
+           await notice(pa,friend,'加入了旅行');
+           await page(pa,'wishlist');await pa.locator('#v1Content > .v1-item').filter({hasText:'QA shopping'}).locator('.v1-check').check();
+           await cloudWait(pb,n=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.wishlist?.some(x=>x.bought&&x.boughtBy===n)),owner);
+           await page(pb,'packing');await pb.locator('#v1Content > .v1-item').filter({hasText:'QA adapter'}).locator('.v1-check').check();
+           await cloudWait(pa,n=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.packing?.some(x=>x.checkedBy?.[n])),friend);
+           await page(pa,'foods');await page(pb,'foods');
+           const food=p=>p.locator('.v3-food-row').filter({hasText:'QA food'});
+           await food(pa).getByRole('button',{name:'✓ 我已吃過'}).click();
+           await cloudWait(pb,n=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.foodWishlist?.some(x=>x.visitedBy?.[n])),owner);
+           await food(pb).getByText(owner,{exact:false}).first().waitFor();
+           await notice(pb,owner,'更新了美食清單');
+           await food(pb).getByRole('button',{name:'✓ 我已吃過'}).click();
+           await cloudWait(pa,n=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.foodWishlist?.some(x=>x.visitedBy?.[n])),friend);
+           await food(pa).getByText(friend,{exact:false}).first().waitFor();
+           await food(pa).getByRole('button',{name:'取消我的已吃過'}).click();
+           await cloudWait(pb,({owner,friend})=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.foodWishlist?.some(x=>x.visitedBy?.[owner]===false&&x.visitedBy?.[friend]===true)),{owner,friend});
+           for(const p of [pa,pb]){await p.evaluate(()=>setTab('home'));await p.locator('#v2Home .voyage-story-reminder .voyage-story-head').click();await p.locator('dialog.voyage-country-tasks[open]').waitFor()}
+           const dialog=p=>p.locator('dialog.voyage-country-tasks[open]');
+           await dialog(pa).locator('input').first().check();
+           await dialog(pb).locator('.voyage-reminder-names').first().filter({hasText:owner}).waitFor({timeout:45000});
+           assert.equal(await dialog(pb).locator('input').first().isChecked(),false);
+           await dialog(pb).locator('input').first().check();
+           await dialog(pa).locator('.voyage-reminder-names').first().filter({hasText:friend}).waitFor({timeout:45000});
+           assert((await dialog(pa).locator('.voyage-reminder-names').first().innerText()).includes('2/2'));
+           await dialog(pa).locator('input').first().uncheck();
+           await dialog(pb).locator('.voyage-reminder-names').first().filter({hasText:'1/2'}).waitFor({timeout:45000});
+           assert.equal(await dialog(pb).locator('input').first().isChecked(),true);
+           for(const p of [pa,pb])await dialog(p).getByRole('button',{name:'返回旅行首頁'}).click();
+           await notice(pb,owner,'更新了旅行小提醒');
+           await pb.evaluate(()=>{trip().days[0].push({id:'qa-event',name:'QA shared itinerary',time:'13:00'});save();render()});
+           await cloudWait(pa,()=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.days?.[0].some(x=>x.id==='qa-event')),null);
+           await pa.reload({waitUntil:'domcontentloaded'});
+           await cloudWait(pa,()=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.cloudId&&t.days?.[0].some(x=>x.id==='qa-event')),null);
+           for(const p of [pa,pb])assert(await p.evaluate(()=>JSON.parse(localStorage.getItem('voyage-v02')).some(t=>t.name==='QA independent local trip')));
+           console.log('PASS official root Chromium + WebKit: light header, Bangkok network, invite, notifications, shopping, packing, independent food/reminder toggles, open-modal counts, itinerary and local persistence');
+          }finally{await a?.close();await b?.close();}
+          JS
