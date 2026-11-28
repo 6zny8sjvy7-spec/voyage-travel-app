@@ -1,5 +1,5 @@
 -- VOYAGE private trip collaboration, run ONCE in your own Supabase project's SQL editor.
--- Requires Supabase Auth with Email OTP and the deployed GitHub Pages URL in Auth Redirect URLs.
+-- Requires Supabase Auth (anonymous sign-in enabled).
 -- This code does NOT create a Supabase project or enable sync automatically.
 -- Uses core PostgreSQL gen_random_uuid() and md5(), no optional extension required.
 
@@ -96,7 +96,7 @@ begin
  ) then raise exception 'ACCESS_DENIED';end if;
  v_token:=replace(gen_random_uuid()::text,'-','') || replace(gen_random_uuid()::text,'-','');
  insert into public.voyage_invites(token_hash,trip_id,role,created_by)
- values(md5(v_token),p_trip_id,p_role,v_auth);
+ values(md5(v_token),p_trip_id,'editor',v_auth);
  return v_token;
 end $$;
 
@@ -112,12 +112,12 @@ begin
  select * into v_inv from public.voyage_invites
   where token_hash=md5(p_token)
   for update;
- if not found or v_inv.used_at is not null or v_inv.expires_at<=now()
+ if not found  or v_inv.expires_at<=now()
    then raise exception 'INVITE_EXPIRED_OR_USED';end if;
  if not exists(select 1 from public.voyage_trips where id=v_inv.trip_id)
    then raise exception 'TRIP_NOT_FOUND';end if;
  insert into public.voyage_members(trip_id,user_id,role)
- values(v_inv.trip_id,v_auth,v_inv.role)
+ values(v_inv.trip_id,v_auth,'editor')
  on conflict(trip_id,user_id) do update set
   role=case when public.voyage_members.role='editor' then 'editor'
             else excluded.role end;
