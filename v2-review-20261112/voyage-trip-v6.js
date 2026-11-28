@@ -65,7 +65,13 @@ button.onclick=async()=>{
  };
  const warning=canLocate?"已找到城市中心位置（不是具體站牌）":"城市定位資料暫未取得，可先排旅行，稍後再定位";
  if(!confirm("建立「"+newTrip.name+"」\n"+newTrip.country+" · "+newTrip.city+"\n"+days+" 天"+(startDate?" · "+startDate+" 出發":" · 日期未設定")+"\n"+warning+"\n\n確定建立嗎？"))return;
- trips.push(newTrip);active=trips.length-1;day=0;save();render();loadWeather();
+ trips.push(newTrip);active=trips.length-1;day=0;
+ // The official home uses the selected trip ID on reload. Keep it in sync, and
+ // notify the country/weather hero modules so new trips activate immediately.
+ try{localStorage.setItem("voyage-v02-active-id",String(newTrip.id))}catch(e){console.warn("Trip selection persistence unavailable",e)}
+ save();render();
+ document.dispatchEvent(new Event("voyage-trip-changed"));
+ loadWeather();
 };
 button.hidden=true;button.style.setProperty("display","none","important");
 function countdown(){
