@@ -1,8 +1,17 @@
-/* BTS Green network: BTS official 47 Sukhumvit + 14 Silom, Siam shared; Gold 3 stops.
+/* Bangkok operational rail station network, 2026-11-28. No planned/unopened stops.
+   BTS Green network: 47 Sukhumvit + 14 Silom, Siam shared; Gold 3 stops.
    Thai station names per network maps; Traditional Chinese labels are practical translations, not official signage.
    Sources: https://www.bts.co.th/eng/library/system-structuer.html
    https://www.bts.co.th/routemap.html
-   https://www.bts.co.th/eng/traintime-frequency/?Line=gold */
+   https://www.bts.co.th/eng/traintime-frequency/?Line=gold
+   https://metro.bemplc.co.th/MRT-System-Map?lang=en
+   https://metro.bemplc.co.th/Fare-Calculation?lang=en
+   https://www.ebm.co.th/th/areamap/
+   https://nbm.co.th/en/traintime-frequency/
+   https://www.mrta.co.th/en/pink-line-extension-si-rat---muang-thong-thani
+   https://www.srtet.co.th/en/route-information
+   https://thailand.go.th/public/useful-information-detail/001_01_107-2
+   Route costs are heuristic, not travel-time or live-service estimates. */
 (()=>{"use strict";
 const parse=s=>s.trim().split("\n").map(x=>{const [id,en,th,zh,aliases=""]=x.split("|");return{id,en,th,zh,aliases:aliases.split(",").filter(Boolean)}});
 const lines={
@@ -212,8 +221,8 @@ RN10|Rangsit|รังสิต|蘭實
 redwest:{title:"SRT 淺紅線 · Light Red",color:"#e76d75",stations:parse(`
 RW01|Krung Thep Aphiwat|กรุงเทพอภิวัฒน์|曼谷中央車站|Bang Sue Grand Station
 RW02|Bang Son|บางซ่อน|邦頌
-RW05|Bang Bamru|บางบำหรุ|曼邦魯|Bang Bumru,RW03
-RW06|Taling Chan|ตลิ่งชัน|大林江|塔林昌,RW04
+RW05|Bang Bamru|บางบำหรุ|曼邦魯|Bang Bumru
+RW06|Taling Chan|ตลิ่งชัน|大林江|塔林昌
 `)},
 arl:{title:"ARL 機場快線 · Airport Rail Link",color:"#b24452",stations:parse(`
 A1|Suvarnabhumi|สุวรรณภูมิ|素萬那普機場|蘇凡納布,蘇汪納蓬,BKK,Suvarnabhumi Airport
