@@ -51,6 +51,8 @@ for(const [engine,browserType] of [['chromium',chromium],['webkit',webkit]]){
    picker=await page.locator('#tripSelect option').allTextContents();
    assert.equal(picker.length,1,'previous countries are history only');
    assert(picker[0].includes('泰國'),'Thai picker shows only Thai');
+   const thaiNaver=await page.locator('#naverMap').evaluate(el=>({hidden:el.hidden,display:getComputedStyle(el).display}));
+   assert(thaiNaver.hidden || thaiNaver.display==='none','Thai map cannot expose Korea-only NAVER: '+JSON.stringify(thaiNaver));
    const scene=page.locator('.vw-scene[data-country="TH"].v4-th-hero');
    await scene.waitFor({state:'visible',timeout:14000});
    const img=scene.locator('img.v4-image');
