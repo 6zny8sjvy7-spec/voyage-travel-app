@@ -53,6 +53,16 @@ for(const [engine,type] of states){
     assert.equal(thai.tz,'Asia/Bangkok');
     assert.equal(thai.days.length,5);
     assert.equal(thai.startDate,'2027-03-19');
+    console.log('THAI_RENDER_DIAGNOSTIC',engine,device,JSON.stringify(await page.evaluate(()=>{
+      const t=window.VoyageUI?.current?.();
+      return {country:t?.country,city:t?.city,id:t?.id,code:window.VoyageRegionV4?.countryCode?.(t),
+       tab:document.body.dataset.tab,v2Visible:!!document.querySelector('#v2Home')?.getClientRects().length,
+       v2Children:document.getElementById('v2Home')?.children.length,
+       scenes:[...document.querySelectorAll('.vw-scene')].map(x=>({country:x.dataset.country,display:getComputedStyle(x).display,html:x.outerHTML.slice(0,130)})),
+       missingWorld:!window.VoyageHomeWorldQA,missingThai:!window.VoyageThaiHeroV4QA
+      }
+     })));
+    if(jsErrors.length)console.log('BROWSER_ERRORS',engine,device,JSON.stringify(jsErrors.slice(0,12)));
     await page.locator('.vw-scene[data-country="TH"]').waitFor({timeout:12000});
     const img=page.locator('.vw-scene[data-country="TH"] img.v4-image');
     await img.waitFor({timeout:12000});
