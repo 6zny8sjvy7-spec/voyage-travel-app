@@ -18,70 +18,92 @@ const data={
 };
 const alias={'暹羅':'Siam','阿索克':'Asok','莫奇':'Mo Chit','勝利紀念碑':'Victory Monument','澎蓬':'Phrom Phong','帕亞泰':'Phaya Thai','華南蓬':'Hua Lamphong','是隆':'Si Lom','素坤逸':'Sukhumvit','沙拉當':'Sala Daeng'};
 const norm=x=>String(x||'').normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,'').trim();
-const match=(s,q)=>s.some(v=>norm(v)===norm(q)||norm(alias[q])===norm(v));
-const root=document.createElement('section');root.id='voyageThaiTransit';root.className='voyage-th-transit';root.hidden=true;
-root.innerHTML=`<h3>🇹🇭 泰國 BTS／MRT／公車搭乘助手</h3>
- <p class="th-note">選擇交通類型，查詢方向、搭幾站與沿途車站。站數僅對已收錄完整站序的區間計算，非即時發車預報。</p>
- <div class="th-row"><label>交通種類<select id="thMode"><option value="suk">BTS 淺綠線</option><option value="sil">BTS 深綠線</option><option value="mrt">MRT 藍線</option><option value="bus">公車</option></select></label></div>
- <div class="th-row"><label>出發車站<input id="thStart" list="thStations" placeholder="例：暹羅 / Siam"></label><label>抵達車站<input id="thEnd" list="thStations" placeholder="例：阿索克 / Asok"></label><datalist id="thStations"></datalist></div>
- <div class="th-actions"><button type="button" id="thFind" class="primary">查詢怎麼搭、方向及站數</button><a id="thExternal" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/">Google Maps 大眾運輸導航</a></div>
- <div id="thResult" class="th-result" role="status" aria-live="polite">請選出發與抵達站。中文、英文或站碼皆可輸入。</div>
- <small class="th-attrib">BTS 站序：BTS SkyTrain 官方路線｜MRT 站序：BEM 官方路線。搭乘當天請再次核對月台終點、異動及票價。公車查詢無官方資料時會引導 BMTA BUS，不會自行編造公車號碼。</small>`;
-container.append(root);
-const style=document.createElement('style');style.id='thTransitStyle';
-style.textContent=`
-#voyageThaiTransit{padding:16px;margin:18px 0;border-radius:20px;background:#f2f8ff;border:1px solid #c6dafa;color:#244062}
-#voyageThaiTransit h3{margin:0 0 9px;font-size:18px}
-#voyageThaiTransit .th-row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
-#voyageThaiTransit label{flex:1 1 180px;display:grid;gap:6px;font-size:13px;font-weight:700}
-#voyageThaiTransit input,#voyageThaiTransit select{width:100%;box-sizing:border-box;background:#fff;border:1px solid #b8cdec;border-radius:10px;padding:11px;font-size:15px;color:#233e61}
-#voyageThaiTransit .th-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-#voyageThaiTransit .th-actions button,#voyageThaiTransit .th-actions a{padding:10px 12px;border-radius:12px;font-size:14px;text-decoration:none}
-#voyageThaiTransit .th-actions a{background:#fff;border:1px solid #b8cdec;color:#2555a2}
-#voyageThaiTransit .th-result{margin-top:14px;padding:14px;border-radius:14px;background:#fff;border:1px solid #dbe6f4;font-size:14px;line-height:1.7}
-#voyageThaiTransit .th-result strong{font-size:16px;color:#1d4892}
-#voyageThaiTransit .th-note,#voyageThaiTransit .th-attrib{color:#657991;line-height:1.55}
-#voyageThaiTransit[hidden]{display:none!important}
-`;
+const matches=(station,query)=>station.some(value=>norm(value)===norm(query)||norm(alias[query])===norm(value));
+const panel=document.getElementById('transportSection');
+const result=document.getElementById('v2RouteResults');
+const from=document.getElementById('transitFrom'),to=document.getElementById('transitTo');
+if(!panel||!result||!from||!to)return;
+const region=()=>window.VoyageRegionV4?.countryCode?.(U.current?.());
+const active=()=>region()==='TH';
+const E=(tag,text,attrs={})=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n};
+const refBox=E('details');refBox.id='voyageThaiStationReference';refBox.className='v5-optional';
+refBox.append(E('summary','泰國 BTS／MRT 站序與搭乘資訊來源（展開）'));
+refBox.append(E('p','上方 A→B 是唯一主要搜尋入口。已收錄的 BTS／MRT 同線區間會直接列出方向及站數；未完整收錄的區間可試公車或綜合轉乘搜尋，無可靠資料時不編造結果。'));
+for(const key of ['suk','sil','mrt']){
+ const p=E('p',data[key].title+'：'+data[key].stations[0][1]+' → '+data[key].stations.at(-1)[1]+'（目前只涵蓋這段）');
+ const a=E('a','官方路線圖', {href:data[key].source,target:'_blank',rel:'noopener noreferrer'});
+ p.append(' · ',a);refBox.append(p);
+}
+refBox.append(E('p','🚌 曼谷公車：可用上方「公車」模式查 A→B；若來源沒有核實站序，請依 Google Maps、BMTA BUS 或 ViaBus 查詢當日路線。'));
+refBox.append(E('a','BMTA BUS 官方說明',{href:'https://www.thailand.go.th/public/issue-focus-detail/--bmta-bus------',target:'_blank',rel:'noopener noreferrer'}));
+refBox.append('　');
+refBox.append(E('a','ViaBus 官方網站',{href:'https://www.viabus.co/',target:'_blank',rel:'noopener noreferrer'}));
+result.after(refBox);
+const style=document.createElement('style');style.id='voyage-thai-integrated-search-style';
+style.textContent=[
+'#voyageThaiStationReference{margin:14px 0;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px}',
+'#voyageThaiStationReference[hidden]{display:none!important}',
+'#voyageThaiStationReference summary{font-weight:700;cursor:pointer;color:var(--ink)}',
+'#voyageThaiStationReference p{font-size:13px;line-height:1.6;color:var(--muted);margin:9px 0}',
+'#transportSection.th-integrated #v5TransitPanel>h3{display:none}',
+'#transportSection.th-integrated #v4TransitRegion{display:none}',
+'#transportSection.th-integrated #v5OptionalDepartures{display:block}',
+'#transportSection.th-integrated #voyageThaiTransit{display:none!important}'
+].join('\n');
 document.head.append(style);
-const $=id=>document.getElementById(id),mode=$('thMode'),a=$('thStart'),b=$('thEnd'),result=$('thResult'),link=$('thExternal');
-function showTrip(){const code=window.VoyageRegionV4?.countryCode?.(U.current?.());root.hidden=code!=='TH'}
-function fillStops(){const value=mode.value;const list=$('thStations');list.replaceChildren();if(value==='bus'){a.placeholder='搭車地點／車站';b.placeholder='抵達地點／車站';return}
- a.placeholder='輸入中文、英文或站碼';b.placeholder='輸入中文、英文或站碼';
- for(const [id,en,zh] of data[value].stations){for(const label of [id,en,zh]){const option=document.createElement('option');option.value=label;option.label=en+' · '+id;list.append(option)}}
+function updateCountry(){
+ const isThai=active();refBox.hidden=!isThai;panel.classList.toggle('th-integrated',isThai);
+ const oldHeading=panel.querySelector(':scope > h2');
+ if(oldHeading&&isThai)oldHeading.textContent='🇹🇭 交通助手 · A → B 怎麼搭';
+ else if(oldHeading&&oldHeading.textContent.includes('泰國'))oldHeading.textContent='交通 · 站名／方向／站數查詢';
 }
-function travelLink(){
- const t=U.current?.();const o=a.value.trim(),d=b.value.trim();
- const start=o+(t?.city?', '+t.city+', Thailand':' Thailand'),end=d+(t?.city?', '+t.city+', Thailand':' Thailand');
- link.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(start)+'&destination='+encodeURIComponent(end)+'&travelmode=transit';
-}
-function textNode(parent,tag,label){const el=document.createElement(tag);el.textContent=label;parent.append(el);return el}
-function route(){
- travelLink();result.replaceChildren();
- if(!a.value.trim()||!b.value.trim()){textNode(result,'p','請先填寫出發與目的地。');return}
- const key=mode.value;
- if(key==='bus'){
-  textNode(result,'strong','🚌 公車路線必須以當日官方或可驗證資料核對');
-  textNode(result,'p','各線公車可能變更站牌、方向與停靠站數；本頁不會憑地名猜公車號碼。請開 Google Maps 大眾運輸，或使用 BMTA BUS 官方 App 查詢路線與即時到站。');
-  const source=document.createElement('a');source.href='https://www.thailand.go.th/public/issue-focus-detail/--bmta-bus------';source.target='_blank';source.rel='noopener noreferrer';source.textContent='查看 BMTA BUS 官方介紹與下載方式';result.append(source);
-  return;
+function routeOf(start,end){
+ const opts=[];
+ for(const [key,line] of Object.entries(data)){
+  const a=line.stations.findIndex(s=>matches(s,start)),b=line.stations.findIndex(s=>matches(s,end));
+  if(a<0||b<0)continue;
+  const sequence=a<=b?line.stations.slice(a,b+1):line.stations.slice(b,a+1).reverse();
+  opts.push({key,line,from:a,to:b,stations:sequence,direction:b>a?line.towardsEnd:line.towardsStart});
  }
- const line=data[key],p=line.stations,from=p.findIndex(x=>match(x,a.value.trim())),to=p.findIndex(x=>match(x,b.value.trim()));
- if(from<0||to<0){textNode(result,'p','有站名不在目前已核對的 '+line.title+' 區間內。請輸入完整英文、中文或站碼，或使用 Google Maps 查詢其他線路／轉乘。');return}
- if(from===to){textNode(result,'p','起終點是同一站，無須搭車。');return}
- const forward=to>from,list=forward?p.slice(from,to+1):p.slice(to,from+1).reverse(),headsign=forward?line.towardsEnd:line.towardsStart;
- textNode(result,'strong','🚇 '+line.title);
- textNode(result,'p','從 '+p[from][2]+'（'+p[from][1]+' · '+p[from][0]+'）上車');
- textNode(result,'p','方向：'+headsign+'。看月台方向與列車車頭標示；下一站是 '+list[1][2]+'（'+list[1][1]+'）。');
- textNode(result,'p','搭乘 '+(list.length-1)+' 站，不用換線；在 '+p[to][2]+'（'+p[to][1]+' · '+p[to][0]+'）下車。');
- const listBox=document.createElement('details');const summary=document.createElement('summary');summary.textContent='展開全部 '+list.length+' 個上下車與途經站';listBox.append(summary);
- const ol=document.createElement('ol');list.forEach(x=>textNode(ol,'li',x[0]+' '+x[2]+' · '+x[1]));listBox.append(ol);result.append(listBox);
- const src=document.createElement('a');src.href=line.source;src.target='_blank';src.rel='noopener noreferrer';src.textContent='官方線路站序來源';result.append(src);
+ return opts.find(x=>x.from!==x.to)||opts[0]||null;
 }
-$('thFind').onclick=route;mode.onchange=()=>{fillStops();result.textContent='請輸入這條線的出發及目的地站名。'};
-[a,b].forEach(x=>x.addEventListener('change',travelLink));
-document.addEventListener('voyage-trip-changed',showTrip);
-const prior=render;render=function(){prior();showTrip()};
-fillStops();showTrip();travelLink();
-window.VoyageThailandTransit={data,route};
+function display(route){
+ result.replaceChildren();
+ if(route.from===route.to){result.append(E('p','起終點是同一站，無須搭車'));return}
+ const info=route.stations,first=info[0],last=info[info.length-1];
+ result.append(E('h3','🚇 '+route.line.title));
+ result.append(E('p','出發：'+first[2]+'（'+first[1]+'／'+first[0]+'）'));
+ result.append(E('p','搭乘方向：'+route.direction+'。月台終點顯示須依現場公告再次核對。'));
+ result.append(E('p','搭乘 '+(info.length-1)+' 站，不需換線。下車：'+last[2]+'（'+last[1]+'／'+last[0]+'）。'));
+ const d=E('details');d.append(E('summary','展開全部 '+info.length+' 個上下車與途經站'));
+ const ol=E('ol');for(const s of info)ol.append(E('li',s[0]+' · '+s[2]+' · '+s[1]));
+ d.append(ol);result.append(d);
+ result.append(E('p','已核對站序，非即時班次或動態到站。請以當天營運公告為準。'));
+ result.append(E('a','官方站序來源',{href:route.line.source,target:'_blank',rel:'noopener noreferrer'}));
+ const link=E('a','　Google Maps 大眾運輸查詢',{
+  href:'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from.value+', Bangkok, Thailand')+'&destination='+encodeURIComponent(to.value+', Bangkok, Thailand')+'&travelmode=transit',
+  target:'_blank',rel:'noopener noreferrer'
+ });
+ result.append(link);
+}
+function intercept(event){
+ if(!active())return;
+ const filter=window.VoyageTransitUIV5?.mode||'mixed';
+ if(filter==='bus')return; // Let the primary open-data search run; no guessed bus numbers.
+ const a=from.value.trim(),b=to.value.trim();
+ if(!a||!b)return;
+ const matched=routeOf(a,b);
+ if(!matched)return; // Cross-line A→B needs real routing, not a forced single-line answer.
+ event.preventDefault();event.stopImmediatePropagation();
+ display(matched);
+}
+function hook(){
+ const btn=[...panel.querySelectorAll('button')].find(x=>/查詢\s*A\s*→\s*B\s*怎麼搭/.test(x.textContent));
+ if(btn&&!btn.dataset.thIntegrated){btn.dataset.thIntegrated='1';btn.addEventListener('click',intercept,true)}
+}
+function refresh(){hook();updateCountry()}
+document.addEventListener('voyage-trip-changed',refresh);
+let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;refresh()})}).observe(panel,{childList:true,subtree:false});
+refresh();
+window.VoyageThailandTransit={data,routeOf,refresh,sourceType:'fixed-official-station-sequence'};
 })();
