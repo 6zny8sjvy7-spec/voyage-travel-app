@@ -25,14 +25,14 @@ function bind(t,row){t.cloudId=row.id;t.cloudVersion=Number(row.version);t.frien
 function redraw(){try{render();U.renderMore();document.dispatchEvent(new Event("voyage-trip-changed"))}catch(e){console.warn("VOYAGE refresh",e)}}
 function replace(t,row,p= row.payload){const localId=t.id,collapsed=t.packingCollapsed;Object.keys(t).forEach(k=>delete t[k]);Object.assign(t,copy(p),{id:localId,packingCollapsed:collapsed,cloudId:row.id,cloudVersion:Number(row.version),friendsOriginalId:row.payload.id});if(t===current())day=Math.max(0,Math.min(day,t.days.length-1));bind(t,row);if(t===current())redraw()}
 function merge(base,local,remote,path=""){if(eq(local,remote))return local;if(eq(base,local))return remote;if(eq(base,remote))return local;
- if(Array.isArray(base)&&Array.isArray(local)&&Array.isArray(remote)){
+ if((Array.isArray(base)||base===undefined)&&Array.isArray(local)&&Array.isArray(remote)){base=base||[];
   const identified=a=>a.every(x=>x&&typeof x==="object"&&typeof x.id==="string")&&new Set(a.map(x=>x.id)).size===a.length;
   if(identified(base)&&identified(local)&&identified(remote)){const ids=[...new Set([...local,...remote,...base].map(x=>x.id))];return ids.map(id=>merge(base.find(x=>x.id===id),local.find(x=>x.id===id),remote.find(x=>x.id===id),path+"/"+id)).filter(x=>x!==undefined)}
   if(base.length===local.length&&base.length===remote.length&&base.every(Array.isArray)&&local.every(Array.isArray)&&remote.every(Array.isArray))return base.map((x,i)=>merge(x,local[i],remote[i],path+"/"+i));
   if(path==="/people")return [...new Set([...local,...remote])].filter(x=>!base.includes(x)||(local.includes(x)&&remote.includes(x)));
  }
  const obj=x=>x!==null&&typeof x==="object"&&!Array.isArray(x);
- if(obj(base)&&obj(local)&&obj(remote)){const result=Object.create(null);for(const k of new Set([...Object.keys(base),...Object.keys(local),...Object.keys(remote)])){const v=merge(base[k],local[k],remote[k],path+"/"+k);if(v!==undefined)result[k]=v}return result}
+ if((obj(base)||base===undefined)&&obj(local)&&obj(remote)){base=base||{};const result=Object.create(null);for(const k of new Set([...Object.keys(base),...Object.keys(local),...Object.keys(remote)])){const v=merge(base[k],local[k],remote[k],path+"/"+k);if(v!==undefined)result[k]=v}return result}
  throw Error("同一欄位被同時修改："+(path||"旅行"));
 }
 function personName(t){return state[t.cloudId]?.name||member()}
