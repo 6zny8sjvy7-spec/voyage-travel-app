@@ -1,0 +1,30 @@
+name: VOYAGE live friends two-browser QA
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'v2-review-20261112/voyage-friends-v1.js'
+      - 'qa-previews/20261128-friends-live-e2e.mjs'
+      - '.github/workflows/qa-friends-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-friends:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Chromium and WebKit against real free Supabase
+        working-directory: site/voyage-travel-app
+        run: |
+          node --check v2-review-20261112/voyage-friends-v1.js
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps chromium webkit
+          (cd .. && python3 -m http.server 8000 > /tmp/voyage-qa-http.log 2>&1) &
+          node qa-previews/20261128-friends-live-e2e.mjs
