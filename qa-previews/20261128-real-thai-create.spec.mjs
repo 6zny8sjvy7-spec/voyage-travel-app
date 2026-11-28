@@ -49,7 +49,7 @@ for(const [engine,type] of states){
     assert.equal(data[0].name,'保留舊韓國旅行','old trip unchanged');
     const thai=data[1];
     assert(['泰國','Thailand'].includes(thai.country),'TH country code persisted without changing the original country language');
-    assert.equal(thai.city,'Bangkok');
+    assert(['曼谷','Bangkok'].includes(thai.city),'Bangkok is normalized to Thai destination in native UI');
     assert.equal(thai.tz,'Asia/Bangkok');
     assert.equal(thai.days.length,5);
     assert.equal(thai.startDate,'2027-03-19');
