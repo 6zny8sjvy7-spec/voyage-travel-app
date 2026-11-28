@@ -1,0 +1,50 @@
+name: VOYAGE production mobile action bar QA
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/qa-home-icon.yml']
+permissions:
+  contents: read
+jobs:
+  mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify production release and mobile WebKit layout
+        run: |
+          set -eu
+          root='https://6zny8sjvy7-spec.github.io/voyage-travel-app/'
+          for i in $(seq 1 15); do
+            if curl -fsSL "${root}?v=7815c87e" -o /tmp/voyage.html && grep -Fq 'voyage-home-world-v1.js?v=8791b22b' /tmp/voyage.html && curl -fsSL "${root}v2-review-20261112/voyage-home-world-v1.js?v=8791b22b" -o /tmp/world.js && grep -Fq '.vw-home-actions>.v2-big-icon{display:none!important}' /tmp/world.js; then break; fi
+            sleep 8
+          done
+          grep -Fq 'voyage-home-world-v1.js?v=8791b22b' /tmp/voyage.html
+          grep -Fq '.vw-home-actions>.v2-big-icon{display:none!important}' /tmp/world.js
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps webkit chromium
+          node --input-type=module <<'JS'
+          import {webkit, chromium} from 'playwright';
+          import assert from 'node:assert/strict';
+          const root='https://6zny8sjvy7-spec.github.io/voyage-travel-app/?v=7815c87e';
+          for(const [name,engine] of [['WebKit',webkit],['Chromium',chromium]]){
+            const browser=await engine.launch();
+            try {
+              for(const [code,country,city,lat,lon] of [['TH','泰國','曼谷',13.7563,100.5018],['JP','日本','東京',35.6762,139.6503]]){
+                const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+                await ctx.addInitScript(({code,country,city,lat,lon})=>{localStorage.setItem('voyage-v02',JSON.stringify([{id:'qa-home',name:'QA',country,city,countryCode:code,lat,lon,tz:code==='TH'?'Asia/Bangkok':'Asia/Tokyo',days:[[]],people:['我']} ]));localStorage.setItem('voyage-v02-active-id','qa-home')},{code,country,city,lat,lon});
+                const p=await ctx.newPage();await p.goto(root,{waitUntil:'domcontentloaded',timeout:90000});
+                const scene=p.locator('#v2Home .vw-scene[data-country="'+code+'"]');await scene.waitFor({state:'visible',timeout:30000});
+                const card=p.locator('#v2Home .vw-home-actions');await card.waitFor({state:'visible'});
+                assert.equal(await card.locator('.v2-big-icon').evaluate(el=>getComputedStyle(el).display),'none');
+                assert.equal(await card.locator('.v2-small-icon').evaluate(el=>getComputedStyle(el).display),'none');
+                assert(await card.getByRole('button',{name:'邀請朋友'}).isVisible());
+                if(code==='TH')await scene.locator('.v5-plane-flight').waitFor({state:'attached',timeout:20000});
+                console.log('PASS',name,code,'main scene retained, redundant icons hidden, invite visible');
+                await ctx.close();
+              }
+            }finally{await browser.close()}
+          }
+          JS
