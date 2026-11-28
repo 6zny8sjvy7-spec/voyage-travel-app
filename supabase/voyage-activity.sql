@@ -31,7 +31,7 @@ begin
  end if;
  if new.payload=old.payload then return new; end if;
  title:=left(coalesce(new.payload->>'name','旅行'),100);
- for k,label in select * from (values ('days','每日行程'),('wishlist','購物願望'),('packing','行李清單'),('expenses','費用'),('documents','機票住宿'),('ideas','行程名單'),('journal','旅行回憶'),('notes','旅行備註')) as fields(k,label) loop
+ for k,label in select * from (values ('days','每日行程'),('wishlist','購物願望'),('packing','行李清單'),('foodWishlist','美食清單'),('countryReminderBy','旅行小提醒'),('expenses','費用'),('documents','機票住宿'),('ideas','行程名單'),('journal','旅行回憶'),('notes','旅行備註')) as fields(k,label) loop
   if new.payload->k is not distinct from old.payload->k then continue; end if;
   before_items:=old.payload->k;after_items:=new.payload->k;
   if k='days' then
