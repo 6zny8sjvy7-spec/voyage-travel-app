@@ -1,0 +1,40 @@
+name: VOYAGE Thailand, Places, History end-to-end QA
+
+on:
+  push:
+    branches:
+      - feat/20261128-thailand-transit-places-history
+  workflow_dispatch:
+
+jobs:
+  real-user-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JS syntax
+        working-directory: site/voyage-travel-app
+        run: |
+          node --check v2-review-20261112/voyage-places-history-v1.js
+          node --check v2-review-20261112/voyage-thailand-transit-guide-v1.js
+          node --check v2-review-20261112/voyage-thailand-vivid-hero-v1.js
+          node --check qa-previews/20261128-thai-places-history-e2e.mjs
+      - name: Install Playwright
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve actual GitHub Pages root path
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" > /tmp/voyage.log 2>&1 &
+          for i in $(seq 1 25); do curl -sf http://127.0.0.1:8000/voyage-travel-app/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/voyage.log
+          exit 1
+      - name: Test true click flows in Chromium and WebKit on desktop and mobile
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-thai-places-history-e2e.mjs
