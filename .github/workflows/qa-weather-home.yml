@@ -1,0 +1,50 @@
+name: VOYAGE formal home weather and action guard QA
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/qa-weather-home.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -eu
+          root='https://6zny8sjvy7-spec.github.io/voyage-travel-app/'
+          for i in $(seq 1 15); do
+            if curl -fsSL "${root}?qa=7300b4f9" -o /tmp/voyage.html && grep -Fq 'voyage-action-icon-guard' /tmp/voyage.html && grep -Fq 'voyage-thailand-approved-art-v4.js?v=5f2701d7' /tmp/voyage.html; then break; fi
+            sleep 8
+          done
+          grep -Fq 'voyage-action-icon-guard' /tmp/voyage.html
+          grep -Fq '5*60*1000' /tmp/voyage.html
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps webkit
+          node --input-type=module <<'JS'
+          import {webkit} from 'playwright';
+          import assert from 'node:assert/strict';
+          const browser=await webkit.launch();
+          try {
+            const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+            await ctx.addInitScript(()=>{localStorage.setItem('voyage-v02',JSON.stringify([{id:'qa-th',name:'QA Bangkok',country:'泰國',city:'曼谷',countryCode:'TH',lat:13.7563,lon:100.5018,tz:'Asia/Bangkok',days:[[]],people:['QA']} ]));localStorage.setItem('voyage-v02-active-id','qa-th')});
+            const page=await ctx.newPage();
+            let requests=0;
+            await page.route('https://api.open-meteo.com/v1/forecast?**',async route=>{requests++;await route.fulfill({json:{current:{temperature_2m:30,weather_code:0,is_day:1,time:requests===1?'2026-11-28T17:30':'2026-11-28T17:45'},daily:{sunrise:['2026-11-28T06:25'],sunset:['2026-11-28T17:47']}}})});
+            await page.goto('https://6zny8sjvy7-spec.github.io/voyage-travel-app/?qa=7300b4f9',{waitUntil:'load'});
+            await page.locator('#v2Home .v4-meta').getByText(/泰國當地資料/).count();
+            await page.waitForFunction(()=>window.VoyageCurrentWeather?.fetchedAt && document.querySelector('#v2Home .v4-meta')?.textContent.includes('查詢'),null,{timeout:25000});
+            const count=requests;await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+            await page.waitForFunction(()=>window.VoyageCurrentWeather?.observedAt==='2026-11-28T17:45',null,{timeout:25000});
+            assert(requests>count);
+            await page.waitForFunction(()=>document.querySelector('#v2Home .v4-meta')?.textContent.includes('17:45'));
+            const card=page.locator('#v2Home .v2-home-hero');
+            assert.equal(await card.locator('.v2-big-icon').evaluate(el=>getComputedStyle(el).display),'none');
+            assert.equal(await card.locator('.v2-small-icon').evaluate(el=>getComputedStyle(el).display),'none');
+            assert(await card.getByRole('button',{name:'邀請朋友'}).isVisible());
+            console.log('PASS: production mobile WebKit hides duplicate icons and refreshes Thailand weather on resume with explicit local time (mock weather response)');
+          }finally{await browser.close()}
+          JS
