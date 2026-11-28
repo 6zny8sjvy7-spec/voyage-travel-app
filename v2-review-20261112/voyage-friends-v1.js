@@ -6,7 +6,7 @@ const {E,button,pages,current,toast,D}=U;
 const URL_BASE="https://jebxjyxpuxgnmowndhqb.supabase.co",KEY="sb_publishable_u9TGFHu8-OG1UUL9TYAwFA_j9LgB8vZ";
 const AUTH="voyage-friends-auth-1",STATE="voyage-friends-state-1";
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))||fallback}catch{return fallback}};
-let auth=read(AUTH,null),state=read(STATE,{}),running=false,status="尚未連線",lastLink="",lastLinkTrip="",conflict=null;
+let auth=read(AUTH,null),state=read(STATE,{}),running=false,status="尚未連線",lastLink="",lastLinkTrip="",conflict=null,lastDiscovery=0;
 const keep=()=>localStorage.setItem(STATE,JSON.stringify(state));
 const copy=o=>JSON.parse(JSON.stringify(o));
 const ordered=o=>Array.isArray(o)?o.map(ordered):o&&typeof o==="object"?Object.fromEntries(Object.keys(o).sort().map(k=>[k,ordered(o[k])])):o;
@@ -22,7 +22,7 @@ async function rpc(name,args){return request("/rest/v1/rpc/"+name,args,await tok
 async function getRow(id){const rows=await request("/rest/v1/voyage_trips?id=eq."+encodeURIComponent(id)+"&select=id,owner,version,payload",null,await token(),"GET");if(!rows?.length)throw Error("無法讀取這趟旅行，請確認邀請有效");return rows[0]}
 function bind(t,row){t.cloudId=row.id;t.cloudVersion=Number(row.version);t.friendsOriginalId=row.payload.id;state[row.id]={base:copy(row.payload),version:Number(row.version)};keep();save()}
 function redraw(){try{render();U.renderMore();document.dispatchEvent(new Event("voyage-trip-changed"))}catch(e){console.warn("VOYAGE refresh",e)}}
-function replace(t,row,p= row.payload){const localId=t.id,collapsed=t.packingCollapsed;Object.keys(t).forEach(k=>delete t[k]);Object.assign(t,copy(p),{id:localId,packingCollapsed:collapsed,cloudId:row.id,cloudVersion:Number(row.version),friendsOriginalId:row.payload.id});if(t===current())day=Math.min(day,t.days.length-1);bind(t,row);redraw()}
+function replace(t,row,p= row.payload){const localId=t.id,collapsed=t.packingCollapsed;Object.keys(t).forEach(k=>delete t[k]);Object.assign(t,copy(p),{id:localId,packingCollapsed:collapsed,cloudId:row.id,cloudVersion:Number(row.version),friendsOriginalId:row.payload.id});if(t===current())day=Math.max(0,Math.min(day,t.days.length-1));bind(t,row);if(t===current())redraw()}
 function merge(base,local,remote,path=""){if(eq(local,remote))return local;if(eq(base,local))return remote;if(eq(base,remote))return local;
  if(Array.isArray(base)&&Array.isArray(local)&&Array.isArray(remote)){
   const identified=a=>a.every(x=>x&&typeof x==="object"&&typeof x.id==="string")&&new Set(a.map(x=>x.id)).size===a.length;
@@ -37,7 +37,7 @@ function merge(base,local,remote,path=""){if(eq(local,remote))return local;if(eq
 function personName(t){return state[t.cloudId]?.name||member()}
 function withName(t){const name=personName(t);if(name&&!t.people.includes(name))t.people.push(name)}
 function uiStatus(s){status=s;const el=document.getElementById("voyageFriendsStatus");if(el)el.textContent=s}
-async function sync(){const t=current();if(!auth||!t?.cloudId||!state[t.cloudId]||running||document.hidden||conflict)return;if(document.querySelector("dialog[open]")||/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||"")&&!["checkbox","radio"].includes(document.activeElement?.type))return;running=true;try{
+async function syncOne(t){if(!t?.cloudId||!state[t.cloudId]||conflict?.id===t.cloudId)return;try{
  const st=state[t.cloudId],row=await getRow(t.cloudId),local=payload(t);const changed=!eq(st.base,local);
  if(!changed){if(Number(row.version)!==st.version)replace(t,row);uiStatus("已同步");return}
  let result=local;
@@ -46,7 +46,10 @@ async function sync(){const t=current();if(!auth||!t?.cloudId||!state[t.cloudId]
  const updated={...row,version,payload:result};
  if(eq(payload(t),local)){if(!eq(local,result))replace(t,updated,result);else bind(t,updated)}else{state[t.cloudId]={...st,base:copy(result),version:Number(version)};keep();t.cloudVersion=Number(version);save()}
  uiStatus("已同步");
- }catch(e){uiStatus("同步暫停："+e.message+"；本機資料保留，將自動重試。")}finally{running=false}}
+ }catch(e){uiStatus("同步暫停："+e.message+"；本機資料保留，將自動重試。")}}
+async function discover(){const rows=await request("/rest/v1/voyage_trips?select=id,owner,version,payload",null,await token(),"GET");let added=0;for(const row of rows){if(trips.some(t=>t.cloudId===row.id))continue;const p=row.payload;if(!p||!Array.isArray(p.days)||!p.days.length)continue;const t=copy(p);if(trips.some(x=>x.id===t.id))t.id=D.uid();trips.push(t);bind(t,row);added++}if(added){save();redraw()}lastDiscovery=Date.now();return added}
+async function sync(force=false){if(!auth||running||uiBusy||document.hidden)return;if(!force&&(document.querySelector("dialog[open]")||/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||"")&&!["checkbox","radio"].includes(document.activeElement?.type)))return;running=true;try{if(force||Date.now()-lastDiscovery>30000)await discover();for(const t of [...trips])if(t.cloudId&&state[t.cloudId])await syncOne(t)}catch(e){uiStatus("雲端讀取暫停："+e.message+"；本機資料保留。")}finally{running=false}}
+
 async function createShare(name){const t=current();if(!t.cloudId&&!confirm("分享「"+t.name+"」整趟旅行內容（包含行程、清單、費用、訂房與備註）給收到邀請連結的朋友？"))return;
  await login(name);
  if(t.cloudId&&!state[t.cloudId])throw Error("此旅行使用舊共編設定，請先備份，不會覆蓋舊資料");
@@ -68,7 +71,7 @@ pages.collab=box=>{
  const input=E("input",{id:"voyageFriendsName",type:"text",maxlength:"30",placeholder:"輸入你自己的暱稱",value:member()});if(auth)input.disabled=true;
  box.append(E("label",{},[E("span",{text:"我的暱稱"}),input]),E("div",{id:"voyageFriendsStatus",class:"v1-notice",text:status}));
  if(!invite&&!auth)box.append(button("儲存我的暱稱",()=>action(async()=>{await login(input.value);uiStatus("我的暱稱已設定："+member())}),"secondary"));
- if(!invite&&auth)box.append(E("p",{class:"v1-sub",text:"我的暱稱："+member()+"；朋友加入後會顯示各自的暱稱。"}));
+ if(!invite&&auth)box.append(E("p",{class:"v1-sub",text:"我的暱稱："+member()+"；朋友加入後會顯示各自的暱稱。"}),button("同步所有共編旅行",async()=>{await sync(true);U.renderMore()},"secondary"));
  box.append(button(invite?"加入旅行":"產生朋友邀請連結",()=>action(()=>invite?join(input.value):createShare(input.value)),"primary"));
  if(lastLink&&!invite&&t.cloudId&&lastLinkTrip===t.cloudId){const link=E("input",{id:"voyageFriendsLink",readonly:"readonly",value:lastLink});box.append(link,button("複製邀請連結",async()=>{try{await navigator.clipboard.writeText(lastLink);toast("邀請連結已複製")}catch{link.select();toast("請長按複製連結")}},"primary"))}
  if(t.cloudId&&state[t.cloudId])box.append(E("p",{class:"v1-sub",text:"目前旅伴："+(t.people||[]).join("、")+"；旅行修改會自動同步。請勿清除瀏覽器資料，否則需重新接受邀請。"}));
@@ -76,5 +79,5 @@ pages.collab=box=>{
 };
 const wishlist=pages.wishlist;if(wishlist)pages.wishlist=box=>{wishlist(box);const t=current();if(!t.cloudId||!state[t.cloudId]||!member())return;const rows=[...box.children].filter(r=>r.classList.contains("v1-item"));rows.forEach((r,i)=>{const x=t.wishlist[i],check=r.querySelector(".v1-check"),main=r.querySelector(".v1-item-main");if(!x||!check||!main)return;main.append(E("div",{class:"v1-sub",text:x.bought?"已購買："+(x.boughtBy||"未記錄"):"尚未購買"}));check.onchange=()=>{x.bought=check.checked;if(x.bought)x.boughtBy=personName(t);else delete x.boughtBy;save();U.renderMore();sync()}})};
 const packing=pages.packing;if(packing)pages.packing=box=>{packing(box);const t=current();if(!t.cloudId||!state[t.cloudId]||!member())return;const who=personName(t);const selector=box.querySelector("#vPackPerson");if(selector){selector.value=who;selector.disabled=true}const rows=[...box.children].filter(r=>r.classList.contains("v1-item"));rows.forEach((r,i)=>{const x=t.packing[i],check=r.querySelector(".v1-check"),main=r.querySelector(".v1-item-main");if(!x||!check||!main)return;x.checkedBy=x.checkedBy||{};check.checked=!!x.checkedBy[who];main.append(E("div",{class:"v1-sub",text:"已打包："+(Object.keys(x.checkedBy).filter(k=>x.checkedBy[k]).join("、")||"尚未打包")}));check.onchange=()=>{x.checkedBy[who]=check.checked;save();U.renderMore();sync()}})};
-setInterval(()=>{if(!uiBusy)sync()},5000);document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!uiBusy)sync()});if(invite)setTimeout(()=>U.showPage("collab"),700);U.renderMore();
+setInterval(()=>{if(!uiBusy)sync()},5000);if(auth&&!invite)setTimeout(()=>sync(true),800);document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!uiBusy)sync()});if(invite)setTimeout(()=>U.showPage("collab"),700);U.renderMore();
 })();
