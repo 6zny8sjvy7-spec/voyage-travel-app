@@ -1,69 +1,114 @@
-/* VOYAGE: trip-specific places-to-visit inbox; no modification to approved home cards. */
+/* VOYAGE travel ideas v2: food-list style page; add/edit dialog only on user action.
+   Per-trip storage remains ideaPlaces in canonical voyage-v02; original links preserved. */
 (()=>{'use strict';
-const U=window.VoyageUI;if(!U||!document.getElementById('v2Home'))return;
-const home=document.getElementById('v2Home');
-const style=document.createElement('style');style.id='voyage-ideas-style-v1';
-style.textContent=`
-#voyageIdeasDialog{width:min(680px,94vw);max-height:85dvh;border:0;border-radius:22px;padding:0;background:#fff;color:#213557;box-shadow:0 20px 80px #14376355}
-#voyageIdeasDialog::backdrop{background:#10294b8c}
-#voyageIdeasDialog .ideas-body{padding:24px;display:grid;gap:12px;max-height:80dvh;overflow-y:auto}
-#voyageIdeasDialog h2{margin:0;font-size:22px}
-#voyageIdeasDialog label{display:grid;gap:5px;font-weight:700;font-size:14px}
-#voyageIdeasDialog input,#voyageIdeasDialog textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #bfcde7;border-radius:12px;font:inherit;color:#213557;background:#fff}
-#voyageIdeasDialog .ideas-actions{display:flex;flex-wrap:wrap;gap:8px}
-#voyageIdeasDialog button{padding:9px 14px;border:1px solid #b9c9ee;border-radius:12px;cursor:pointer;background:#f2f6ff;color:#24477e;font:inherit}
-#voyageIdeasDialog button.primary{background:#4473e0;color:#fff}
-#voyageIdeasDialog .ideas-item{display:grid;gap:7px;padding:12px 14px;border-radius:16px;background:#f2f7ff;border:1px solid #dce6fa;overflow-wrap:anywhere}
-#voyageIdeasDialog .ideas-item strong{font-size:16px}
-#voyageIdeasDialog .ideas-item small{font-size:12px;color:#687b9a}
-#voyageIdeasDialog .ideas-item a{color:#2559d9;text-decoration:underline;font-weight:700}
-#v2Home .v2-link.voyage-ideas-entry .v2-icon{color:#7b5fd9}
-`;
+const U=window.VoyageUI,home=document.getElementById('v2Home');
+if(!U||!home)return;
+const {E,button,field,get,openDialog,D,pages}=U;
+const style=document.createElement('style');style.id='voyage-ideas-style-v2';
+style.textContent=[
+'#v1Content .ideas-page{display:grid;gap:12px}',
+'#v1Content .ideas-header{display:flex;align-items:center;gap:13px;margin-bottom:4px}',
+'#v1Content .ideas-illustration{font-size:34px;background:linear-gradient(145deg,#ede0ff,#fff1f4);width:64px;height:64px;border-radius:18px;display:grid;place-items:center}',
+'#v1Content .ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}',
+'#v1Content .ideas-card{min-width:0;padding:16px;border:1px solid #dce5f7;border-radius:18px;background:var(--card);box-shadow:0 3px 14px #182b4720}',
+'#v1Content .ideas-card strong{display:block;font-size:17px;overflow-wrap:anywhere}',
+'#v1Content .ideas-note{color:var(--muted);font-size:13px;white-space:pre-wrap;margin:7px 0 4px;overflow-wrap:anywhere}',
+'#v1Content .ideas-source{display:block;margin:9px 0;color:#3266c7;font-size:13px;overflow-wrap:anywhere}',
+'#v1Content .ideas-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}',
+'#v1Content .ideas-actions button{white-space:normal;padding:9px 12px;border-radius:12px}',
+'#v1Content .ideas-empty{border:1px dashed #bdcde9;background:var(--card);padding:24px;border-radius:18px;color:var(--muted)}',
+'#v1Content .ideas-status{display:inline-block;background:#eaf4ed;color:#28633b;border-radius:999px;padding:4px 9px;font-size:12px;margin-top:8px}',
+'@media(max-width:620px){#v1Content .ideas-grid{grid-template-columns:1fr}#v1Content .ideas-card{padding:14px}}'
+].join('\n');
 document.head.append(style);
-const dialog=document.createElement('dialog');dialog.id='voyageIdeasDialog';
-dialog.innerHTML=`<div class="ideas-body"><div class="ideas-actions" style="justify-content:space-between;align-items:center"><h2>📋 行程名單</h2><button type="button" data-action="close">關閉</button></div><p style="margin:0;color:#64728c">先收藏大家想去的景點、餐廳或活動，不會自動排入每日行程。</p><form id="voyageIdeasForm" style="display:grid;gap:10px"><label>想去的地點或活動名稱<input name="name" maxlength="140" required placeholder="例：洽圖洽週末市集"></label><label>網址（Google Maps／Instagram／Threads 或其他 HTTPS 網址）<input name="url" inputmode="url" type="url" placeholder="https://..." autocomplete="off"></label><label>備註（選填）<textarea name="notes" rows="2" maxlength="900" placeholder="朋友推薦、店家資訊、預算等"></textarea></label><div class="ideas-actions"><button class="primary" type="submit">＋ 加入行程名單</button></div></form><div id="voyageIdeasItems" aria-live="polite"></div></div>`;
-document.body.append(dialog);
-dialog.querySelector('[data-action="close"]').onclick=()=>dialog.close();
-const form=dialog.querySelector('#voyageIdeasForm'),items=dialog.querySelector('#voyageIdeasItems');
-const safeUrl=s=>{try{const u=new URL(s);return u.protocol==='https:'?u.href:''}catch{return''}};
-function getTrip(){return U.current?.()}
-function read(){const t=getTrip();if(!Array.isArray(t.ideaPlaces))t.ideaPlaces=[];return t.ideaPlaces}
-function store(){U.save();document.dispatchEvent(new Event('voyage-trip-changed'))}
-function show(){
- const t=getTrip();dialog.querySelector('h2').textContent='📋 行程名單 · '+String(t?.city||'');
- const collection=read();items.replaceChildren();
- if(!collection.length){const p=document.createElement('p');p.textContent='還沒有收藏的地點，先貼一筆網址試試。';items.append(p)}
- collection.forEach((x,i)=>{
-  const item=document.createElement('div');item.className='ideas-item';
-  const name=document.createElement('strong');name.textContent=x.name;item.append(name);
-  if(x.notes){const small=document.createElement('small');small.textContent=x.notes;item.append(small)}
-  const actions=document.createElement('div');actions.className='ideas-actions';
-  if(safeUrl(x.url)){const link=document.createElement('a');link.textContent=/instagram\.com/i.test(x.url)?'開啟 Instagram':/threads\.(?:net|com)/i.test(x.url)?'開啟 Threads':/google\.|maps\.app\./i.test(x.url)?'開啟 Google Maps':'開啟原始連結';link.href=x.url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link)}
-  const del=document.createElement('button');del.type='button';del.textContent='刪除此筆';del.onclick=()=>{if(confirm('確定刪除「'+x.name+'」這筆收藏嗎？')){read().splice(i,1);store();show()}};
-  actions.append(del);item.append(actions);items.append(item);
+const safeUrl=v=>{try{const u=new URL(String(v||''));return u.protocol==='https:'&&u.hostname?u.href:''}catch{return''}};
+const current=()=>U.current?.();
+const list=()=>{const t=current();if(!t)return [];if(!Array.isArray(t.ideaPlaces))t.ideaPlaces=[];return t.ideaPlaces};
+function sourceName(url){
+ try{const h=new URL(url).hostname.toLowerCase();if(h.includes('threads.'))return 'Threads';if(h.includes('instagram.com'))return 'Instagram';if(h==='maps.app.goo.gl'||h.includes('google.'))return 'Google Maps';return new URL(url).hostname}catch{return '原始連結'}
+}
+function openNew(existing=null){
+ const editing=!!existing;
+ openDialog(editing?'編輯行程名單':'＋ 新增想去的地點',[
+ field('vIdeaName','景點／店家／活動名稱','text',existing?.name||'',{full:true}),
+ field('vIdeaUrl','Google Maps／IG／Threads 網址（可選填）','url',existing?.url||'',{full:true}),
+ field('vIdeaNotes','備註','textarea',existing?.notes||'',{full:true})
+ ],()=>{
+  const name=get('vIdeaName'),raw=get('vIdeaUrl'),url=raw?safeUrl(raw):'';
+  if(!name)throw Error('請輸入名稱');
+  if(raw&&!url)throw Error('請輸入完整的 HTTPS 網址');
+  if(editing){existing.name=name;existing.url=url;existing.notes=get('vIdeaNotes')}
+  else list().push({id:D.uid(),name,url,notes:get('vIdeaNotes'),createdAt:new Date().toISOString()});
+  return true;
  });
 }
-form.addEventListener('submit',e=>{
- e.preventDefault();const data=new FormData(form);const name=String(data.get('name')||'').trim(),raw=String(data.get('url')||'').trim(),notes=String(data.get('notes')||'').trim();
- if(!name){alert('請填寫地點或活動名稱');return}
- const url=raw?safeUrl(raw):'';if(raw&&!url){alert('連結必須是完整的 https:// 網址');return}
- read().push({id:crypto.randomUUID?.()||('idea-'+Date.now()),name,url,notes,createdAt:new Date().toISOString()});
- store();form.reset();show();
-});
+function arrange(item){
+ const t=current();if(!t||!t.days?.length){U.toast('這趟旅行沒有可安排的日期');return}
+ openDialog('📅 將「'+item.name+'」排入每日行程',[
+ field('vIdeaDay','選擇安排日期','select','0',{options:t.days.map((_,i)=>[String(i),'第 '+(i+1)+' 天'+(t.startDate?' · '+D.dayISO(t.startDate,i):'')])}),
+ field('vIdeaTime','預定時間','time','10:00'),
+ field('vIdeaDuration','停留時間（分鐘）','number','60',{min:0,step:5}),
+ field('vIdeaMemo','行程備註','textarea',item.notes||'',{full:true})
+ ],()=>{
+  const index=Number(get('vIdeaDay')),time=get('vIdeaTime'),duration=Number(get('vIdeaDuration'));
+  if(!Number.isInteger(index)||index<0||index>=t.days.length)throw Error('請選擇正確的旅行日期');
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('時間格式不正確');
+  if(!Number.isFinite(duration)||duration<0)throw Error('停留分鐘數不正確');
+  const event={id:D.uid(),name:item.name,type:'place',time,duration,notes:get('vIdeaMemo')};
+  if(safeUrl(item.url)){event.mapUrl=item.url;event.url=item.url}
+  t.days[index].push(event);
+  item.scheduledCount=(Number(item.scheduledCount)||0)+1;
+  item.lastScheduledDay=index;
+  U.toast('已加入第 '+(index+1)+' 天行程；收藏仍會保留');
+  return true;
+ });
+}
+function renderIdeas(box){
+ const t=current();if(!t){box.textContent='請先建立旅行';return}
+ const root=E('section',{class:'ideas-page'});
+ const head=E('div',{class:'ideas-header'},[
+  E('span',{class:'ideas-illustration',text:'📋'}),
+  E('div',{},[E('h3',{text:'行程名單 · '+(t.city||t.country||'目前旅行')}),E('p',{class:'v1-sub',text:'先瀏覽大家想去的地點，確定要去再安排到每日行程。'})])
+ ]);
+ root.append(head);
+ root.append(E('div',{class:'v1-actions'},[button('＋ 新增地點／貼上網址',()=>openNew(),'primary')]));
+ const grid=E('div',{class:'ideas-grid'});
+ const collection=list();
+ if(!collection.length)grid.append(E('div',{class:'ideas-empty',text:'目前沒有收藏。點「新增地點／貼上網址」後才會開啟輸入視窗。'}));
+ for(const item of collection){
+  const card=E('article',{class:'ideas-card'});
+  card.append(E('strong',{text:item.name||'未命名地點'}));
+  if(item.notes)card.append(E('p',{class:'ideas-note',text:item.notes}));
+  const url=safeUrl(item.url);
+  if(url)card.append(E('a',{class:'ideas-source',href:url,target:'_blank',rel:'noopener noreferrer',text:'🔗 開啟 '+sourceName(url)+' 原始連結'}));
+  if(item.scheduledCount)card.append(E('span',{class:'ideas-status',text:'已安排到行程 '+item.scheduledCount+' 次'}));
+  const actions=E('div',{class:'ideas-actions'});
+  actions.append(button('📅 加入每日行程',()=>arrange(item),'primary'),button('編輯',()=>openNew(item)),button('刪除收藏',()=>{
+   if(!confirm('確定刪除「'+item.name+'」的收藏嗎？已加入每日行程的活動不會刪除。'))return;
+   const index=list().indexOf(item);if(index>=0)list().splice(index,1);
+   U.save();U.renderMore();
+  }));
+  card.append(actions);grid.append(card);
+ }
+ root.append(grid);box.append(root);
+}
+pages.ideas=renderIdeas;
 function placeEntry(){
- const grid=home.querySelector('.v2-quick-grid');if(!grid||grid.querySelector('.voyage-ideas-entry'))return;
+ const grid=home.querySelector('.v2-quick-grid');if(!grid)return;
  const food=[...grid.querySelectorAll('.v2-link')].find(x=>x.textContent.includes('美食口袋名單'));
  if(!food)return;
- const b=document.createElement('button');b.type='button';b.className='v2-link voyage-ideas-entry';
- const ico=document.createElement('span');ico.className='v2-icon';ico.textContent='📋';
- const name=document.createElement('span');name.textContent='行程名單';
- const sub=document.createElement('small');sub.textContent='想去的地點・貼上連結收藏';
- b.append(ico,name,sub);b.onclick=()=>{show();dialog.showModal()};
- food.after(b);
+ let buttonEntry=grid.querySelector('.voyage-ideas-entry');
+ if(!buttonEntry){
+  buttonEntry=document.createElement('button');buttonEntry.type='button';buttonEntry.className='v2-link voyage-ideas-entry';
+  buttonEntry.append(E('span',{class:'v2-icon',text:'📋'}),E('span',{text:'行程名單'}),E('small',{text:'想去的地點與連結收藏'}));
+ }
+ food.after(buttonEntry);
+ buttonEntry.onclick=()=>U.showPage('ideas');
 }
-let pending=false;function refresh(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;placeEntry()})}
+let scheduled=false;
+function refresh(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;placeEntry()})}
 new MutationObserver(refresh).observe(home,{childList:true,subtree:false});
-document.addEventListener('voyage-trip-changed',()=>{if(dialog.open)show();refresh()});
+document.addEventListener('voyage-trip-changed',refresh);
 refresh();
-window.VoyageIdeas={show,read};
+window.VoyageIdeas={show:()=>U.showPage('ideas'),read:list,arrange};
 })();
