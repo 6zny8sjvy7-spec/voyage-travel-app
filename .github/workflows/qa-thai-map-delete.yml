@@ -1,0 +1,44 @@
+name: VOYAGE formal Thai rail, bus, map URL, delete regression
+on:
+  push:
+    branches:
+      - fix/20261128-thai-transit-simplify-event-map-delete
+  workflow_dispatch:
+jobs:
+  official-root:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate syntax
+        working-directory: site/voyage-travel-app
+        run: |
+          node --check v2-review-20261112/voyage-map.js
+          node --check v2-review-20261112/voyage-thai-transit-v1.js
+          node --check qa-previews/20261128-thai-map-delete-e2e.mjs
+      - name: Install browsers
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve real GitHub Pages root
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" > /tmp/voyage.log 2>&1 &
+          for n in $(seq 1 25); do curl -sf "http://127.0.0.1:8000/voyage-travel-app/" >/dev/null && exit 0; sleep 1; done
+          cat /tmp/voyage.log
+          exit 1
+      - name: Test actual root user flows in Chromium and WebKit
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-thai-map-delete-e2e.mjs
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-thailand-clean-transit-map-delete
+          path: site/voyage-travel-app/qa-previews/thai-map-delete-shots/
+          if-no-files-found: ignore
