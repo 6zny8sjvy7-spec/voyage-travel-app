@@ -15,7 +15,7 @@ const style=document.createElement('style');style.textContent=`
 @media(max-width:480px){#v2Home .voyage-seoul-hero-v12{border-radius:18px}#v2Home .v2-home-hero.v12-home-actions .v2-toolbar button{font-size:12px;flex-basis:105px}}
 `;document.head.append(style);
 let lastTripDate='',lastWeatherSignature='';let frame=null;
-const homeId='v2Home',source='../design-previews/VOYAGE-HERO-12.html?mode=auto&rev=20261126';
+const homeId='v2Home',source='../design-previews/VOYAGE-HERO-12.html?mode=auto&rev=20261127-v8';
 function details(){try{return window.VoyageUI?.current?.() || null;}catch(e){return null}}
 function isSeoul(t){const city=String(t?.city||'');return window.VoyageRegionV4?.countryCode?.(t)==='KR'&&!window.VoyageHomeGuard?.cityMismatch?.(t)&&/(首爾|seoul|서울)/i.test(city)}
 function sendTrip(t){const val=t?.startDate||'',days=Array.isArray(t?.days)?t.days.length:0,tripName=String(t?.name||t?.city||'旅行');const sig=JSON.stringify([t?.id,val,days,tripName]);if(frame?.contentWindow&&sig!==lastTripDate){lastTripDate=sig;frame.contentWindow.postMessage({type:'voyage-home-scene',startDate:val,days,tripName},location.origin);}}
@@ -31,7 +31,7 @@ function localNow(t){
 function syncWeather(){
  const t=details();if(!isSeoul(t)||!frame?.contentWindow)return;
  const w=window.VoyageCurrentWeather;
- const valid=!!(w&&w.city===t.city&&typeof w.isDay==='boolean'&&Number.isFinite(Number(w.code)));
+ const valid=!!(w&&!window.VoyageHomeGuard?.cityMismatch?.(t)&&String(w.tripId)===String(t.id)&&w.city===t.city&&w.locationKey===JSON.stringify([t.country,t.city,t.lat,t.lon,t.tz])&&typeof w.isDay==='boolean'&&Number.isInteger(w.code));
  let scene='cloud',isNight=false;
  if(valid){
   const now=localNow(t);
