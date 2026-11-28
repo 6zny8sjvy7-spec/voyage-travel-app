@@ -1,8 +1,8 @@
 /* VOYAGE formal-root map source continuity.
    A Google Maps short link is a valid saved source, NOT a verified coordinate.
-   Expose the source in the actual map panel without guessing a Leaflet pin. */
+   Expose the source in V3 visible inline calendar map, not legacy hidden mapSection. */
 (()=>{'use strict';
-const U=window.VoyageUI,section=document.getElementById('mapSection'),note=document.getElementById('mapNote');
+const U=window.VoyageUI,section=document.getElementById('v3InlineMap'),note=document.getElementById('v3MapSummary');
 if(!U||!section||!note)return;
 const root=document.createElement('section');
 root.id='voyageSavedMapLinks';root.setAttribute('aria-label','已儲存的地圖連結');
