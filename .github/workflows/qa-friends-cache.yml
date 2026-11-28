@@ -1,0 +1,24 @@
+name: VOYAGE current public version verification
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/qa-friends-cache.yml']
+permissions:
+  contents: read
+jobs:
+  public-version:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check exact deployed nickname revision
+        run: |
+          set -eu
+          root='https://6zny8sjvy7-spec.github.io/voyage-travel-app/'
+          for i in $(seq 1 15); do
+            if curl -fsSL --max-time 12 "${root}?v=5adf8868" -o /tmp/index.html && grep -Fq 'voyage-friends-v1.js?v=e722a5dc' /tmp/index.html && curl -fsSL --max-time 12 "${root}v2-review-20261112/voyage-friends-v1.js?v=e722a5dc" -o /tmp/friends.js && grep -Fq '儲存我的暱稱' /tmp/friends.js && grep -Fq 'if(conflict&&t.cloudId&&conflict.id===t.cloudId)' /tmp/friends.js; then
+              echo 'PASS: public root serves new versioned script; own nickname and false-conflict fix present'
+              exit 0
+            fi
+            sleep 8
+          done
+          exit 1
