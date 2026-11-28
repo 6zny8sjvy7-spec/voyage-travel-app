@@ -30,6 +30,7 @@ for(const [browserName,browserType] of [['chromium',chromium],['webkit',webkit]]
    page.on('dialog',d=>d.accept());
    try{
     const res=await page.goto(root,{waitUntil:'load',timeout:90000});assert.equal(res?.status(),200);
+    await page.evaluate(()=>setTab('transport'));
     const panel=page.locator('#transportSection');
     await panel.locator('#thSimplePlanner').waitFor({timeout:13000});
     assert(await panel.evaluate(el=>el.classList.contains('th-integrated')),'TH mode active');
@@ -54,6 +55,7 @@ for(const [browserName,browserType] of [['chromium',chromium],['webkit',webkit]]
     assert(busHref.includes('travelmode=transit')&&busHref.includes('Asok')&&busHref.includes('Ari'),busHref);
     assert.equal(await panel.locator('#thSimplePlanner').isVisible(),true);
     await page.screenshot({path:screen+'/'+browserName+'-'+device+'-bus.png'});
+    await page.evaluate(()=>setTab('itinerary'));
     const mapLink=page.locator('#v1MapStops .v1-map-source-link').first();
     await mapLink.waitFor({timeout:8000});
     assert.equal(await mapLink.getAttribute('href'),url,'Original short URL must appear in map section exactly');
