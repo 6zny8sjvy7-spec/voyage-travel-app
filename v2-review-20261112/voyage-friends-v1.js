@@ -49,7 +49,7 @@ async function syncOne(t){if(!t?.cloudId||!state[t.cloudId]||conflict?.id===t.cl
  uiStatus("已同步");
  }catch(e){uiStatus("同步暫停："+e.message+"；本機資料保留，將自動重試。")}}
 async function discover(){const rows=await request("/rest/v1/voyage_trips?select=id,owner,version,payload",null,await token(),"GET");let added=0;for(const row of rows){if(trips.some(t=>t.cloudId===row.id))continue;const p=row.payload;if(!p||!Array.isArray(p.days)||!p.days.length)continue;const t=copy(p);if(trips.some(x=>x.id===t.id))t.id=D.uid();trips.push(t);bind(t,row);added++}if(added){save();redraw()}lastDiscovery=Date.now();return added}
-async function sync(force=false){if(!auth||running||uiBusy||document.hidden)return;if(!force&&(document.querySelector("dialog[open]")||/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||"")&&!["checkbox","radio"].includes(document.activeElement?.type)))return;running=true;try{if(force||Date.now()-lastDiscovery>30000)await discover();for(const t of [...trips])if(t.cloudId&&state[t.cloudId])await syncOne(t)}catch(e){uiStatus("雲端讀取暫停："+e.message+"；本機資料保留。")}finally{running=false}}
+async function sync(force=false){if(!auth||running||uiBusy||document.hidden)return;if(!force&&(document.querySelector("dialog[open]")||/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||"")&&!["checkbox","radio"].includes(document.activeElement?.type)))return;running=true;try{if(force||Date.now()-lastDiscovery>30000)await discover();for(const t of [...trips])if(t.cloudId&&state[t.cloudId])await syncOne(t);await pollActivity()}catch(e){uiStatus("雲端讀取暫停："+e.message+"；本機資料保留。")}finally{running=false}}
 
 async function createShare(name){const t=current();if(!t.cloudId&&!confirm("分享「"+t.name+"」整趟旅行內容（包含行程、清單、費用、訂房與備註）給收到邀請連結的朋友？"))return;
  await login(name);
@@ -65,6 +65,49 @@ async function join(name){await login(name);const id=await rpc("voyage_accept_in
  let t=trips.find(x=>x.cloudId===id);
  if(!t){t=copy(row.payload);if(trips.some(x=>x.id===t.id))t.id=D.uid();t.friendsOriginalId=row.payload.id;trips.push(t)}
  bind(t,row);const actual=member();state[id].name=actual;keep();active=trips.indexOf(t);day=0;localStorage.setItem("voyage-v02-active-id",String(t.id));withName(t);save();invite="";sessionStorage.removeItem("voyage-friends-invite");history.replaceState(null,"",location.pathname+location.search);redraw();uiStatus("已加入旅行，正在同步");}
+
+let activityRows=[],activityReady=false,activitySeen=0,activityUser="",activityPanel=null,activityBell=null,activityToast=null,activityTimer=null;
+function activityReadKey(){return "voyage-activity-read-"+auth.user.id}
+function activityRead(){return Number(localStorage.getItem(activityReadKey())||0)}
+function activityNode(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n}
+function activityUI(){
+ if(activityBell)return;
+ const css=activityNode("style");css.textContent=`
+ #voyageActivityBell{position:fixed;top:calc(env(safe-area-inset-top,0px) + 9px);right:12px;z-index:1100;display:flex;align-items:center;gap:5px;min-height:40px;border:1px solid #dedbe8;border-radius:99px;background:#fff;color:#303851;padding:7px 11px;box-shadow:0 3px 12px #26334c22;font-size:14px;font-weight:800}
+ #voyageActivityBell .va-count{background:#d84949;color:white;border-radius:99px;padding:0 6px;font-size:11px;line-height:20px}
+ #voyageActivityPanel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 58px);right:12px;z-index:1101;width:min(360px,calc(100vw - 24px));max-height:65vh;overflow:auto;background:var(--card,#fff);color:var(--ink,#27334f);border:1px solid var(--line,#ddd);border-radius:18px;box-shadow:0 14px 45px #26334c38;padding:14px}
+ #voyageActivityPanel[hidden],#voyageActivityToast[hidden]{display:none!important}
+ #voyageActivityPanel .va-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px}
+ #voyageActivityPanel .va-row{padding:11px 0;border-top:1px solid var(--line,#ddd);overflow-wrap:anywhere}
+ #voyageActivityPanel .va-meta{color:var(--muted,#718096);font-size:12px;margin-top:3px}
+ #voyageActivityToast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 58px);left:50%;transform:translateX(-50%);z-index:1102;width:min(410px,calc(100vw - 28px));background:#263759;color:white;border:0;border-radius:15px;padding:13px 16px;text-align:left;box-shadow:0 7px 25px #26334c44;overflow-wrap:anywhere}
+ `;document.head.append(css);
+ activityBell=activityNode("button");activityBell.id="voyageActivityBell";activityBell.type="button";activityBell.setAttribute("aria-label","旅行通知");activityBell.setAttribute("aria-expanded","false");
+ activityPanel=activityNode("section");activityPanel.id="voyageActivityPanel";activityPanel.hidden=true;
+ activityToast=activityNode("button");activityToast.id="voyageActivityToast";activityToast.type="button";activityToast.hidden=true;activityToast.setAttribute("aria-live","polite");
+ const toggle=()=>{activityPanel.hidden=!activityPanel.hidden;activityBell.setAttribute("aria-expanded",String(!activityPanel.hidden));if(!activityPanel.hidden){activityToast.hidden=true;markActivityRead()}renderActivity()};
+ activityBell.addEventListener("click",toggle);activityToast.addEventListener("click",()=>{activityPanel.hidden=false;activityBell.setAttribute("aria-expanded","true");activityToast.hidden=true;markActivityRead();renderActivity()});document.body.append(activityBell,activityPanel,activityToast);
+}
+function markActivityRead(){if(activityRows.length)localStorage.setItem(activityReadKey(),String(Math.max(activityRead(),...activityRows.map(x=>Number(x.id)))))}
+function renderActivity(){
+ if(!activityBell)return;const unread=activityRows.filter(x=>Number(x.id)>activityRead()).length;
+ activityBell.replaceChildren(activityNode("span","","🔔 通知"));if(unread)activityBell.append(activityNode("span","va-count",String(unread)));
+ if(activityPanel.hidden)return;
+ const head=activityNode("div","va-head"),close=activityNode("button","secondary","關閉");close.type="button";close.onclick=()=>{activityPanel.hidden=true;activityBell.setAttribute("aria-expanded","false")};head.append(activityNode("strong","","旅行更新通知"),close);activityPanel.replaceChildren(head);
+ if(!activityRows.length)activityPanel.append(activityNode("p","va-meta","目前沒有新通知"));
+ for(const x of activityRows){const item=activityNode("div","va-row");item.append(activityNode("strong","",x.actor_name+" "+x.detail),activityNode("div","va-meta",x.trip_name+" · "+new Date(x.created_at).toLocaleString("zh-TW")));activityPanel.append(item)}
+}
+async function pollActivity(){
+ if(!auth||document.hidden)return;
+ try{
+ const uid=auth.user.id;if(uid!==activityUser){activityUser=uid;activityReady=false;activitySeen=activityRead();activityRows=[]}
+ const rows=await request("/rest/v1/voyage_activity?select=id,actor_name,trip_name,kind,detail,created_at&actor_id=neq."+encodeURIComponent(uid)+"&order=id.desc&limit=60",null,await token(),"GET");
+ activityUI();const fresh=rows.filter(x=>Number(x.id)>activitySeen);activityRows=rows;
+ if(fresh.length){activitySeen=Math.max(activitySeen,...fresh.map(x=>Number(x.id)));if(activityPanel.hidden){activityToast.textContent=fresh[0].actor_name+" "+fresh[0].detail+(fresh.length>1?" · 另有 "+(fresh.length-1)+" 則更新":"");activityToast.hidden=false;clearTimeout(activityTimer);activityTimer=setTimeout(()=>{activityToast.hidden=true},6500)}}
+ activityReady=true;if(!activityPanel.hidden)markActivityRead();renderActivity();
+ }catch(e){console.warn("VOYAGE activity",e.message)}
+}
+
 let uiBusy=false;
 async function action(fn){if(uiBusy||running)return;uiBusy=true;try{await fn()}catch(e){uiStatus("未完成："+e.message);toast(status)}finally{uiBusy=false;U.renderMore();sync()}}
 pages.collab=box=>{
