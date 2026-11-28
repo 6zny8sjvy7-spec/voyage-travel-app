@@ -1,0 +1,41 @@
+name: VOYAGE formal Thai trip creation regression
+on:
+  push:
+    branches: [hotfix/20261128-official-thai-create]
+  workflow_dispatch:
+jobs:
+  test-formal-new-thai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium and WebKit
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve actual VOYAGE root URL path
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" > /tmp/voyage.log 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8000/voyage-travel-app/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/voyage.log
+          exit 1
+      - name: Create Bangkok by Chinese name, reload, keep original trip
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-real-thai-create.spec.mjs
+      - name: Check deployed official root is not old cached home
+        run: |
+          python3 - <<'PY'
+          import urllib.request, re
+          url='https://6zny8sjvy7-spec.github.io/voyage-travel-app/?check=20261128-thai'
+          body=urllib.request.urlopen(url,timeout=25).read().decode('utf-8')
+          print('PUBLISHED_ROOT_HTML_BYTES',len(body))
+          print('PUBLISHED_TITLE',re.search(r'<title[^>]*>(.*?)</title>',body).group(1))
+          print('PUBLISHED_V2_HOME', 'v2-home-hero' in body, 'voyage-thailand-production-v1.js' in body)
+          print('PUBLISHED_TEST_RIBBON', 'id="v2ReviewTop"' in body)
+          PY
