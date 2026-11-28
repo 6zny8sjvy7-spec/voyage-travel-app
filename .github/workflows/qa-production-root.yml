@@ -1,0 +1,43 @@
+name: VOYAGE actual production-root browser QA
+
+on:
+  push:
+    branches:
+      - qa/20261128-production-root-integration
+  workflow_dispatch:
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site/voyage-travel-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium, WebKit and Playwright
+        working-directory: site/voyage-travel-app
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Serve same project path as actual GitHub Pages
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/site" > /tmp/voyage-http.log 2>&1 &
+          for attempt in $(seq 1 25); do
+            if curl -sf "http://127.0.0.1:8000/voyage-travel-app/" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/voyage-http.log
+          exit 1
+      - name: Verify formal root and KR TH JP on desktop and mobile
+        working-directory: site/voyage-travel-app
+        run: node qa-previews/20261128-production-root-check.mjs
+      - name: Upload QA screenshots including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-production-root-browser-QA
+          path: site/voyage-travel-app/qa-previews/browser-shots/
+          if-no-files-found: ignore
