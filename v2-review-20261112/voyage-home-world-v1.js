@@ -27,7 +27,7 @@ style.textContent=[
 '#v3WeatherArt .vw-weather-illustration{display:block;width:100%;height:100%;min-height:96px;max-width:186px}',
 '#v2Home .v2-home-hero.vw-home-actions{min-height:0!important;margin:0 0 18px!important;padding:0 4px 4px!important;display:flex!important;background:transparent!important;border:0!important;box-shadow:none!important}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-small-icon,#v2Home .v2-home-hero.vw-home-actions .eyebrow,#v2Home .v2-home-hero.vw-home-actions h2,#v2Home .v2-home-hero.vw-home-actions p{display:none!important}',
-'#v2Home .v2-home-hero.vw-home-actions .v2-big-icon{display:inline-flex!important;align-items:center;font-size:32px!important;line-height:1;order:-1;margin-right:6px}',
+'#v2Home .v2-home-hero.vw-home-actions>.v2-big-icon{display:none!important}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-hero-copy{width:100%;max-width:none!important;padding:0!important}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:0!important;padding:0!important}',
 '#v2Home .v2-home-hero.vw-home-actions .v2-toolbar button{flex:1 1 150px}',
