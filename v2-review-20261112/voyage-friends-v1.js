@@ -13,7 +13,8 @@ const ordered=o=>Array.isArray(o)?o.map(ordered):o&&typeof o==="object"?Object.f
 const eq=(a,b)=>JSON.stringify(ordered(a))===JSON.stringify(ordered(b));
 const member=()=>auth?.user?.user_metadata?.nickname||auth?.nickname||"";
 const validName=s=>typeof s==="string"&&s.trim().length>0&&s.trim().length<=30;
-function payload(t){const x=copy(t);if(t.friendsOriginalId)x.id=t.friendsOriginalId;delete x.friendsOriginalId;delete x.cloudId;delete x.cloudVersion;delete x.cloudSnapshot;delete x.packingCollapsed;return x}
+function normalizeOwner(t,name){if(!name||name==="我"||!Array.isArray(t.people))return t;const rename=v=>v==="我"?name:v;t.people=[...new Set(t.people.map(rename))];for(const x of t.expenses||[]){if(x.paidBy==="我")x.paidBy=name;if(Array.isArray(x.sharedWith))x.sharedWith=[...new Set(x.sharedWith.map(rename))]}for(const x of t.packing||[]){if(x.owner==="我")x.owner=name;if(x.checkedBy&&Object.prototype.hasOwnProperty.call(x.checkedBy,"我")){x.checkedBy[name]=!!(x.checkedBy[name]||x.checkedBy["我"]);delete x.checkedBy["我"]}}for(const x of t.wishlist||[])if(x.boughtBy==="我")x.boughtBy=name;return t}
+function payload(t){const x=normalizeOwner(copy(t),t.friendsOwnerNickname);if(t.friendsOriginalId)x.id=t.friendsOriginalId;delete x.friendsOriginalId;delete x.cloudId;delete x.cloudVersion;delete x.cloudSnapshot;delete x.packingCollapsed;return x}
 function persistAuth(data){if(!data?.access_token||!data?.refresh_token||!data?.user?.id)throw Error("無法建立暱稱登入");auth={...data,nickname:data.user.user_metadata?.nickname||auth?.nickname,expires_at:data.expires_at||Math.floor(Date.now()/1000)+(data.expires_in||3600)};localStorage.setItem(AUTH,JSON.stringify(auth));return auth}
 async function request(path,body,token,method="POST"){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(URL_BASE+path,{method,headers:{apikey:KEY,"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{}),...(path.includes("/rest/v1/")&&method==="POST"&&!path.includes("/rpc/")?{Prefer:"return=representation"}:{})},...(method==="GET"?{}:{body:JSON.stringify(body)}),signal:controller.signal,cache:"no-store"});const txt=await r.text();let data;try{data=txt?JSON.parse(txt):null}catch{data=txt}if(!r.ok)throw Error(data?.message||data?.msg||data?.error_description||data?.error||"HTTP "+r.status);return data}finally{clearTimeout(timeout)}}
 async function token(){if(!auth)throw Error("請先輸入暱稱");if(auth.expires_at>Date.now()/1000+90)return auth.access_token;return persistAuth(await request("/auth/v1/token?grant_type=refresh_token",{refresh_token:auth.refresh_token})).access_token}
@@ -28,7 +29,7 @@ function merge(base,local,remote,path=""){if(eq(local,remote))return local;if(eq
   const identified=a=>a.every(x=>x&&typeof x==="object"&&typeof x.id==="string")&&new Set(a.map(x=>x.id)).size===a.length;
   if(identified(base)&&identified(local)&&identified(remote)){const ids=[...new Set([...local,...remote,...base].map(x=>x.id))];return ids.map(id=>merge(base.find(x=>x.id===id),local.find(x=>x.id===id),remote.find(x=>x.id===id),path+"/"+id)).filter(x=>x!==undefined)}
   if(base.length===local.length&&base.length===remote.length&&base.every(Array.isArray)&&local.every(Array.isArray)&&remote.every(Array.isArray))return base.map((x,i)=>merge(x,local[i],remote[i],path+"/"+i));
-  if(path==="/people"&&base.every(x=>local.includes(x)&&remote.includes(x)))return [...new Set([...local,...remote])];
+  if(path==="/people")return [...new Set([...local,...remote])].filter(x=>!base.includes(x)||(local.includes(x)&&remote.includes(x)));
  }
  const obj=x=>x!==null&&typeof x==="object"&&!Array.isArray(x);
  if(obj(base)&&obj(local)&&obj(remote)){const result=Object.create(null);for(const k of new Set([...Object.keys(base),...Object.keys(local),...Object.keys(remote)])){const v=merge(base[k],local[k],remote[k],path+"/"+k);if(v!==undefined)result[k]=v}return result}
@@ -38,7 +39,7 @@ function personName(t){return state[t.cloudId]?.name||member()}
 function withName(t){const name=personName(t);if(name&&!t.people.includes(name))t.people.push(name)}
 function uiStatus(s){status=s;const el=document.getElementById("voyageFriendsStatus");if(el)el.textContent=s}
 async function syncOne(t){if(!t?.cloudId||!state[t.cloudId]||conflict?.id===t.cloudId)return;try{
- const st=state[t.cloudId],row=await getRow(t.cloudId),local=payload(t);const changed=!eq(st.base,local);
+ const st=state[t.cloudId],row=await getRow(t.cloudId);const canonical=row.payload.friendsOwnerNickname||(row.owner===auth.user.id?member():null);if(canonical&&(!t.friendsOwnerNickname||t.people?.includes("我"))){t.friendsOwnerNickname=canonical;normalizeOwner(t,canonical);save()}const local=payload(t);const changed=!eq(st.base,local);
  if(!changed){if(Number(row.version)!==st.version)replace(t,row);uiStatus("已同步");return}
  let result=local;
  if(Number(row.version)!==st.version){try{result=merge(st.base,local,row.payload)}catch(e){conflict={id:t.cloudId,local,remote:row};localStorage.setItem("voyage-friends-conflict-"+t.cloudId,JSON.stringify(conflict));uiStatus(e.message+"。本機修改已保留，請到朋友共編處理。");toast(status);return}}
@@ -53,7 +54,7 @@ async function sync(force=false){if(!auth||running||uiBusy||document.hidden)retu
 async function createShare(name){const t=current();if(!t.cloudId&&!confirm("分享「"+t.name+"」整趟旅行內容（包含行程、清單、費用、訂房與備註）給收到邀請連結的朋友？"))return;
  await login(name);
  if(t.cloudId&&!state[t.cloudId])throw Error("此旅行使用舊共編設定，請先備份，不會覆蓋舊資料");
- if(!t.cloudId){withName(t);const rows=await request("/rest/v1/voyage_trips",{owner:auth.user.id,payload:payload(t)},await token());const row=rows[0];bind(t,row);state[row.id].name=member();keep()}
+ if(!t.cloudId){t.friendsOwnerNickname=member();normalizeOwner(t,member());withName(t);const rows=await request("/rest/v1/voyage_trips",{owner:auth.user.id,payload:payload(t)},await token());const row=rows[0];bind(t,row);state[row.id].name=member();keep()}
  const invitation=await rpc("voyage_create_invite",{p_trip_id:t.cloudId,p_role:"editor"});
  const link=new URL(location.origin+location.pathname);link.hash="invite="+encodeURIComponent(invitation);lastLink=link.toString();lastLinkTrip=t.cloudId;
  uiStatus("邀請連結已建立，7 天內可供多位朋友加入");
@@ -74,7 +75,7 @@ pages.collab=box=>{
  if(!invite&&auth)box.append(E("p",{class:"v1-sub",text:"我的暱稱："+member()+"；朋友加入後會顯示各自的暱稱。"}),button("同步所有共編旅行",async()=>{await sync(true);U.renderMore()},"secondary"));
  box.append(button(invite?"加入旅行":"產生朋友邀請連結",()=>action(()=>invite?join(input.value):createShare(input.value)),"primary"));
  if(lastLink&&!invite&&t.cloudId&&lastLinkTrip===t.cloudId){const link=E("input",{id:"voyageFriendsLink",readonly:"readonly",value:lastLink});box.append(link,button("複製邀請連結",async()=>{try{await navigator.clipboard.writeText(lastLink);toast("邀請連結已複製")}catch{link.select();toast("請長按複製連結")}},"primary"))}
- if(t.cloudId&&state[t.cloudId])box.append(E("p",{class:"v1-sub",text:"目前旅伴："+(t.people||[]).join("、")+"；旅行修改會自動同步。請勿清除瀏覽器資料，否則需重新接受邀請。"}));
+ if(t.cloudId&&state[t.cloudId])box.append(E("p",{class:"v1-sub",text:"目前旅伴："+(t.people||[]).map(n=>n===member()?n+"（自己）":n).join("、")+"；旅行修改會自動同步。請勿清除瀏覽器資料，否則需重新接受邀請。"}));
  if(conflict&&t.cloudId&&conflict.id===t.cloudId)box.append(E("p",{class:"v1-warning",text:"同一欄位同時被修改；本機修改已保留。請先備份，再選擇載入雲端版本。"}),button("保留本機備份並載入雲端",()=>action(async()=>{if(!confirm("本機修改會備份保存，確定載入雲端版本？"))return;replace(t,await getRow(t.cloudId));conflict=null;uiStatus("已讀取雲端版本")})));
 };
 const wishlist=pages.wishlist;if(wishlist)pages.wishlist=box=>{wishlist(box);const t=current();if(!t.cloudId||!state[t.cloudId]||!member())return;const rows=[...box.children].filter(r=>r.classList.contains("v1-item"));rows.forEach((r,i)=>{const x=t.wishlist[i],check=r.querySelector(".v1-check"),main=r.querySelector(".v1-item-main");if(!x||!check||!main)return;main.append(E("div",{class:"v1-sub",text:x.bought?"已購買："+(x.boughtBy||"未記錄"):"尚未購買"}));check.onchange=()=>{x.bought=check.checked;if(x.bought)x.boughtBy=personName(t);else delete x.boughtBy;save();U.renderMore();sync()}})};
