@@ -60,7 +60,20 @@ for(const [browserName,browserType] of browserMatrix){
       const code=t.id==='qa-thai'?'TH':'JP';
       hero=page.locator('.vw-scene[data-country="'+code+'"]');
       await hero.waitFor({timeout:12000});
-      const loaded=await hero.locator('img').evaluateAll(els=>els.some(el=>el.complete&&el.naturalWidth>0));
+      let loaded;
+      if(code==='JP'){
+       // Japan art is CSS background-image, not an <img> element.
+       await hero.locator('.v8-jp-art').waitFor({timeout:12000});
+       loaded=await hero.locator('.v8-jp-art').evaluate(async el=>{
+        const bg=getComputedStyle(el).backgroundImage;
+        const source=bg.match(/url\\(["']?([^"')]+)["']?\\)/)?.[1];
+        if(!source)return false;
+        const probe=new Image();probe.src=source;
+        try{await probe.decode();return probe.naturalWidth>0}catch{return false}
+       });
+      }else{
+       loaded=await hero.locator('img').evaluateAll(els=>els.some(el=>el.complete&&el.naturalWidth>0));
+      }
       assert(loaded,code+' illustration must load');
      }
      assert.equal(broken.length,0,'site-local assets missing: '+broken.join('; '));
