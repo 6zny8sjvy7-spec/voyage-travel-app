@@ -10,7 +10,7 @@ function activeCountryOnly(){
  const entries=trips.map((item,i)=>({item,i})).filter(({item})=>code(item)===c&&!item.archived);
  if(!entries.some(e=>e.i===active))entries.push({item:current,i:active});
  const sig=entries.map(e=>e.i+':'+e.item.name).join('|')+':'+active;
- if(picker.dataset.countryFilteredSig===sig)return;
+ if(picker.dataset.countryFilteredSig===sig && [...picker.options].map(x=>x.value).join(',')===entries.map(e=>String(e.i)).join(','))return;
  picker.replaceChildren(...entries.map(({item,i})=>new Option(item.name+' · '+item.country,String(i))));
  picker.value=String(active);
  picker.dataset.countryFilteredSig=sig;
