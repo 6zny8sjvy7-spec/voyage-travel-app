@@ -1,0 +1,34 @@
+name: VOYAGE build Thai moving-plane hero assets
+on:
+  push:
+    branches:
+      - feature/20261128-thailand-hero-transport-collections
+    paths:
+      - .github/workflows/build-thai-hero-v5.yml
+      - qa-previews/build-thai-hero-v5.py
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  create-image-layers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image utilities
+        run: pip install --disable-pip-version-check 'numpy<2' 'opencv-python-headless<5' pillow
+      - name: Prepare clean no-plane scene and transparent plane layer
+        run: python qa-previews/build-thai-hero-v5.py
+      - name: Commit only rendered Thai hero image layers
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2-review-20261112/assets/voyage-thai-clean-v5.webp v2-review-20261112/assets/voyage-thai-airplane-v5.webp
+          if git diff --cached --quiet; then echo "Nothing changed"; exit 0; fi
+          git commit -m "art(qa): generate sharp plane-free Thailand background and flying airplane sprite"
+          git push
