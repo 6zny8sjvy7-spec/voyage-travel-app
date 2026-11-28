@@ -36,8 +36,9 @@ for(const [browserName,browserType] of browserMatrix){
    });
    for(const t of trips){
     try{
-     await page.addInitScript(id=>localStorage.setItem('voyage-v02-active-id',id),t.id);
-     const response=await page.goto(root,{waitUntil:'load',timeout:90000});
+     if(!page.url().startsWith(root))await page.goto(root,{waitUntil:'load',timeout:90000});
+     await page.evaluate(id=>localStorage.setItem('voyage-v02-active-id',id),t.id);
+     const response=await page.reload({waitUntil:'load',timeout:90000});
      assert.equal(response?.status(),200,'root page must return 200');
      await page.locator('#v2Home').waitFor({timeout:30000});
      await page.waitForTimeout(2300);
