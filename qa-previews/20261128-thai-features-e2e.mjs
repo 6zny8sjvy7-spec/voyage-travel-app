@@ -24,9 +24,10 @@ for(const [engine,browserType] of [['chromium',chromium],['webkit',webkit]]){
    const response=await page.goto(url,{waitUntil:'load',timeout:90000});
    assert.equal(response?.status(),200);
    await page.locator('#v2Home .v2-quick-grid').waitFor({timeout:16000});
+   await page.locator('#v2Home .voyage-ideas-entry').waitFor({state:'attached',timeout:10000});
    const links=await page.locator('#v2Home .v2-quick-grid .v2-link').allTextContents();
    const food=links.findIndex(x=>x.includes('美食口袋名單'));
-   assert(food>=0 && links[food+1]?.includes('行程名單'),'new shortcut follows food');
+   assert(food>=0 && links[food+1]?.includes('行程名單'),'new shortcut follows food: '+JSON.stringify(links));
    assert.equal(links.filter(x=>x.includes('行程名單')).length,1);
    assert(!links[food+1].includes('NEW'),'no NEW badge');
    let picker=await page.locator('#tripSelect option').allTextContents();
