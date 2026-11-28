@@ -149,7 +149,7 @@ modalStyle.textContent+='.voyage-reminder-names{display:block;font-size:11px;lin
 function showAllReminders(){
  const t=U.current?.();if(!t)return;
  const r=countryInfo(t),dlg=el('dialog','voyage-country-tasks'),heading=el('h2','',r.name+' · 旅行小提醒');
- const count=el('p'),summary=()=>{
+ const refreshers=[];const count=el('p'),summary=()=>{
   const state=doneStates(U.current?.(),r.code);
   count.textContent='我已確認 '+r.items.filter(x=>state[x.id]).length+'／'+r.items.length+' 項。勾選不代表系統已審核護照、簽證或入境申報。';
  };
@@ -160,14 +160,14 @@ function showAllReminders(){
   input.type='checkbox';input.checked=!!doneStates(t,r.code)[item.id];
   const names=el('small','voyage-reminder-names');
   const updateNames=()=>{const current=U.current?.();const who=reminderIdentity(current);const checked=reminderNames(current,r.code,item.id);names.textContent=who?'已確認 '+checked.length+'/'+(current.people||[]).length+' 人'+(checked.length?' · '+checked.join('、'):''):'';};
-  updateNames();if(reminderIdentity(t))txt.append(names);
+  updateNames();if(reminderIdentity(t))txt.append(names);refreshers.push(()=>{input.checked=!!doneStates(U.current?.(),r.code)[item.id];updateNames()});
   input.addEventListener('change',()=>{saveDone(item.id,input.checked);summary();updateNames();});
   line.append(input,txt);
   if(item.url){const link=el('a','','官方查核');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',e=>e.stopPropagation());line.append(link);}
   dlg.append(line);
  }
  const exit=el('button','','返回旅行首頁');exit.type='button';exit.addEventListener('click',()=>dlg.close());
- dlg.append(exit);dlg.addEventListener('close',()=>dlg.remove(),{once:true});
+ const refreshModal=()=>{if(U.current?.()?.id!==t.id)return;summary();refreshers.forEach(fn=>fn())};document.addEventListener('voyage-trip-changed',refreshModal);dlg.append(exit);dlg.addEventListener('close',()=>{document.removeEventListener('voyage-trip-changed',refreshModal);dlg.remove()},{once:true});
  document.body.append(dlg);dlg.showModal();
 }
 function render(){
