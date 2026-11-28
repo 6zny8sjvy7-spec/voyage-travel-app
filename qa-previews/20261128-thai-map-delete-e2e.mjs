@@ -50,6 +50,7 @@ for(const [browserName,browserType] of [['chromium',chromium],['webkit',webkit]]
     assert(result.includes('Khu Khot')&&result.includes('不需換線'),result.slice(0,1000));
     await page.screenshot({path:screen+'/'+browserName+'-'+device+'-rail.png'});
     await panel.locator('.v5-mode-switch button').filter({hasText:'公車'}).click();
+    await panel.locator('#thBusHint').waitFor({state:'visible',timeout:5000});
     assert(await panel.locator('#thBusHint').isVisible(),'Bus view includes a safe alternative with actual link');
     const busHref=await panel.locator('#thBusHint a').first().getAttribute('href');
     assert(busHref.includes('travelmode=transit')&&busHref.includes('Asok')&&busHref.includes('Ari'),busHref);
