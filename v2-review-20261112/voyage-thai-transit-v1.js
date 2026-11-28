@@ -49,7 +49,7 @@ style.textContent=[
 '#transportSection.th-integrated #v4TransitRegion{display:none}',
 '#transportSection.th-integrated>.eyebrow,#transportSection.th-integrated>.hint,#transportSection.th-integrated>p.v1-sub{display:none!important}',
 '#transportSection.th-integrated #v5TransitPanel>p,#transportSection.th-integrated #v5RegionDesc{display:none!important}',
-'#transportSection.th-integrated #v5OptionalDepartures,#transportSection.th-integrated #v5ManualProgress,#transportSection.th-integrated #voyageThaiStationReference{display:none!important}',
+'#transportSection.th-integrated #v5OptionalDepartures,#transportSection.th-integrated #v5ManualProgress,#transportSection.th-integrated #voyageThaiStationReference,#transportSection.th-integrated #v1TransitExtras{display:none!important}',
 '#transportSection.th-integrated #rideFields,#transportSection.th-integrated .view-switch{display:none!important}',
 '#transportSection.th-integrated #v5ManualTransitAdd{display:none!important}',
 '#transportSection.th-integrated #thSimplePlanner{display:block;border:1px solid var(--line);background:var(--card);border-radius:15px;padding:10px 13px;margin:12px 0}',
