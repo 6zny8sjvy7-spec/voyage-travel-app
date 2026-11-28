@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import {chromium,webkit} from 'playwright';
 const root='http://127.0.0.1:8000/voyage-travel-app/';
 const seed=[
@@ -30,6 +31,8 @@ for(const [engine,type] of [['chromium',chromium],['webkit',webkit]]){
       const x=document.querySelector('.v4-th-hero img.v4-image');
       return x&&x.complete&&x.naturalWidth>=1500&&x.currentSrc.includes('voyage-thailand-vivid-hero-20261128.webp')
     },{timeout:15000});
+    await fs.mkdir('qa-previews/visual-shots',{recursive:true});
+    await page.screenshot({path:'qa-previews/visual-shots/'+engine+'-'+device+'-thai-home.png',fullPage:false});
     const noOld=await page.locator('#v2Home .v2-quick-grid .v2-link.voyage-place-shortcut').count();
     assert.equal(noOld,1,'NEW places shortcut exists');
     const adjacent=await page.locator('#v2Home .v2-link.voyage-place-shortcut').evaluate(x=>x.previousElementSibling?.textContent.includes('美食口袋名單'));
