@@ -556,7 +556,29 @@ field("vEvName","名稱","text",e.name),field("vEvType","類別","select",e.type
 field("vEvTime","開始時間","time",e.time||"10:00"),field("vEvDuration","預估分鐘","number",e.duration||60,{min:0}),
 field("vEvNotes","備註／地址／預訂資訊","textarea",e.notes||"",{full:true}),field("vEvCost","預估費用（旅行幣別）","number",e.cost||0,{min:0,step:"0.01"}),
 field("vEvURL","地點網址（HTTPS）","url",e.mapUrl||e.url||"",{full:true}),field("vEvFrom","交通起點","text",e.from||""),field("vEvTo","交通終點","text",e.to||""),field("vEvLine","路線及搭乘方向","text",e.line||"")
-],()=>{const name=get("vEvName"),time=get("vEvTime"),duration=Number(get("vEvDuration")),url=get("vEvURL");if(!name||!D.validTime(time)||!Number.isFinite(duration)||duration<0||duration>2880)throw Error("請填名稱、有效時間及合理分鐘數");if(url&&!/^https:\/\//i.test(url))throw Error("連結必須是 HTTPS");const x={...e,name,time,duration,type:get("vEvType"),notes:get("vEvNotes"),cost:D.amount(get("vEvCost"))||0,from:get("vEvFrom"),to:get("vEvTo"),line:get("vEvLine")};if(url){x.url=url;if(/(google|naver|goo\.gl|naver\.me)/i.test(url))x.mapUrl=url}else{delete x.url;delete x.mapUrl}/* Existing imported photoUrl is retained by {...e}, never removed when editing. No fake upload field. */if(!isNew&&e.name!==name){delete x.lat;delete x.lon}const all=events.filter((_,i)=>isNew||i!==index),conflicts=D.conflicts([...all,x]);if(conflicts.length&&!confirm("時間與既有行程重疊。保留原有時間並儲存嗎？"))return false;if(isNew)events.push(x);else events[index]=x;return true})}
+],()=>{const name=get("vEvName"),time=get("vEvTime"),duration=Number(get("vEvDuration")),url=get("vEvURL");if(!name||!D.validTime(time)||!Number.isFinite(duration)||duration<0||duration>2880)throw Error("請填名稱、有效時間及合理分鐘數");if(url&&!/^https:\/\//i.test(url))throw Error("連結必須是 HTTPS");const x={...e,name,time,duration,type:get("vEvType"),notes:get("vEvNotes"),cost:D.amount(get("vEvCost"))||0,from:get("vEvFrom"),to:get("vEvTo"),line:get("vEvLine")};if(url){x.url=url;if(/(google|naver|goo\.gl|naver\.me)/i.test(url))x.mapUrl=url}else{delete x.url;delete x.mapUrl}/* Existing imported photoUrl is retained by {...e}, never removed when editing. No fake upload field. */if(!isNew&&e.name!==name){delete x.lat;delete x.lon}const all=events.filter((_,i)=>isNew||i!==index),conflicts=D.conflicts([...all,x]);if(conflicts.length&&!confirm("時間與既有行程重疊。保留原有時間並儲存嗎？"))return false;if(isNew)events.push(x);else events[index]=x;return true});
+if(!isNew){
+ const actions=$v("v1DialogForm")?.querySelector(".v1-form-actions");
+ if(actions){
+  const erase=button("🗑 刪除此行程",()=>{
+   if(!confirm("確定刪除「"+e.name+"」這筆已安排的行程？只刪除這筆，不會刪收藏或其他天的資料。"))return;
+   try{
+    // Preserve the last actual formal trip state before the destructive action.
+    const raw=localStorage.getItem("voyage-v02");
+    if(raw!==null)localStorage.setItem("voyage-backup-before-event-delete-"+Date.now(),raw);
+   }catch(error){alert("資料備份失敗，因此不執行刪除。請先確認瀏覽器儲存空間。");return;}
+   const at=events.indexOf(e);
+   if(at<0){alert("行程資料已更新，請重新開啟編輯視窗。");return;}
+   events.splice(at,1);
+   dialog.close();save();render();
+   toast("已刪除這筆行程，收藏及其他日期都保留");
+  },"secondary");
+  erase.id="v1DeleteScheduledEvent";
+  erase.style.cssText="margin-right:auto;border:1px solid #cb8585;color:#9e3030;background:#fff2f2;font-weight:750";
+  actions.prepend(erase);
+ }
+}
+}
 function metric(value,label){const n=E("div",{class:"v1-metric"});n.append(E("strong",{text:String(value)}),E("small",{text:label}));return n}
 function summaryRender(){const t=current(),total=t.days.flat().length,done=t.days.flat().filter(x=>x.done).length;let countdown="未設定出發日期";if(t.startDate&&D.dayISO(t.startDate,0)){const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:t.tz||"UTC",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(p=>[p.type,p.value]));const today=parts.year+"-"+parts.month+"-"+parts.day,diff=Math.round((Date.parse(t.startDate+"T12:00:00Z")-Date.parse(today+"T12:00:00Z"))/86400000);countdown=diff>0?"倒數 "+diff+" 天":diff===0?"今天出發":"已開始 "+(-diff)+" 天"}const spent=t.expenses.reduce((a,e)=>a+(Number(e.twd)||0),0);summary.replaceChildren(E("div",{class:"eyebrow",text:"旅行概況"}),E("h2",{text:t.city+" · "+countdown}),E("div",{class:"v1-metrics"},[metric(t.days.length,"旅行天數"),metric(total,"已安排活動"),metric(D.money(spent,"TWD"),"已記帳（台幣）"),metric(t.people.length,"旅伴人數")]),E("div",{class:"v1-actions"},[button("✎ 旅行設定",tripEditor),button("行李清單",()=>showPage("packing"))]));if(t.notes)summary.append(E("p",{class:"v1-sub",text:t.notes}))}
 function renderMore(){const tabs=[["overview","資料與備份"]],menu=$v("v1Menu");menu.replaceChildren();tabs.forEach(([id,label])=>menu.append(button(label,()=>{page=id;renderMore()},page===id?"active":"")));const box=$v("v1Content");box.replaceChildren();if(pages[page])pages[page](box);else box.append(E("p",{text:"功能模組載入中或尚未連接"}))}
@@ -1259,4 +1281,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./voyage-ideas-v1.js"></script>
 <script src="./voyage-history-country-v1.js"></script>
 <script src="./voyage-thai-transit-v1.js"></script>
+<script src="./voyage-saved-map-links-v1.js"></script>
 </body></html>
