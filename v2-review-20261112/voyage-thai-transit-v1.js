@@ -47,12 +47,66 @@ style.textContent=[
 '#voyageThaiStationReference p{font-size:13px;line-height:1.6;color:var(--muted);margin:9px 0}',
 '#transportSection.th-integrated #v5TransitPanel>h3{display:none}',
 '#transportSection.th-integrated #v4TransitRegion{display:none}',
-'#transportSection.th-integrated #v5OptionalDepartures{display:block}',
+'#transportSection.th-integrated>.eyebrow,#transportSection.th-integrated>.hint,#transportSection.th-integrated>p.v1-sub{display:none!important}',
+'#transportSection.th-integrated #v5TransitPanel>p,#transportSection.th-integrated #v5RegionDesc{display:none!important}',
+'#transportSection.th-integrated #v5OptionalDepartures,#transportSection.th-integrated #v5ManualProgress,#transportSection.th-integrated #voyageThaiStationReference{display:none!important}',
+'#transportSection.th-integrated #rideFields,#transportSection.th-integrated .view-switch{display:none!important}',
+'#transportSection.th-integrated #v5ManualTransitAdd{display:none!important}',
+'#transportSection.th-integrated #thSimplePlanner{display:block;border:1px solid var(--line);background:var(--card);border-radius:15px;padding:10px 13px;margin:12px 0}',
+'#transportSection.th-integrated #thSimplePlanner summary{cursor:pointer;font-weight:750;color:var(--ink)}',
+'#transportSection.th-integrated #thSimplePlanner #planFields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px}',
+'#transportSection.th-integrated #thSimplePlanner #planFields label{min-width:0}',
+'#transportSection.th-integrated #thSimplePlanner #planFields input{min-width:0;width:100%}',
+'#transportSection.th-integrated #thSimplePlanner .th-save-route{grid-column:1/-1}',
+'#transportSection.th-integrated #thBusHint{border-radius:13px;padding:12px 14px;margin:11px 0;background:#fff7e8;border:1px solid #f0dab0;font-size:13px;line-height:1.6}',
+'#transportSection.th-integrated #thBusHint a{color:#1254a3;font-weight:750}',
 '#transportSection.th-integrated #voyageThaiTransit{display:none!important}'
 ].join('\n');
 document.head.append(style);
+/* The lower manual train tracker and duplicate station search are not relevant
+   to a simple Thailand A→B query. Preserve their DOM for other countries, and
+   keep date/time only under one optional "save this trip" disclosure. */
+const planFields=document.getElementById('planFields');
+const originalPlanHost=planFields?.parentElement;
+const originalPlanNext=planFields?.nextSibling||null;
+const compact=E('details',undefined,{id:'thSimplePlanner'});
+compact.append(E('summary','＋ 將交通安排到每日行程（選用）'));
+const thSave=E('button','儲存這趟交通到行程',{class:'primary th-save-route',type:'button'});
+thSave.addEventListener('click',()=>document.getElementById('addTransit')?.click());
+const busHint=E('div',undefined,{id:'thBusHint'});
+busHint.append(E('strong','🚌 公車路線建議：'));
+busHint.append(E('span','先使用上方 A→B 查詢。免費資料如果無法確認公車號碼或停靠站，請改用當天的大眾運輸導航，不會顯示猜測的站數。 '));
+const busMap=E('a','Google Maps 查詢公車／大眾運輸',{target:'_blank',rel:'noopener noreferrer'});
+busHint.append(busMap,' · ');
+busHint.append(E('a','ViaBus',{href:'https://www.viabus.co/',target:'_blank',rel:'noopener noreferrer'}));
+function busUrl(){
+ return 'https://www.google.com/maps/dir/?api=1&origin='+
+ encodeURIComponent((from.value.trim()||'Bangkok')+', Bangkok, Thailand')+
+ '&destination='+encodeURIComponent((to.value.trim()||'Bangkok')+', Bangkok, Thailand')+
+ '&travelmode=transit';
+}
+function refreshBus(){
+ const mode=window.VoyageTransitUIV5?.mode||'mixed';
+ busHint.hidden=!active()||mode!=='bus';busMap.href=busUrl();
+}
+for(const node of [from,to])node.addEventListener('input',refreshBus);
+panel.addEventListener('click',e=>{
+ if(e.target.closest('.v5-mode-switch button'))requestAnimationFrame(refreshBus);
+});
 function updateCountry(){
  const isThai=active();refBox.hidden=!isThai;panel.classList.toggle('th-integrated',isThai);
+ if(isThai){
+  if(planFields && planFields.parentElement!==compact){
+   compact.append(planFields);compact.append(thSave);
+  }
+  result.after(compact,busHint);
+ }else{
+  compact.remove();busHint.remove();
+  if(planFields&&originalPlanHost&&planFields.parentElement!==originalPlanHost){
+   originalPlanHost.insertBefore(planFields,originalPlanNext);
+  }
+ }
+ refreshBus();
  const oldHeading=panel.querySelector(':scope > h2');
  if(oldHeading&&isThai)oldHeading.textContent='🇹🇭 交通助手 · A → B 怎麼搭';
  else if(oldHeading&&oldHeading.textContent.includes('泰國'))oldHeading.textContent='交通 · 站名／方向／站數查詢';
