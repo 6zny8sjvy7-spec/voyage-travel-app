@@ -47,7 +47,7 @@ style.textContent=[
 '#voyageThaiStationReference p{font-size:13px;line-height:1.6;color:var(--muted);margin:9px 0}',
 '#transportSection.th-integrated #v5TransitPanel>h3{display:none}',
 '#transportSection.th-integrated #v4TransitRegion{display:none}',
-'#transportSection.th-integrated .v5-departure-query{display:none}',
+'#transportSection.th-integrated #v5OptionalDepartures{display:block}',
 '#transportSection.th-integrated #voyageThaiTransit{display:none!important}'
 ].join('\n');
 document.head.append(style);
